@@ -4,7 +4,7 @@ One-time setup to open-source the monorepo and ship **`@nuvio/*`** packages to u
 
 ## 1. Create the GitHub repository
 
-1. On GitHub, create a new repository (e.g. **`MapleMinds/Nuvio`**).
+1. On GitHub, create a new repository (e.g. **`ehah/Nuvio`** — https://github.com/ehah/Nuvio).
 2. Do **not** add a README/license from the template (this repo already has them).
 3. Copy the remote URL (HTTPS or SSH).
 
@@ -15,7 +15,7 @@ git init
 git add -A
 git commit -m "Initial release: Nuvio 0.1.0 dev overlay for React + Vite + Tailwind"
 git branch -M main
-git remote add origin https://github.com/MapleMinds/Nuvio.git
+git remote add origin https://github.com/ehah/Nuvio.git
 git push -u origin main
 git tag v0.1.0
 git push origin v0.1.0

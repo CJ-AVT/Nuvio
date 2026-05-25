@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MapleMinds/Nuvio.git",
+    "url": "https://github.com/ehah/Nuvio.git",
     "directory": "packages/shared"
   },
   "keywords": ["nuvio", "vite", "devtools", "protocol"],

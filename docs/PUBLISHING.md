@@ -71,7 +71,7 @@ Follow the root [README.md](../README.md) (consumer setup + Full MVP) to add `nu
 
 ## Repository URL in package.json
 
-If the Git remote differs from `https://github.com/MapleMinds/Nuvio`, update the `repository` field in each published `package.json` before tagging releases.
+If the Git remote differs from `https://github.com/ehah/Nuvio`, update the `repository` field in each published `package.json` before tagging releases.
 
 ## First-time GitHub push
 

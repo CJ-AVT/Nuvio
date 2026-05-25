@@ -2,7 +2,7 @@
 
 Visual editing layer for React + Vite + Tailwind: localhost overlay, source-backed patches (see `docs/PRD.md` and `docs/implPlan.md`).
 
-**Repository:** [github.com/MapleMinds/Nuvio](https://github.com/MapleMinds/Nuvio) · **npm:** `@nuvio/vite-plugin`, `@nuvio/overlay` (maintainers: [GITHUB_AND_RELEASE.md](docs/GITHUB_AND_RELEASE.md))
+**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **npm:** `@nuvio/vite-plugin`, `@nuvio/overlay` (maintainers: [GITHUB_AND_RELEASE.md](docs/GITHUB_AND_RELEASE.md))
 
 ## Install (consumer setup, ~5 minutes)
 
