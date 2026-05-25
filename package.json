@@ -1,0 +1,21 @@
+{
+  "name": "nuvio",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/**\" run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "dev": "pnpm build && pnpm --filter @nuvio/demo-app dev",
+    "dogfood": "pnpm build && pnpm typecheck && pnpm test && pnpm --filter @nuvio/demo-app build",
+    "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",
+    "publish:stable": "pnpm -r publish --filter \"./packages/*\" --access public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3"
+  }
+}

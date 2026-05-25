@@ -1,0 +1,527 @@
+import type { IncomingMessage } from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import type { Duplex } from "node:stream";
+import type { Logger, Plugin } from "vite";
+import { WebSocket } from "ws";
+import { WebSocketServer } from "ws";
+import { applyPatchToSource } from "@nuvio/ast-engine";
+import {
+  NUVIO_WS_PATH,
+  PROTOCOL_VERSION,
+  parseClientMessage,
+  serializeServerMessage,
+} from "@nuvio/shared";
+import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
+import {
+  buildSourceIndex,
+  extractIdsFromSource,
+  pickBestSourceIndex,
+  type BuildSourceIndexResult,
+} from "./source-index.js";
+
+const APP_ENTRY_CANDIDATES = ["src/App.tsx", "src/app.tsx", "App.tsx"] as const;
+
+function nuvioWsMessageToText(data: unknown): string {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (Buffer.isBuffer(data)) {
+    return data.toString("utf8");
+  }
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(data).toString("utf8");
+  }
+  if (ArrayBuffer.isView(data)) {
+    const v = data as ArrayBufferView;
+    return Buffer.from(v.buffer, v.byteOffset, v.byteLength).toString("utf8");
+  }
+  return String(data);
+}
+
+/** When glob indexing returns no ids (mis-rooted cwd, etc.), still pick up ids from the app entry file. */
+function supplementIndexFromAppTsx(
+  serverRoot: string,
+  built: BuildSourceIndexResult,
+  emitWarn: (msg: string) => void = console.warn,
+): BuildSourceIndexResult {
+  if (built.entries.length > 0) {
+    return built;
+  }
+  for (const rel of APP_ENTRY_CANDIDATES) {
+    const appTsx = path.resolve(serverRoot, rel);
+    if (!fs.existsSync(appTsx)) {
+      continue;
+    }
+    try {
+      const code = fs.readFileSync(appTsx, "utf8");
+      const hits = extractIdsFromSource(appTsx, code);
+      if (hits.length === 0) {
+        continue;
+      }
+      emitWarn(
+        `[Nuvio] Source index had 0 ids; supplemented from ${appTsx} (${hits.length} id(s)). ` +
+          `Fix scan roots if this is unexpected.`,
+      );
+      return {
+        ...built,
+        entries: hits,
+        scannedFileCount: Math.max(built.scannedFileCount, 1),
+      };
+    } catch {
+      /* try next candidate */
+    }
+  }
+  return built;
+}
+
+export interface NuvioPluginOptions {
+  /** Glob patterns relative to Vite config root (see DEFAULT_GLOBS). */
+  scanGlobs?: string[];
+  /** Log client ops (no source file contents). */
+  verbose?: boolean;
+}
+
+/**
+ * Default globs relative to `root`.
+ * Include monorepo layouts (`apps/` / `packages/`) so indexing still finds sources when
+ * `root` resolves to the repo root (only `./src/**` would otherwise match nothing).
+ */
+const DEFAULT_GLOBS = [
+  "src/**/*.{tsx,jsx}",
+  "apps/**/src/**/*.{tsx,jsx}",
+  "packages/**/src/**/*.{tsx,jsx}",
+];
+
+function isAllowedOrigin(origin: string | undefined): boolean {
+  if (origin === undefined || origin === "") {
+    return true;
+  }
+  try {
+    const u = new URL(origin);
+    return (
+      (u.hostname === "localhost" || u.hostname === "127.0.0.1") &&
+      (u.protocol === "http:" || u.protocol === "https:")
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Nuvio Vite plugin — Phase 1: WebSocket protocol + dev-time source index + selection ack.
+ */
+export function nuvio(options?: NuvioPluginOptions): Plugin {
+  const scanGlobs = options?.scanGlobs ?? DEFAULT_GLOBS;
+  const verbose = options?.verbose ?? false;
+
+  let indexVersion = 0;
+  let cachedIndexPayload: string | null = null;
+  const idToEntry = new Map<
+    string,
+    { id: string; file: string; line: number; column: number }
+  >();
+
+  return {
+    name: "nuvio",
+    apply: "serve",
+    configureServer(server) {
+      const log: Logger = server.config.logger;
+      const fromConfigFile =
+        typeof server.config.configFile === "string"
+          ? path.dirname(server.config.configFile)
+          : "";
+      const serverRoot = path.resolve(server.config.root);
+      const rootCandidates = [
+        path.resolve(fromConfigFile || serverRoot),
+        serverRoot,
+        process.cwd(),
+      ];
+      const rootsLabel = [...new Set(rootCandidates)].join(" | ");
+      const wss = new WebSocketServer({ noServer: true });
+
+      type UndoSnapshot = { file: string; contents: string };
+      const undoStack: UndoSnapshot[] = [];
+      const UNDO_MAX = 32;
+      const pushUndoSnapshot = (file: string, contents: string): void => {
+        undoStack.push({ file, contents });
+        while (undoStack.length > UNDO_MAX) {
+          undoStack.shift();
+        }
+      };
+
+      const rebuildIndex = (): void => {
+        let built = pickBestSourceIndex(rootCandidates, scanGlobs);
+        built = supplementIndexFromAppTsx(serverRoot, built, log.warn);
+        if (built.entries.length === 0) {
+          const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"]);
+          if (fallback.entries.length > 0) {
+            log.warn(
+              `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)) from ${serverRoot}.`,
+            );
+            built = fallback;
+          }
+        }
+        indexVersion += 1;
+        idToEntry.clear();
+        for (const e of built.entries) {
+          idToEntry.set(e.id, e);
+        }
+
+        cachedIndexPayload = serializeServerMessage({
+          type: "indexReady",
+          protocolVersion: PROTOCOL_VERSION,
+          indexVersion,
+          entries: built.entries,
+          duplicateErrors: built.duplicateErrors,
+        });
+
+        if (verbose) {
+          if (built.parseErrors.length > 0) {
+            log.warn(`[Nuvio] index parse issues: ${built.parseErrors.length} file(s)`);
+          }
+          if (built.duplicateErrors.length > 0) {
+            log.warn(
+              `[Nuvio] duplicate ids: ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
+            );
+          }
+          log.info(
+            `[Nuvio] index roots=${rootsLabel} matchedFiles=${built.scannedFileCount} uniqueIds=${built.entries.length}`,
+          );
+        } else {
+          log.info(
+            `[Nuvio] index v${indexVersion} — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`,
+          );
+        }
+
+        if (built.scannedFileCount === 0) {
+          log.warn(
+            `[Nuvio] Source index matched 0 files for globs [${scanGlobs.join(", ")}] under roots ${rootsLabel}. ` +
+              `Dev server cwd does not affect this if Vite root is correct; ensure \`data-nuvio-id\` lives under that root.`,
+          );
+        } else if (built.entries.length === 0 && built.parseErrors.length > 0) {
+          const e0 = built.parseErrors[0]!;
+          log.warn(
+            `[Nuvio] Source index has 0 ids after ${built.scannedFileCount} file(s); first error: ${e0.file} — ${e0.message}`,
+          );
+        } else if (built.entries.length === 0 && built.duplicateErrors.length > 0) {
+          log.warn(
+            `[Nuvio] Source index: all contract ids appear duplicated — ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
+          );
+        } else if (
+          built.entries.length === 0 &&
+          built.duplicateErrors.length === 0 &&
+          built.parseErrors.length === 0
+        ) {
+          log.warn(
+            `[Nuvio] Source index scanned ${built.scannedFileCount} file(s) under roots ${rootsLabel} but extracted 0 ids (no \`data-nuvio-id\` / wrapper hits).`,
+          );
+        }
+
+        if (cachedIndexPayload && wss.clients.size > 0) {
+          for (const client of wss.clients) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(cachedIndexPayload);
+            }
+          }
+        }
+      };
+
+      const debouncedRebuild = (() => {
+        let t: ReturnType<typeof setTimeout> | undefined;
+        return () => {
+          if (t) {
+            clearTimeout(t);
+          }
+          t = setTimeout(() => {
+            rebuildIndex();
+            t = undefined;
+          }, 120);
+        };
+      })();
+
+      server.watcher.on("change", (file) => {
+        if (!/\.(tsx|jsx)$/.test(file)) {
+          return;
+        }
+        debouncedRebuild();
+      });
+
+      wss.on("connection", (ws) => {
+        if (cachedIndexPayload && ws.readyState === WebSocket.OPEN) {
+          ws.send(cachedIndexPayload);
+        }
+
+        ws.on("message", async (data) => {
+          const text = nuvioWsMessageToText(data);
+          const msg = parseClientMessage(text);
+          if (!msg) {
+            ws.send(
+              serializeServerMessage({
+                type: "error",
+                code: "bad_message",
+                message: "Invalid client message",
+              }),
+            );
+            return;
+          }
+          if (msg.protocolVersion !== PROTOCOL_VERSION) {
+            ws.send(
+              serializeServerMessage({
+                type: "error",
+                code: "bad_version",
+                message: `Expected protocolVersion ${PROTOCOL_VERSION}`,
+                requestId: "requestId" in msg ? msg.requestId : undefined,
+              }),
+            );
+            return;
+          }
+
+          if (msg.type === "ping") {
+            if (verbose) {
+              log.info(`[Nuvio] ping ${msg.requestId}`);
+            }
+            ws.send(
+              serializeServerMessage({
+                type: "pong",
+                protocolVersion: PROTOCOL_VERSION,
+                requestId: msg.requestId,
+              }),
+            );
+            if (cachedIndexPayload) {
+              ws.send(cachedIndexPayload);
+            }
+            return;
+          }
+
+          if (msg.type === "select") {
+            if (verbose) {
+              log.info(`[Nuvio] select ${msg.id}`);
+            }
+            const entry = idToEntry.get(msg.id);
+            if (!entry) {
+              log.warn(`[Nuvio] select unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
+              ws.send(
+                serializeServerMessage({
+                  type: "selectAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: "unknown_id",
+                  errorMessage: "Id not found in dev source index",
+                }),
+              );
+              return;
+            }
+            ws.send(
+              serializeServerMessage({
+                type: "selectAck",
+                protocolVersion: PROTOCOL_VERSION,
+                requestId: msg.requestId,
+                id: msg.id,
+                ok: true,
+                file: entry.file,
+                line: entry.line,
+                column: entry.column,
+              }),
+            );
+            return;
+          }
+
+          if (msg.type === "patchUndo") {
+            const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+            const last = undoStack.pop();
+            if (!last) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchUndoAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  ok: false,
+                  errorCode: "empty_stack",
+                  errorMessage: "Nothing to undo",
+                }),
+              );
+              return;
+            }
+            try {
+              assertPathWithinRoot(writeGuardRoot, last.file);
+              fs.writeFileSync(last.file, last.contents, "utf8");
+            } catch (e) {
+              undoStack.push(last);
+              ws.send(
+                serializeServerMessage({
+                  type: "patchUndoAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  ok: false,
+                  errorCode: "undo_write_error",
+                  errorMessage: String(e),
+                }),
+              );
+              return;
+            }
+            log.info(`[Nuvio] undo restored ${last.file}`);
+            ws.send(
+              serializeServerMessage({
+                type: "patchUndoAck",
+                protocolVersion: PROTOCOL_VERSION,
+                requestId: msg.requestId,
+                ok: true,
+                file: last.file,
+                undoStackDepth: undoStack.length,
+              }),
+            );
+            return;
+          }
+
+          if (msg.type === "patchApply") {
+            const entry = idToEntry.get(msg.id);
+            const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+            const dryRun = msg.dryRun === true;
+            const patchAckExtras = dryRun ? ({ dryRun: true as const } as const) : {};
+            if (!entry) {
+              log.warn(`[Nuvio] patch unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: "unknown_id",
+                  errorMessage: "Id not found in dev source index",
+                  ...patchAckExtras,
+                }),
+              );
+              return;
+            }
+            try {
+              assertPathWithinRoot(writeGuardRoot, entry.file);
+            } catch (e) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: "path_escape",
+                  errorMessage: String(e),
+                  ...patchAckExtras,
+                }),
+              );
+              return;
+            }
+            let source: string;
+            try {
+              source = fs.readFileSync(entry.file, "utf8");
+            } catch (e) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: "read_error",
+                  errorMessage: String(e),
+                  ...patchAckExtras,
+                }),
+              );
+              return;
+            }
+            const result = await applyPatchToSource(source, entry.file, msg.id, msg.ops);
+            if (!result.ok) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: result.code,
+                  errorMessage: result.message,
+                  ...patchAckExtras,
+                }),
+              );
+              return;
+            }
+            if (dryRun) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: true,
+                  diffSummary: result.diffSummary,
+                  dryRun: true,
+                }),
+              );
+              if (verbose) {
+                log.info(`[Nuvio] patchPreview ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
+              }
+              return;
+            }
+            try {
+              fs.writeFileSync(entry.file, result.source, "utf8");
+            } catch (e) {
+              ws.send(
+                serializeServerMessage({
+                  type: "patchAck",
+                  protocolVersion: PROTOCOL_VERSION,
+                  requestId: msg.requestId,
+                  id: msg.id,
+                  ok: false,
+                  errorCode: "write_error",
+                  errorMessage: String(e),
+                }),
+              );
+              return;
+            }
+            pushUndoSnapshot(entry.file, source);
+            log.info(`[Nuvio] touched ${entry.file}`);
+            ws.send(
+              serializeServerMessage({
+                type: "patchAck",
+                protocolVersion: PROTOCOL_VERSION,
+                requestId: msg.requestId,
+                id: msg.id,
+                ok: true,
+                diffSummary: result.diffSummary,
+                writtenFile: entry.file,
+                undoStackDepth: undoStack.length,
+              }),
+            );
+            if (verbose) {
+              log.info(`[Nuvio] patchApply ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
+            }
+            return;
+          }
+        });
+      });
+
+      server.httpServer?.on(
+        "upgrade",
+        (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+          const pathname = pathnameFromUpgradeUrl(request.url);
+          if (pathname !== NUVIO_WS_PATH) {
+            return;
+          }
+          if (!isAllowedOrigin(request.headers.origin)) {
+            socket.destroy();
+            return;
+          }
+          wss.handleUpgrade(request, socket, head, (ws) => {
+            wss.emit("connection", ws, request);
+          });
+        },
+      );
+
+      rebuildIndex();
+    },
+  };
+}
