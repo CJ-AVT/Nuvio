@@ -35,13 +35,13 @@ export default function App(): ReactElement {
             data-nuvio-id="demo.features.row"
           >
             <div
-              className="flex-1 rounded-lg border border-slate-800 bg-slate-900/50 p-4"
+              className="flex-1 rounded-lg border border-slate-800 bg-slate-900/50 p-4 mt-4"
               data-nuvio-id="demo.features.card.stable"
             >
               This is card 1
             </div>
             <div
-              className="flex-1 rounded-lg border border-slate-800 p-4 bg-slate-900"
+              className="flex-1 rounded-lg border border-slate-800 p-4 bg-slate-900 m-4"
               data-nuvio-id="demo.features.card.fast"
             >
               This is Card 2

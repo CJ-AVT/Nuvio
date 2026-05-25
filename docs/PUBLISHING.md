@@ -6,7 +6,8 @@
 
 1. **npm organization** `@nuvio` on [npmjs.com](https://www.npmjs.com/) with publish rights for your account.
 2. One-time login: `npm login` (scope defaults to `@nuvio` when publishing scoped packages).
-3. Clean tree: commit and tag as your release process requires; `pnpm publish` may refuse on uncommitted changes unless you opt out intentionally.
+3. **Two-factor authentication (required to publish):** npm must have 2FA enabled in **“Authorization and writes”** mode (not “Authorization only”). See [Troubleshooting: E403 2FA](#troubleshooting-e403-2fa) below.
+4. Clean tree: commit and tag as your release process requires; `pnpm publish` may refuse on uncommitted changes unless you opt out intentionally.
 
 ## Build and publish
 
@@ -76,3 +77,26 @@ If the Git remote differs from `https://github.com/ehah/Nuvio`, update the `repo
 ## First-time GitHub push
 
 See [GITHUB_AND_RELEASE.md](./GITHUB_AND_RELEASE.md) for `git init`, remote, tag **`v0.1.0`**, and `pnpm publish:stable`.
+
+## Troubleshooting: E403 2FA
+
+If publish fails with:
+
+```text
+403 Forbidden - Two-factor authentication or granular access token with bypass 2fa enabled is required to publish packages.
+```
+
+**Fix (interactive publish):**
+
+1. Open [npmjs.com](https://www.npmjs.com/) → avatar → **Account** → enable **Two-Factor Authentication**.
+2. Choose **Authorization and writes** (required for `npm publish`; “Authorization only” is not enough).
+3. Confirm you own or can publish to **`@nuvio`**: create the org at [npmjs.com/org/create](https://www.npmjs.com/org/create) if needed, or join an existing org with publish rights.
+4. From the repo root, pass a one-time password from your authenticator app:
+
+```bash
+pnpm publish:stable --otp=123456
+```
+
+Replace `123456` with the current 6-digit code (valid ~30 seconds).
+
+**Alternative (CI / token):** create a **Granular Access Token** on npm with **Publish** permission for the `@nuvio` packages and enable **bypass 2FA for publish**, then `npm login` with that token before `pnpm publish:stable`.

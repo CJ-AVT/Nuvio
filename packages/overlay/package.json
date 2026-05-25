@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build": "tsup src/index.tsx --format esm --dts --external react --external react-dom --external @nuvio/shared",
+    "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

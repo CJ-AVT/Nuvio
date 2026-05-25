@@ -27,6 +27,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean --external vite --external @nuvio/shared --external @nuvio/ast-engine",
+    "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

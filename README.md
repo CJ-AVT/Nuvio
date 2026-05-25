@@ -2,24 +2,23 @@
 
 Visual editing layer for React + Vite + Tailwind: localhost overlay, source-backed patches (see `docs/PRD.md` and `docs/implPlan.md`).
 
-**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **npm:** `@nuvio/vite-plugin`, `@nuvio/overlay` (maintainers: [GITHUB_AND_RELEASE.md](docs/GITHUB_AND_RELEASE.md))
+**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT · **Release:** [v0.1.0](https://github.com/ehah/Nuvio/releases/tag/v0.1.0)
 
-## Install (consumer setup, ~5 minutes)
+## Install in your project (~5 minutes)
 
-**Full MVP (`0.1.0`, npm `latest`):**
+**Recommended today — from GitHub (no npm account):** follow **[INSTALL_FROM_GITHUB.md](docs/INSTALL_FROM_GITHUB.md)** (pin tag `v0.1.0`).
+
+**Later — from npm** (when published):
 
 ```bash
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
-# or: npm i -D @nuvio/vite-plugin @nuvio/overlay
 ```
-
-**Public alpha line** (older): `@alpha` → `0.1.0-alpha.x`.
 
 You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x** configured for that app.
 
 ### 1. Install packages
 
-Use the commands above (or `@alpha` for the prerelease line).
+Use [INSTALL_FROM_GITHUB.md](docs/INSTALL_FROM_GITHUB.md) or the npm commands above.
 
 ### 2. Register the Vite plugin
 
