@@ -207,7 +207,7 @@ apps/
 
 ### Status
 
-* **Repo complete** — `0.1.0-alpha.0` on all `@nuvio/*` publishable packages, `LICENSE` (MIT), root **`pnpm publish:alpha`**, consumer onboarding in [README.md](../README.md), [PUBLISHING.md](PUBLISHING.md), [COMPATIBILITY.md](COMPATIBILITY.md), [LIMITATIONS.md](LIMITATIONS.md), [CHANGELOG.md](../CHANGELOG.md). **Maintainer step:** run `pnpm publish:alpha` with npm access to the **`@nuvio`** scope, then verify install from a clean Vite app per README (closes dogfood exit criterion).
+* **Repo complete** — `0.1.0-alpha.0` on all `@nuvio/*` publishable packages, `LICENSE` (MIT), root **`pnpm publish:alpha`**, consumer onboarding in [README.md](../README.md), [npmPublish.md](npmPublish.md), [COMPATIBILITY.md](COMPATIBILITY.md), [LIMITATIONS.md](LIMITATIONS.md), [CHANGELOG.md](../CHANGELOG.md). **Maintainer step:** run `pnpm publish:alpha` with npm access to the **`@nuvio`** scope, then verify install from a clean Vite app per README (closes dogfood exit criterion).
 
 ### Dependencies
 
@@ -362,7 +362,7 @@ apps/
 | 1         | Selection + source index     | Edit mode, hover/select, **id → file** via dev-time AST index |
 | 2         | First real patches           | **Done** — Text + **whitelist + `tailwind-merge`**; golden tests in CI |
 | 3         | Alpha feature-complete       | **Done** — Alpha property set, **Validate required before Apply**, **undo last patch** + stack depth, touched-file log |
-| **Alpha** | **Public npm alpha**         | **Done (repo)** — `alpha` tag + `0.1.0-alpha.0`; publish + dogfood per README / PUBLISHING |
+| **Alpha** | **Public npm alpha**         | **Done (repo)** — `alpha` tag + `0.1.0-alpha.0`; publish + dogfood per README / npmPublish |
 | 4         | Full MVP                     | **Complete (repo)** — `0.1.0`, tests/docs/dogfood gate; npm `latest` publish is maintainer step |
 | 5         | Hardening                    | Real-world patterns, perf, CI disable, telemetry spec |
 | 6         | V2 Next + layout depth       | Next adapter, responsive, tokens, tree |

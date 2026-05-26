@@ -24,14 +24,14 @@ Aligned with [PRD.md](./PRD.md) § *MVP definition of done — Full MVP* and [im
 - [x] [README.md](../README.md) — consumer setup, Full MVP flows, troubleshooting
 - [x] [LIMITATIONS.md](./LIMITATIONS.md) — alpha vs full MVP boundaries
 - [x] [COMPATIBILITY.md](./COMPATIBILITY.md) — stack matrix
-- [x] [PUBLISHING.md](./PUBLISHING.md) — `alpha` and **`latest`** (stable) publish flows
+- [x] [npmPublish.md](./npmPublish.md) — `alpha` and **`latest`** (stable) publish flows
 - [x] [CHANGELOG.md](../CHANGELOG.md) — `0.1.0` release notes
 - [ ] **Maintainer dogfood** — install `@nuvio/*@latest` (or workspace) in a **clean** Vite app outside this monorepo; complete [DOGFOOD.md](./DOGFOOD.md)
 
 ## Release
 
 - [x] Semver **`0.1.0`** on all `@nuvio/*` packages (promoted from `0.1.0-alpha.0`)
-- [ ] **`pnpm publish:stable`** run by maintainer with npm `@nuvio` access (see [PUBLISHING.md](./PUBLISHING.md))
+- [ ] **`pnpm publish:stable`** run by maintainer with npm `@nuvio` access (see [npmPublish.md](./npmPublish.md))
 
 ## Explicitly later (not Full MVP)
 

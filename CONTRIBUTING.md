@@ -4,7 +4,7 @@
 
 **Full MVP:** **`@nuvio/*` `0.1.0`** on npm **`latest`**. **Alpha line:** `0.1.0-alpha.x` on **`alpha`**.
 
-Before publishing stable: `pnpm dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md). Maintainer flow: [docs/PUBLISHING.md](./docs/PUBLISHING.md). DoD checklist: [docs/FULL_MVP_DOD.md](./docs/FULL_MVP_DOD.md). Limits: [docs/LIMITATIONS.md](./docs/LIMITATIONS.md), [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md). [CHANGELOG.md](./CHANGELOG.md) tracks releases.
+Before publishing stable: `pnpm dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md). Maintainer flow: [docs/npmPublish.md](./docs/npmPublish.md). DoD checklist: [docs/FULL_MVP_DOD.md](./docs/FULL_MVP_DOD.md). Limits: [docs/LIMITATIONS.md](./docs/LIMITATIONS.md), [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md). [CHANGELOG.md](./CHANGELOG.md) tracks releases.
 
 ## Monorepo layout
 

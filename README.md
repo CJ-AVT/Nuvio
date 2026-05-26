@@ -6,10 +6,6 @@ Visual editing layer for React + Vite + Tailwind: localhost overlay, source-back
 
 ## Install in your project (~5 minutes)
 
-**Recommended today — from GitHub (no npm account):** follow **[INSTALL_FROM_GITHUB.md](docs/INSTALL_FROM_GITHUB.md)** (pin tag `v0.1.0`).
-
-**Later — from npm** (when published):
-
 ```bash
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
@@ -18,7 +14,7 @@ You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x** conf
 
 ### 1. Install packages
 
-Use [INSTALL_FROM_GITHUB.md](docs/INSTALL_FROM_GITHUB.md) or the npm commands above.
+Use the npm command above (or pin a version, e.g. `@nuvio/vite-plugin@0.1.0`).
 
 ### 2. Register the Vite plugin
 
@@ -80,7 +76,7 @@ Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit. Ids mus
 
 Run **`pnpm dev`**, open localhost, turn **Edit on**, select a region, **Validate** then **Apply**. See [compatibility](docs/COMPATIBILITY.md), [limitations](docs/LIMITATIONS.md), and [CHANGELOG](CHANGELOG.md).
 
-**Maintainers:** [PUBLISHING.md](docs/PUBLISHING.md), [DOGFOOD.md](docs/DOGFOOD.md), [FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md).
+**Maintainers:** [npmPublish.md](docs/npmPublish.md), [DOGFOOD.md](docs/DOGFOOD.md), [FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md).
 
 ---
 

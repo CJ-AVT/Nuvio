@@ -6,6 +6,7 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ### Changed
 
+- Maintainer docs consolidated into [npmPublish.md](docs/npmPublish.md) (removed `PUBLISHING`, `GITHUB_AND_RELEASE`, `INSTALL_FROM_GITHUB`, `PUBLIC_RELEASE`).
 - Overlay UI: **Properties** panel renamed **Editor**; style flow button **Preview** renamed **Validate** (same `dryRun` behavior).
 - Editor **color pickers**: full Tailwind default palette (Figma-style swatch grid) for text and background utilities.
 - **Frosted-glass** overlay chrome (Editor + Nuvio chip); removed read-only Typography/Layout/Appearance inspector blocks.
@@ -22,7 +23,7 @@ First **stable** release after public alpha. Install with `@latest` (no dist-tag
 - **Layout & structure** UI: move up/down (sibling reorder under flex/grid parents), hide, show, duplicate; auto-apply after successful structural preview.
 - **Indexed elements** list in the Editor panel for quick selection.
 - **Overlay chrome**: draggable/collapsible Editor panel and Nuvio chip; layout persisted under `nuvio:overlay-chrome:v1`.
-- **Docs**: [FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md), [DOGFOOD.md](docs/DOGFOOD.md); updated [LIMITATIONS](docs/LIMITATIONS.md), [COMPATIBILITY](docs/COMPATIBILITY.md), [PUBLISHING](docs/PUBLISHING.md).
+- **Docs**: [FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md), [DOGFOOD.md](docs/DOGFOOD.md); updated [LIMITATIONS](docs/LIMITATIONS.md), [COMPATIBILITY](docs/COMPATIBILITY.md), maintainer publishing guide.
 
 ### Changed
 
@@ -40,4 +41,4 @@ First **stable** release after public alpha. Install with `@latest` (no dist-tag
 
 - Initial publishable **`@nuvio/shared`**, **`@nuvio/ast-engine`**, **`@nuvio/vite-plugin`**, **`@nuvio/overlay`** at `0.1.0-alpha.0` (npm **`alpha`** tag).
 - Phase 3 feature set: dev-time source index, `data-nuvio-id` selection, alpha property controls (text + Tailwind whitelist), **Preview** (`dryRun`), **Apply**, session **Undo last**, touched-file logging.
-- Docs: [compatibility stub](docs/COMPATIBILITY.md), [known limitations](docs/LIMITATIONS.md), [publishing guide](docs/PUBLISHING.md), MIT [LICENSE](LICENSE).
+- Docs: [compatibility stub](docs/COMPATIBILITY.md), [known limitations](docs/LIMITATIONS.md), maintainer publishing guide, MIT [LICENSE](LICENSE).
