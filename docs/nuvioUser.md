@@ -4,6 +4,8 @@
 
 You only need this guide and a terminal. Copy the commands exactly.
 
+**v0.2+:** Nuvio ships its own overlay styles. You do **not** add `@nuvio/overlay` to Tailwind `content`.
+
 ---
 
 ## What you get
@@ -26,7 +28,7 @@ Your project should already be:
 | -------- | ---------------- |
 | **Node 20+** | Run `node -v` in terminal. You should see `v20` or higher. |
 | **A Vite + React app** | Usually created with `pnpm create vite ... --template react-ts` |
-| **Tailwind CSS v3** | You have `tailwind.config.js` and use classes like `className="text-xl"` |
+| **Tailwind CSS v3 or v4** | v3: `tailwind.config.js` and `@tailwind` in CSS. v4: often `@import "tailwindcss"` in CSS (no config file required). |
 | **pnpm** | You install packages with `pnpm` (not only `npm`) |
 
 If you are starting from zero, use **“Brand new test project”** at the bottom of this guide first.
@@ -68,37 +70,7 @@ export default defineConfig({
 
 ---
 
-## Step 3 — So the Nuvio UI looks styled (Tailwind)
-
-**File:** `tailwind.config.js` (or `tailwind.config.ts`)
-
-Find the `content:` array. Add this **one extra line** inside it:
-
-```js
-"./node_modules/@nuvio/overlay/dist/**/*.js",
-```
-
-**Example** — your `content` might look like this when done:
-
-```js
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@nuvio/overlay/dist/**/*.js",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-```
-
-**If you skip this:** the Nuvio panel may show up as plain unstyled text.
-
----
-
-## Step 4 — Show the Nuvio bar on your page
+## Step 3 — Show the Nuvio bar on your page
 
 **File:** usually `src/App.tsx`
 
@@ -123,7 +95,7 @@ export default function App() {
 
 ---
 
-## Step 5 — Mark what you want to edit
+## Step 4 — Mark what you want to edit
 
 On any element you want to click and edit, add **`data-nuvio-id`** with a short unique name.
 
@@ -144,9 +116,26 @@ On any element you want to click and edit, add **`data-nuvio-id`** with a short 
 - Do **not** use random IDs that change every refresh.
 - Keep `className="..."` as normal text in quotes on that same tag if you want to edit Tailwind classes.
 
+### Card pattern (recommended for v0.3+)
+
+Use one host id for the card and explicit child ids for label/value text:
+
+```tsx
+<div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">
+  <p data-nuvio-id="metric.orders.label">Orders</p>
+  <h3 data-nuvio-id="metric.orders.value">5,359</h3>
+</div>
+```
+
+Why this matters:
+
+- You can select the card host first, then choose **Text target** (`label` or `value`).
+- You can keep **Style target** on the card container for spacing/background edits.
+- Duplicate ids block writes. Every repeated card needs unique ids (`.copy`, `.copy2`, ...).
+
 ---
 
-## Step 6 — Run and try it
+## Step 5 — Run and try it
 
 ```bash
 pnpm dev
@@ -166,6 +155,18 @@ Open the URL it prints (often `http://localhost:5173`).
 
 You should see the page update and your file change in the editor (Cursor/VS Code).
 
+The chip shows **diagnostics** (Vite channel, indexed id count, file/line, className patchability, risk level) when something is wrong — read those messages before guessing.
+
+---
+
+## Tailwind v4 apps
+
+If your app uses **Tailwind CSS v4** (CSS-first, `@import "tailwindcss"`):
+
+- You still follow **Steps 1–5** above.
+- You do **not** add `./node_modules/@nuvio/overlay/dist/**/*.js` to Tailwind `content`.
+- Nuvio overlay UI is **self-contained** (Shadow DOM + bundled CSS).
+
 ---
 
 ## Brand new test project (no existing app?)
@@ -182,7 +183,7 @@ npx tailwindcss init -p
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
 
-Then do **Steps 2–6** above.
+Then do **Steps 2–5** above.
 
 In `src/index.css`, make sure you have Tailwind’s three lines at the top:
 
@@ -203,17 +204,25 @@ Add at least one `data-nuvio-id` in `src/App.tsx`, run `pnpm dev`, and test **Ed
 - You forgot `data-nuvio-id` on your elements, or
 - The id is not in a `.tsx` / `.jsx` file under `src/`
 
-Add an id, save, restart `pnpm dev`.
+Add an id, save, restart `pnpm dev`. The diagnostics line will say **0 ids indexed**.
 
-### Nuvio panel looks broken / no colors
+### Nuvio panel looks broken / clipped / off-screen
 
-You probably missed **Step 3** (the Tailwind `content` line). Add it, save, restart `pnpm dev`.
+On **v0.2+** this is usually **not** a missing Tailwind `content` line. Try:
+
+- **Reset position** on the chip or editor header.
+- Hard-refresh the browser (`Cmd+Shift+R` on Mac).
+- Restart `pnpm dev`.
+
+If you are on **Nuvio 0.1.x**, add the overlay path to Tailwind `content` (see [COMPATIBILITY.md](./COMPATIBILITY.md)).
 
 ### **Validate** or **Apply** is greyed out
 
 - Turn **Edit** on first.
 - Click an element that has `data-nuvio-id`.
-- If it still fails: stop the terminal (`Ctrl+C`), run `pnpm dev` again, hard-refresh the browser (`Cmd+Shift+R` on Mac).
+- If class edits fail: `className` must be a **string literal** on that tag (not `cn(...)`).
+- If the chip warns about duplicates, rename duplicate ids first (for example `metric.orders.value.copy`).
+- If it still fails: stop the terminal (`Ctrl+C`), run `pnpm dev` again, hard-refresh the browser.
 
 ### Install command failed
 
@@ -232,13 +241,14 @@ Try Nuvio — edit your React app in the browser while it runs locally.
 1) In your Vite + React + Tailwind project:
    pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 
-2) Follow the simple guide (5 setup steps + how to use Edit/Validate/Apply):
+2) Follow the simple guide (setup + Edit/Validate/Apply):
    [paste link to this file in your repo]
 
 3) Packages on npm:
    https://www.npmjs.com/org/nuvio
 
 Works on your machine only — not for production deploys.
+No Tailwind content hack for the overlay on v0.2+.
 ```
 
 **Best way to onboard someone:**
@@ -260,6 +270,7 @@ Works on your machine only — not for production deploys.
 | Save a change | **Validate** → **Apply** |
 | Undo | **Undo last** on the chip |
 | Mark editable UI | `data-nuvio-id="something.unique"` on the tag |
+| Fix clipped UI | **Reset position** on chip/editor |
 
 ---
 
@@ -267,4 +278,6 @@ Works on your machine only — not for production deploys.
 
 - Known limits: [LIMITATIONS.md](./LIMITATIONS.md)
 - Supported versions: [COMPATIBILITY.md](./COMPATIBILITY.md)
+- Maintainer dogfood (v0.2 fixtures): [DOGFOOD.md](./DOGFOOD.md)
 - Dev-only behavior: [DEV_ONLY.md](./DEV_ONLY.md)
+- v0.2.0 engineering spec: [nuvio_v0.2.0.md](./nuvio_v0.2.0.md)

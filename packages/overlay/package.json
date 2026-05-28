@@ -1,6 +1,6 @@
 {
   "name": "@nuvio/overlay",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.0",
   "description": "Nuvio dev overlay: edit mode, selection, Editor panel, Validate/Apply/Undo against the Vite dev server.",
   "license": "MIT",
   "repository": {
@@ -14,20 +14,21 @@
   },
   "files": ["dist", "README.md"],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": ["./dist/index.js", "./dist/style.css"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/index.tsx --format esm --dts --external react --external react-dom --external @nuvio/shared",
+    "build": "tsup",
     "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",

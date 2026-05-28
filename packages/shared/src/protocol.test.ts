@@ -80,6 +80,27 @@ describe("parseClientMessage", () => {
     });
   });
 
+  it("accepts patchApply with activeBreakpoint", () => {
+    const msg = parseClientMessage(
+      JSON.stringify({
+        type: "patchApply",
+        protocolVersion: PROTOCOL_VERSION,
+        requestId: "r3c",
+        id: "hero.title",
+        ops: [{ kind: "mergeTailwindClassName", classNameFragment: "p-6" }],
+        activeBreakpoint: "md",
+      }),
+    );
+    expect(msg).toEqual({
+      type: "patchApply",
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: "r3c",
+      id: "hero.title",
+      ops: [{ kind: "mergeTailwindClassName", classNameFragment: "p-6" }],
+      activeBreakpoint: "md",
+    });
+  });
+
   it("accepts patchApply with Phase 4 structural ops", () => {
     const msg = parseClientMessage(
       JSON.stringify({
@@ -135,6 +156,21 @@ describe("server messages", () => {
     });
   });
 
+  it("round-trips pong with diagnostics", () => {
+    const msg: ServerMessage = {
+      type: "pong",
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: "r1",
+      diagnostics: {
+        viteVersion: "6.0.0",
+        reactVersion: "19.0.0",
+        tailwindVersion: "4.0.0",
+        overlayCssMode: "self-contained",
+      },
+    };
+    expect(parseServerMessage(serializeServerMessage(msg))).toEqual(msg);
+  });
+
   it("parses indexReady", () => {
     const msg: ServerMessage = {
       type: "indexReady",
@@ -144,6 +180,37 @@ describe("server messages", () => {
         { id: "a", file: "/x/A.tsx", line: 1, column: 0 },
       ],
       duplicateErrors: [],
+    };
+    expect(parseServerMessage(serializeServerMessage(msg))).toEqual(msg);
+  });
+
+  it("parses indexReady v2 entries and diagnostics", () => {
+    const msg: ServerMessage = {
+      type: "indexReady",
+      protocolVersion: PROTOCOL_VERSION,
+      indexVersion: 1,
+      entries: [
+        {
+          id: "hero.title",
+          file: "/x/Hero.tsx",
+          line: 4,
+          column: 8,
+          tagName: "h1",
+          componentName: "Hero",
+          hasLiteralClassName: true,
+          classNameValue: "text-xl",
+          textEditable: true,
+          structuralEditable: true,
+          riskLevel: "safe",
+          unsupportedReasons: [],
+          insideMap: false,
+        },
+      ],
+      duplicateErrors: [],
+      diagnostics: {
+        viteVersion: "6.0.0",
+        overlayCssMode: "self-contained",
+      },
     };
     expect(parseServerMessage(serializeServerMessage(msg))).toEqual(msg);
   });
@@ -208,5 +275,74 @@ describe("server messages", () => {
       undoStackDepth: 0,
     };
     expect(parseServerMessage(serializeServerMessage(msg))).toEqual(msg);
+  });
+
+  it("parses index v3 textTargets on indexReady and selectAck", () => {
+    const indexMsg: ServerMessage = {
+      type: "indexReady",
+      protocolVersion: PROTOCOL_VERSION,
+      indexVersion: 2,
+      entries: [
+        {
+          id: "metric.orders.card",
+          file: "/x/Card.tsx",
+          line: 10,
+          column: 4,
+          textTargets: [
+            {
+              key: "metric.orders.label",
+              label: "h3 · Orders",
+              file: "/x/Card.tsx",
+              line: 11,
+              column: 6,
+              tagName: "h3",
+              textEditable: true,
+              textPreview: "Orders",
+              nuvioId: "metric.orders.label",
+              patchHostId: "metric.orders.label",
+            },
+          ],
+          styleTargets: [
+            {
+              key: "host",
+              label: "div · container",
+              file: "/x/Card.tsx",
+              line: 10,
+              column: 4,
+              tagName: "div",
+              nuvioId: "metric.orders.card",
+              patchHostId: "metric.orders.card",
+              classNamePatchable: true,
+            },
+          ],
+          hierarchyRole: "card",
+          parentHostId: "dashboard.metrics",
+          childTargetIds: ["metric.orders.label"],
+          patchHostId: "metric.orders.card",
+          primaryTextTargetKey: "metric.orders.label",
+        },
+      ],
+      duplicateErrors: [],
+    };
+    expect(parseServerMessage(serializeServerMessage(indexMsg))).toEqual(indexMsg);
+
+    const selectMsg: ServerMessage = {
+      type: "selectAck",
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: "s1",
+      id: "metric.orders.card",
+      ok: true,
+      file: "/x/Card.tsx",
+      line: 10,
+      column: 4,
+      textTargets: indexMsg.entries[0]?.textTargets,
+      styleTargets: indexMsg.entries[0]?.styleTargets,
+      hierarchyRole: "card",
+      parentHostId: "dashboard.metrics",
+      childTargetIds: ["metric.orders.label"],
+      patchHostId: "metric.orders.card",
+      primaryTextTargetKey: "metric.orders.label",
+    };
+    expect(parseServerMessage(serializeServerMessage(selectMsg))).toEqual(selectMsg);
   });
 });

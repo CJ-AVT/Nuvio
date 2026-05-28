@@ -9,9 +9,12 @@ import { applyPatchToSource } from "@nuvio/ast-engine";
 import {
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
+  type IndexWireEntry,
+  type RuntimeDiagnostics,
   parseClientMessage,
   serializeServerMessage,
 } from "@nuvio/shared";
+import { readRuntimeVersions } from "./read-dep-version.js";
 import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
 import {
@@ -44,6 +47,7 @@ function nuvioWsMessageToText(data: unknown): string {
 function supplementIndexFromAppTsx(
   serverRoot: string,
   built: BuildSourceIndexResult,
+  classNameMode: "literal-only" | "cn-basic",
   emitWarn: (msg: string) => void = console.warn,
 ): BuildSourceIndexResult {
   if (built.entries.length > 0) {
@@ -56,7 +60,7 @@ function supplementIndexFromAppTsx(
     }
     try {
       const code = fs.readFileSync(appTsx, "utf8");
-      const hits = extractIdsFromSource(appTsx, code);
+      const hits = extractIdsFromSource(appTsx, code, { classNameMode });
       if (hits.length === 0) {
         continue;
       }
@@ -77,10 +81,14 @@ function supplementIndexFromAppTsx(
 }
 
 export interface NuvioPluginOptions {
+  /** Master switch; false disables index + WS server. */
+  enabled?: boolean;
   /** Glob patterns relative to Vite config root (see DEFAULT_GLOBS). */
   scanGlobs?: string[];
   /** Log client ops (no source file contents). */
   verbose?: boolean;
+  /** className parsing mode: strict literals (default) or simple cn/clsx strings. */
+  classNameMode?: "literal-only" | "cn-basic";
 }
 
 /**
@@ -113,20 +121,27 @@ function isAllowedOrigin(origin: string | undefined): boolean {
  * Nuvio Vite plugin — Phase 1: WebSocket protocol + dev-time source index + selection ack.
  */
 export function nuvio(options?: NuvioPluginOptions): Plugin {
+  const envEnabled = process.env.NUVIO !== "0";
+  const enabled = options?.enabled ?? envEnabled;
   const scanGlobs = options?.scanGlobs ?? DEFAULT_GLOBS;
   const verbose = options?.verbose ?? false;
+  const classNameMode = options?.classNameMode ?? "literal-only";
 
   let indexVersion = 0;
   let cachedIndexPayload: string | null = null;
-  const idToEntry = new Map<
-    string,
-    { id: string; file: string; line: number; column: number }
-  >();
+  let runtimeDiagnostics: RuntimeDiagnostics = { overlayCssMode: "self-contained" };
+  const idToEntry = new Map<string, IndexWireEntry>();
 
   return {
     name: "nuvio",
     apply: "serve",
     configureServer(server) {
+      if (!enabled) {
+        server.config.logger.info(
+          "[Nuvio] disabled (set `NUVIO=1` or `nuvio({ enabled: true })` to enable).",
+        );
+        return;
+      }
       const log: Logger = server.config.logger;
       const fromConfigFile =
         typeof server.config.configFile === "string"
@@ -152,10 +167,12 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       };
 
       const rebuildIndex = (): void => {
-        let built = pickBestSourceIndex(rootCandidates, scanGlobs);
-        built = supplementIndexFromAppTsx(serverRoot, built, log.warn);
+        let built = pickBestSourceIndex(rootCandidates, scanGlobs, { classNameMode });
+        built = supplementIndexFromAppTsx(serverRoot, built, classNameMode, log.warn);
         if (built.entries.length === 0) {
-          const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"]);
+          const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], {
+            classNameMode,
+          });
           if (fallback.entries.length > 0) {
             log.warn(
               `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)) from ${serverRoot}.`,
@@ -169,12 +186,19 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           idToEntry.set(e.id, e);
         }
 
+        const versions = readRuntimeVersions(serverRoot);
+        runtimeDiagnostics = {
+          ...versions,
+          overlayCssMode: "self-contained",
+        };
+
         cachedIndexPayload = serializeServerMessage({
           type: "indexReady",
           protocolVersion: PROTOCOL_VERSION,
           indexVersion,
           entries: built.entries,
           duplicateErrors: built.duplicateErrors,
+          diagnostics: runtimeDiagnostics,
         });
 
         if (verbose) {
@@ -191,7 +215,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           );
         } else {
           log.info(
-            `[Nuvio] index v${indexVersion} — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`,
+            `[Nuvio] index v2 — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`,
           );
         }
 
@@ -287,6 +311,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
                 type: "pong",
                 protocolVersion: PROTOCOL_VERSION,
                 requestId: msg.requestId,
+                diagnostics: runtimeDiagnostics,
               }),
             );
             if (cachedIndexPayload) {
@@ -325,6 +350,13 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
                 file: entry.file,
                 line: entry.line,
                 column: entry.column,
+                patchHostId: entry.patchHostId,
+                primaryTextTargetKey: entry.primaryTextTargetKey,
+                textTargets: entry.textTargets,
+                styleTargets: entry.styleTargets,
+                hierarchyRole: entry.hierarchyRole,
+                parentHostId: entry.parentHostId,
+                childTargetIds: entry.childTargetIds,
               }),
             );
             return;
@@ -433,7 +465,10 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
               );
               return;
             }
-            const result = await applyPatchToSource(source, entry.file, msg.id, msg.ops);
+            const result = await applyPatchToSource(source, entry.file, msg.id, msg.ops, {
+              classNameMode,
+              activeBreakpoint: msg.activeBreakpoint,
+            });
             if (!result.ok) {
               ws.send(
                 serializeServerMessage({

@@ -7,6 +7,7 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "dev": "pnpm build && pnpm --filter @nuvio/demo-app dev",
+    "dev:tailadmin": "pnpm build && pnpm --filter @nuvio/tailadmin-dogfood dev",
     "dogfood": "pnpm build && pnpm typecheck && pnpm test && pnpm --filter @nuvio/demo-app build",
     "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",
     "publish:stable": "pnpm -r publish --filter \"./packages/*\" --access public"
@@ -17,5 +18,20 @@
   "devDependencies": {
     "@types/node": "^22.13.5",
     "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-helmet-async": {
+        "react": "^16.8.0 || ^17 || ^18 || ^19"
+      },
+      "@react-jvectormap/core": {
+        "react": "^16.8.0 || ^17 || ^18 || ^19",
+        "react-dom": "^16.8.0 || ^17 || ^18 || ^19"
+      },
+      "@react-jvectormap/world": {
+        "react": "^16.8.0 || ^17 || ^18 || ^19",
+        "react-dom": "^16.8.0 || ^17 || ^18 || ^19"
+      }
+    }
   }
 }

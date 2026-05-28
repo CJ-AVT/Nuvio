@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "description": "Paths locked after v0.3.0-alpha implementation. Agents must not edit these unless the user explicitly unlocks in the current message.",
+  "unlockPhrases": [
+    "unlock implementation lock",
+    "unlock locked code",
+    "unlock all locked code",
+    "unlock:"
+  ],
+  "scopes": [
+    {
+      "id": "overlay-v0.3",
+      "description": "Nuvio overlay v0.3: target routing, Tailwind depth, breakpoint/device UI",
+      "globs": ["packages/overlay/**"]
+    },
+    {
+      "id": "shared-v0.3",
+      "description": "Shared protocol/wire types including index v3 metadata and breakpoint context",
+      "globs": ["packages/shared/**"]
+    },
+    {
+      "id": "vite-plugin-v0.3",
+      "description": "Vite plugin v0.3: index v3, classNameMode, enabled/NUVIO gate, patch forwarding",
+      "globs": ["packages/vite-plugin/**"]
+    },
+    {
+      "id": "ast-engine-v0.3",
+      "description": "AST patch engine v0.3: whitelist depth, cn-basic, breakpoint-aware merge helpers",
+      "globs": ["packages/ast-engine/**"]
+    },
+    {
+      "id": "demo-app",
+      "description": "demo-app Nuvio fixture and wiring",
+      "globs": ["apps/demo-app/**"]
+    },
+    {
+      "id": "tailwind-v4-test",
+      "description": "Tailwind v4 test fixture",
+      "globs": ["apps/tailwind-v4-test/**"]
+    },
+    {
+      "id": "tailadmin-dogfood",
+      "description": "TailAdmin dogfood fixture",
+      "globs": ["apps/tailadmin-dogfood/**"]
+    }
+  ],
+  "exemptFromLock": [
+    "docs/IMPLEMENTATION_LOCK.md",
+    ".nuvio/implementation-lock.json",
+    ".cursor/rules/implementation-lock.mdc"
+  ]
+}

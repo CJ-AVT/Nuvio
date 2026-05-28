@@ -1,16 +1,105 @@
 import { z } from "zod";
 
 /** Bump when wire payloads change incompatibly. */
-export const PROTOCOL_VERSION = 4 as const;
+export const PROTOCOL_VERSION = 5 as const;
+
+export const riskLevelSchema = z.enum(["safe", "caution", "unsupported"]);
+
+export type RiskLevel = z.infer<typeof riskLevelSchema>;
+
+/** Index v3: editable text node under an instrumented host (Step 1). */
+export const textTargetSchema = z.object({
+  /** Stable within host: `data-nuvio-id` or `loc:line:column`. */
+  key: z.string(),
+  label: z.string(),
+  file: z.string(),
+  line: z.number().int(),
+  column: z.number().int(),
+  tagName: z.string(),
+  textEditable: z.boolean(),
+  textPreview: z.string().optional(),
+  /** Present when the text node has its own `data-nuvio-id`. */
+  nuvioId: z.string().optional(),
+  /** Host id used for `mergeTailwindClassName` when patching styles for this target. */
+  patchHostId: z.string(),
+  insideMap: z.boolean().optional(),
+});
+
+export type TextWireTarget = z.infer<typeof textTargetSchema>;
+
+/** Index v3: explicit style patch target under an instrumented host. */
+export const styleTargetSchema = z.object({
+  /** Stable key within host: `data-nuvio-id` or `host` for selected container. */
+  key: z.string(),
+  label: z.string(),
+  file: z.string(),
+  line: z.number().int(),
+  column: z.number().int(),
+  tagName: z.string(),
+  nuvioId: z.string(),
+  patchHostId: z.string(),
+  classNamePatchable: z.boolean(),
+  riskLevel: riskLevelSchema.optional(),
+});
+
+export type StyleWireTarget = z.infer<typeof styleTargetSchema>;
+
+export const hierarchyRoleSchema = z.enum([
+  "section",
+  "card",
+  "form",
+  "group",
+  "layout",
+  "text",
+  "button",
+  "input",
+  "media",
+  "unknown",
+]);
+
+export type HierarchyRole = z.infer<typeof hierarchyRoleSchema>;
 
 export const indexEntrySchema = z.object({
   id: z.string(),
   file: z.string(),
   line: z.number().int(),
   column: z.number().int(),
+  /** Source index v2 metadata */
+  tagName: z.string().optional(),
+  componentName: z.string().optional(),
+  hasLiteralClassName: z.boolean().optional(),
+  classNameValue: z.string().optional(),
+  textEditable: z.boolean().optional(),
+  structuralEditable: z.boolean().optional(),
+  riskLevel: riskLevelSchema.optional(),
+  unsupportedReasons: z.array(z.string()).optional(),
+  insideMap: z.boolean().optional(),
+  /** Index v3: default id for className patches on this host. */
+  patchHostId: z.string().optional(),
+  /** Index v3: preferred text target key in `textTargets`. */
+  primaryTextTargetKey: z.string().optional(),
+  /** Index v3: descendant (and host) text edit targets. */
+  textTargets: z.array(textTargetSchema).optional(),
+  /** Index v3: explicit style patch targets for this selected host. */
+  styleTargets: z.array(styleTargetSchema).optional(),
+  /** Index v3: coarse host role, used for defaults/hints only. */
+  hierarchyRole: hierarchyRoleSchema.optional(),
+  /** Index v3: nearest ancestor host id in JSX ownership hierarchy. */
+  parentHostId: z.string().optional(),
+  /** Index v3: descendant host ids under this host (if any). */
+  childTargetIds: z.array(z.string()).optional(),
 });
 
 export type IndexWireEntry = z.infer<typeof indexEntrySchema>;
+
+export const runtimeDiagnosticsSchema = z.object({
+  viteVersion: z.string().optional(),
+  reactVersion: z.string().optional(),
+  tailwindVersion: z.string().optional(),
+  overlayCssMode: z.literal("self-contained").optional(),
+});
+
+export type RuntimeDiagnostics = z.infer<typeof runtimeDiagnosticsSchema>;
 
 export const duplicateIdOccurrenceSchema = z.object({
   file: z.string(),
@@ -78,6 +167,8 @@ export const patchOpSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type PatchOp = z.infer<typeof patchOpSchema>;
+export const breakpointSchema = z.enum(["base", "sm", "md", "lg", "xl"]);
+export type Breakpoint = z.infer<typeof breakpointSchema>;
 
 export const clientPatchApplySchema = z.object({
   type: z.literal("patchApply"),
@@ -85,6 +176,8 @@ export const clientPatchApplySchema = z.object({
   requestId: z.string().min(1),
   id: z.string().min(1),
   ops: z.array(patchOpSchema).min(1),
+  /** Optional responsive context for className merges. */
+  activeBreakpoint: breakpointSchema.optional(),
   /** When true, server validates and returns `patchAck` with `diffSummary` but does not write disk or push undo. */
   dryRun: z.boolean().optional(),
 });
@@ -112,6 +205,7 @@ export const serverPongSchema = z.object({
   type: z.literal("pong"),
   protocolVersion: z.number().int(),
   requestId: z.string(),
+  diagnostics: runtimeDiagnosticsSchema.optional(),
 });
 
 export const serverErrorSchema = z.object({
@@ -127,6 +221,7 @@ export const serverIndexReadySchema = z.object({
   indexVersion: z.number().int(),
   entries: z.array(indexEntrySchema),
   duplicateErrors: z.array(duplicateIdErrorSchema),
+  diagnostics: runtimeDiagnosticsSchema.optional(),
 });
 
 export type ServerIndexReady = z.infer<typeof serverIndexReadySchema>;
@@ -140,6 +235,14 @@ export const serverSelectAckSchema = z.object({
   file: z.string().optional(),
   line: z.number().int().optional(),
   column: z.number().int().optional(),
+  /** Index v3 snapshot for the selected host (also on `indexReady` entries). */
+  patchHostId: z.string().optional(),
+  primaryTextTargetKey: z.string().optional(),
+  textTargets: z.array(textTargetSchema).optional(),
+  styleTargets: z.array(styleTargetSchema).optional(),
+  hierarchyRole: hierarchyRoleSchema.optional(),
+  parentHostId: z.string().optional(),
+  childTargetIds: z.array(z.string()).optional(),
   errorCode: z.string().optional(),
   errorMessage: z.string().optional(),
 });

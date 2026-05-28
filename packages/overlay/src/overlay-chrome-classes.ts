@@ -1,25 +1,43 @@
 import type { CSSProperties } from "react";
 
-/** Tailwind chrome frame (borders/shadow). Frosting uses inline styles for Safari `-webkit-backdrop-filter`. */
-export const NUVO_GLASS_FRAME =
-  "border border-white/20 shadow-2xl shadow-black/50 ring-1 ring-white/10";
+/** Root wrapper — scopes self-contained overlay.css */
+export const NUVO_ROOT = "nuvio-root";
 
-export const NUVO_GLASS_HEADER = "border-b border-white/10";
+/** Glass Pro shell (chip + editor). */
+export const NUVO_GLASS_SHELL = "nuvio-glass-shell";
+export const NUVO_GLASS_CONTENT = "nuvio-glass-content";
+export const NUVO_CARD = "nuvio-card";
 
-export const NUVO_GLASS_SECTION =
-  "rounded-lg border border-white/10 bg-slate-950/30 backdrop-blur-md";
+/** @deprecated Use NUVO_GLASS_SHELL */
+export const NUVO_CHROME_SURFACE = NUVO_GLASS_SHELL;
+/** @deprecated Use NUVO_CARD */
+export const NUVO_CHROME_SECTION = NUVO_CARD;
+/** @deprecated Alias */
+export const NUVO_CHROME_HEADER = "nuvio-panel-header";
+/** @deprecated Alias for NUVO_GLASS_SHELL */
+export const NUVO_GLASS_FRAME = NUVO_GLASS_SHELL;
+/** @deprecated Alias for NUVO_CARD */
+export const NUVO_GLASS_SECTION = NUVO_CARD;
+/** @deprecated Alias for NUVO_CHROME_HEADER */
+export const NUVO_GLASS_HEADER = NUVO_CHROME_HEADER;
 
 /**
- * True glass: translucent fill + backdrop blur (incl. WebKit).
- * Apply on chip and Editor shells via `style={NUVO_GLASS_SURFACE_STYLE}`.
+ * Inline backdrop (Safari / Shadow DOM need filter on the painted element).
+ * Background/border come from `.nuvio-glass-shell` in overlay.css.
  */
-export const NUVO_GLASS_SURFACE_STYLE: CSSProperties = {
-  backgroundColor: "rgba(2, 6, 23, 0.45)",
-  WebkitBackdropFilter: "blur(24px) saturate(180%)",
-  backdropFilter: "blur(24px) saturate(180%)",
+export const NUVO_GLASS_SHELL_INLINE: CSSProperties = {
+  WebkitBackdropFilter: "blur(24px) saturate(160%)",
+  backdropFilter: "blur(24px) saturate(160%)",
 };
 
-/** @deprecated Use NUVO_GLASS_FRAME + NUVO_GLASS_SURFACE_STYLE */
-export const NUVO_GLASS_PANEL = NUVO_GLASS_FRAME;
+/** @deprecated Use NUVO_GLASS_SHELL_INLINE */
+export const NUVO_LIQUID_GLASS_SURFACE = NUVO_GLASS_SHELL_INLINE;
 
-export const NUVO_GLASS_CHIP = NUVO_GLASS_FRAME;
+/** @deprecated Use NUVO_GLASS_SHELL_INLINE */
+export const NUVO_GLASS_SURFACE_STYLE = NUVO_GLASS_SHELL_INLINE;
+
+/** @deprecated Use NUVO_GLASS_SHELL */
+export const NUVO_GLASS_PANEL = NUVO_GLASS_SHELL;
+
+/** @deprecated Use NUVO_GLASS_SHELL */
+export const NUVO_GLASS_CHIP = NUVO_GLASS_SHELL;

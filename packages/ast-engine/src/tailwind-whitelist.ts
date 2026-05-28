@@ -27,11 +27,18 @@ const ROUNDED = /^rounded$|^rounded-(none|sm|md|lg|xl|2xl|3xl|full)$/;
 const LAYOUT = /^(flex|inline-flex|block|inline|inline-block|grid|inline-grid|hidden|contents)$/;
 
 const FLEX = /^(flex-row|flex-col|flex-wrap|flex-1|grow|shrink|basis-0|items-(start|end|center|baseline|stretch)|justify-(start|end|center|between|around|evenly))$/;
+const GRID_COLS = /^grid-cols-(1|2|3|4|5|6|7|8|9|10|11|12)$/;
 
 const BORDER_W = /^border(-(0|2|4|8))?$/;
+const BORDER_COLOR =
+  /^border-(inherit|current|transparent|black|white|(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950))$/;
+const RING = /^ring(-(0|1|2|4|8))?$/;
+const RING_COLOR =
+  /^ring-(inherit|current|transparent|black|white|(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950))$/;
 
 /** Text alignment (PRD full MVP typography). */
 const TEXT_ALIGN = /^text-(left|center|right|justify|start|end)$/;
+const TRACKING = /^tracking-(tighter|tight|normal|wide|wider|widest)$/;
 
 /** Opacity scale (Tailwind v3 default steps). */
 const OPACITY = /^opacity-(0|5|10|15|20|25|30|40|50|60|70|75|80|90|95|100)$/;
@@ -81,8 +88,13 @@ export function validateTailwindFragment(fragment: string): void {
       ROUNDED.test(t) ||
       LAYOUT.test(t) ||
       FLEX.test(t) ||
+      GRID_COLS.test(t) ||
       BORDER_W.test(t) ||
+      BORDER_COLOR.test(t) ||
+      RING.test(t) ||
+      RING_COLOR.test(t) ||
       TEXT_ALIGN.test(t) ||
+      TRACKING.test(t) ||
       OPACITY.test(t) ||
       SHADOW.test(t) ||
       W_WIDTH.test(t) ||

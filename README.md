@@ -2,7 +2,9 @@
 
 Visual editing layer for React + Vite + Tailwind: localhost overlay, source-backed patches (see `docs/PRD.md` and `docs/implPlan.md`).
 
-**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT · **Release:** [v0.1.0](https://github.com/ehah/Nuvio/releases/tag/v0.1.0)
+`0.3.0-alpha.0` focus: hierarchy-first targeting, deeper Tailwind controls, and breakpoint-aware class patches for real dashboard workflows.
+
+**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT · **Release:** `0.3.0-alpha.0` (Phase B) · **Stable:** [v0.1.0](https://github.com/ehah/Nuvio/releases/tag/v0.1.0) (`latest`)
 
 ## Install in your project (~5 minutes)
 
@@ -10,7 +12,9 @@ Visual editing layer for React + Vite + Tailwind: localhost overlay, source-back
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
 
-You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x** configured for that app.
+You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x or 4.x** on the host app.
+
+**v0.2+ (monorepo / upcoming alpha):** overlay UI is **self-contained** — you do **not** add `@nuvio/overlay` to Tailwind `content`. See [nuvioUser.md](docs/nuvioUser.md).
 
 ### 1. Install packages
 
@@ -34,25 +38,7 @@ export default defineConfig({
 
 Optional: `nuvio({ scanGlobs: ["src/**/*.{tsx,jsx}"], verbose: process.env.NUVIO_VERBOSE === "1" })`.
 
-### 3. Tailwind must see overlay classes
-
-Add the published overlay bundle to Tailwind **`content`** (paths are relative to your Tailwind config file):
-
-```js
-// tailwind.config.js
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@nuvio/overlay/dist/**/*.js",
-  ],
-  // ...
-};
-```
-
-Without this step, the overlay UI loses utility classes and looks broken.
-
-### 4. Mount the dev shell once
+### 3. Mount the dev shell once
 
 ```tsx
 // e.g. App.tsx (root layout)
@@ -70,7 +56,7 @@ export default function App() {
 
 `NuvioDevShell` renders **nothing in production** (`import.meta.env.DEV`). The Vite plugin runs **only on `vite dev`**. Install both packages as **devDependencies** — see [DEV_ONLY.md](docs/DEV_ONLY.md).
 
-### 5. Instrument hosts
+### 4. Instrument hosts
 
 Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit. Ids must be **unique** in the scanned project. Use **string literal** `className="..."` on that same element for Tailwind patches (see [limitations](docs/LIMITATIONS.md)).
 
@@ -107,7 +93,7 @@ Open the printed localhost URL. Turn **Edit on** in the Nuvio chip:
 - **Full MVP:** layout/effect controls (gap, width, opacity, shadow, …), **Move up/down** on flex/grid siblings, **Hide / Show / Duplicate**, **Indexed elements** list
 - **Drag / collapse** the Editor panel and Nuvio chip (layout saved in `localStorage`)
 
-**Wire protocol v4:** adds `moveSibling`, `setHidden`, `duplicateHost`. Rebuild packages (`pnpm build`) after upgrading.
+**Wire protocol v5** (v0.2 monorepo): index v2 metadata + diagnostics. **v4** on npm `0.1.0`: `moveSibling`, `setHidden`, `duplicateHost`. Rebuild packages (`pnpm build`) after upgrading.
 
 ### Full MVP quick test (demo app)
 
@@ -115,7 +101,7 @@ Open the printed localhost URL. Turn **Edit on** in the Nuvio chip:
 2. **Move down** — cards swap in the row (auto-applies to `App.tsx`)
 3. **Undo last** on the Nuvio chip if needed
 
-Host apps that use **`@nuvio/overlay`** must include that package in **Tailwind `content` globs** (otherwise overlay utility classes are purged and the UI collapses into plain text). The demo does this in `apps/demo-app/tailwind.config.js`.
+**v0.2+:** overlay ships bundled CSS + Shadow DOM — `apps/demo-app` no longer lists `@nuvio/overlay` in Tailwind `content`. **0.1.x on npm:** still requires that `content` line (see [COMPATIBILITY.md](docs/COMPATIBILITY.md)).
 
 ### `nuvio()` plugin options (optional)
 
@@ -155,6 +141,7 @@ The demo app’s `tsconfig.json` maps **`@nuvio/overlay`** and **`@nuvio/vite-pl
 | `pnpm typecheck` | Typecheck every package and app               |
 | `pnpm test`   | Run Vitest in packages that define tests         |
 | `pnpm dogfood` | Build + typecheck + test + demo production build (release gate) |
+| `pnpm dev:tailadmin` | Build packages + TailAdmin dogfood app (`apps/tailadmin-dogfood`) |
 | `pnpm publish:stable` | Publish `@nuvio/*` to npm **`latest`** (maintainers) |
 | `pnpm publish:alpha` | Publish with **`alpha`** dist-tag (maintainers) |
 

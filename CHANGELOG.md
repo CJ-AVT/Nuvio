@@ -4,13 +4,58 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ## [Unreleased]
 
+## [0.3.0-alpha.0] — 2026-05-28 (Phase B — stack mastery alpha)
+
+Phase B per [nuvio_v0.3.0.md](docs/nuvio_v0.3.0.md): hierarchy-first targeting, Tailwind depth, responsive breakpoint-aware patching, and hardening gates on real dashboard fixtures.
+
+### Added
+
+- **Index v3 targeting metadata** on wire/index: `textTargets`, `styleTargets`, `patchHostId`, hierarchy hints.
+- **Overlay target routing**: explicit text/style target resolution with host-vs-child patch labels.
+- **ComponentTree upgrades**: risk filters, duplicate-id diagnostics, host grouping.
+- **Tailwind depth controls**: expanded spacing/layout/typography/visual picks (line-height, letter-spacing, flex/grid, border/ring, axis spacing).
+- **Responsive pipeline**: active breakpoint context (`base|sm|md|lg|xl`) from overlay to patch engine.
+- **Breakpoint-aware AST helpers**: `parseClassNameByBreakpoint`, `mergeAtBreakpoint`.
+- **Plugin runtime gate**: `NUVIO=0` and `nuvio({ enabled: false })`.
+- **Telemetry spec doc**: [TELEMETRY.md](docs/TELEMETRY.md) (spec-only, opt-in model).
+
 ### Changed
 
-- Maintainer docs consolidated into [npmPublish.md](docs/npmPublish.md) (removed `PUBLISHING`, `GITHUB_AND_RELEASE`, `INSTALL_FROM_GITHUB`, `PUBLIC_RELEASE`).
-- Overlay UI: **Properties** panel renamed **Editor**; style flow button **Preview** renamed **Validate** (same `dryRun` behavior).
-- Editor **color pickers**: full Tailwind default palette (Figma-style swatch grid) for text and background utilities.
-- **Frosted-glass** overlay chrome (Editor + Nuvio chip); removed read-only Typography/Layout/Appearance inspector blocks.
-- **`NuvioDevShell`** returns `null` outside `import.meta.env.DEV`; [DEV_ONLY.md](docs/DEV_ONLY.md) documents deploy/git safety.
+- Public v0.3 editor remains **polish-only**: no public create/insert/duplicate UI actions.
+- Style validate flow now supports debounced style-only validation to reduce slider/color noise.
+- TailAdmin dogfood metric instrumentation aligned to host/label/value contract for predictable edits.
+- Shared package exports extended for protocol v0.3 types (`Breakpoint`, style/hierarchy target types).
+
+### Verification
+
+- `pnpm dogfood` passes with v0.3 changes (build + typecheck + test + demo build).
+- TailAdmin dogfood app build passes.
+
+## [0.2.0-alpha.0] — 2026-05-28 (Phase A — reliability)
+
+**Phase A** per [nuvio_v0.2.0.md](docs/nuvio_v0.2.0.md): host-agnostic overlay, Tailwind v4 + TailAdmin dogfood, source index v2. Install with npm **`alpha`** tag when published (maintainers: [npmPublish.md](docs/npmPublish.md), [DOGFOOD.md](docs/DOGFOOD.md) §v0.2).
+
+### Added
+
+- **Self-contained overlay CSS** (`@nuvio/overlay/style.css`) — no host Tailwind `content` entry for Nuvio UI.
+- **Shadow DOM** chrome (chip, editor, diagnostics) with injected overlay styles.
+- **Positioning v2**: collision-aware defaults, versioned `localStorage` keys (`nuvio:*:v2`), **Reset position**, offscreen saved positions ignored.
+- **Source index v2** (`PROTOCOL_VERSION` **5**): component name, literal `className`, map context, risk level, `unsupportedReasons` on `indexReady`.
+- **Runtime diagnostics**: Vite/React/Tailwind versions where detectable; duplicate id reporting; selection summary in editor.
+- **Monorepo fixtures**: `apps/tailwind-v4-test` (TW v4 CSS-first), `apps/tailadmin-dogfood` (TailAdmin dashboard).
+- **Docs**: [nuvioUser.md](docs/nuvioUser.md) simplified setup (§16); [COMPATIBILITY.md](docs/COMPATIBILITY.md), [DOGFOOD.md](docs/DOGFOOD.md) v0.2 checklists.
+
+### Changed
+
+- **`apps/demo-app`**: removed `@nuvio/overlay` from Tailwind `content` (overlay independence).
+- Overlay UI uses `nuvio-*` classes + CSS variables (host-agnostic).
+- Editor shows file, line, component, className patchability, and risk from index metadata.
+- Maintainer docs consolidated into [npmPublish.md](docs/npmPublish.md); overlay **Properties** → **Editor**; **Preview** → **Validate**; frosted-glass chrome; **`NuvioDevShell`** no-op outside `import.meta.env.DEV`.
+
+### Unchanged
+
+- Dev-only Vite integration; string-literal `className` on patched hosts; utility whitelist + `tailwind-merge`.
+- Validate (`dryRun`) → Apply → session **Undo last**; structural ops from 0.1.0 (`moveSibling`, `setHidden`, `duplicateHost`).
 
 ## [0.1.0] — 2026-05-24 (Full MVP — `latest` on npm)
 

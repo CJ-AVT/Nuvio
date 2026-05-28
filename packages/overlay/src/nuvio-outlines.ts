@@ -15,9 +15,20 @@ export function paintNuvioOutline(id: string, mode: "hover" | "selected"): void 
   if (!el) {
     return;
   }
+  paintNuvioOutlineElement(el, mode);
+}
+
+export function paintNuvioOutlineElement(
+  el: HTMLElement,
+  mode: "hover" | "selected" | "target-hover" | "target-active",
+): void {
   el.setAttribute("data-nuvio-outline", mode);
   if (mode === "selected") {
     el.style.outline = "2px solid rgb(14 165 233)";
+  } else if (mode === "target-active") {
+    el.style.outline = "2px solid rgb(34 211 238)";
+  } else if (mode === "target-hover") {
+    el.style.outline = "2px dashed rgb(103 232 249)";
   } else {
     el.style.outline = "2px dashed rgb(56 189 248)";
   }

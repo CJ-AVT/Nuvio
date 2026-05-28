@@ -30,6 +30,7 @@ Nuvio is a **local development tool**. It must not run in production builds or a
 - CI **`vite build`** / deploy pipeline: Nuvio plugin does not attach to production builds.
 - npm/pnpm **production install** (`--prod` / `NODE_ENV=production`): devDependencies (including Nuvio) are not installed on the server.
 - Optional: run `pnpm build` locally and confirm bundle inspect shows no overlay UI (or only dead code eliminated).
+- Optional CI hard-disable: set `NUVIO=0` (or `nuvio({ enabled: false })`) to skip Nuvio index + WS startup entirely.
 
 ## If you want zero Nuvio in `App.tsx`
 

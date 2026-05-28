@@ -9,7 +9,14 @@ import {
   type ReactElement,
   type RefObject,
 } from "react";
-import type { DuplicateIdError, IndexWireEntry, PatchOp } from "@nuvio/shared";
+import { createPortal } from "react-dom";
+import type {
+  Breakpoint,
+  DuplicateIdError,
+  IndexWireEntry,
+  PatchOp,
+  RuntimeDiagnostics,
+} from "@nuvio/shared";
 import {
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
@@ -18,22 +25,38 @@ import {
 import { InteractionLayer } from "./InteractionLayer.js";
 import {
   cornerAnchorPosition,
+  clampToViewport,
+  DEFAULT_OVERLAY_CHROME,
   loadOverlayChromePersist,
+  OVERLAY_CHROME_MARGIN,
   saveOverlayChromePersist,
   snapToNearestCorner,
   type ChipCorner,
   type OverlayChromePersist,
   type Point,
 } from "./overlay-chrome-storage.js";
-import { NUVO_GLASS_CHIP, NUVO_GLASS_SURFACE_STYLE } from "./overlay-chrome-classes.js";
+import {
+  NUVO_GLASS_CONTENT,
+  NUVO_GLASS_SHELL,
+  NUVO_GLASS_SHELL_INLINE,
+  NUVO_ROOT,
+} from "./overlay-chrome-classes.js";
 import { clearNuvioOutlines } from "./nuvio-outlines.js";
+import { pickDefaultTextTargetKey } from "./text-target-dom.js";
+import { useNuvioShadowMount } from "./NuvioShadowRoot.js";
 import { PropertyPanelShell } from "./PropertyPanelShell.js";
+import { NuvioChipStatus, type NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
 import { isStructuralOnlyOps } from "./structural-patch-ops.js";
 import { useChromeDrag } from "./useChromeDrag.js";
+import {
+  loadDeveloperDetails,
+  saveDeveloperDetails,
+} from "./developer-details-storage.js";
 
 type ChannelState = "idle" | "connecting" | "ready" | "error";
 
 type PendingPatch = { kind: "preview" | "apply"; opsFingerprint: string; ops: PatchOp[] };
+type DevicePreset = "desktop" | "tablet" | "mobile";
 
 function shortDisplayPath(absPath: string): string {
   const norm = absPath.replace(/\\/g, "/");
@@ -95,10 +118,15 @@ function assignRef<T extends HTMLElement>(
 }
 
 export function NuvioDevShellInner(): ReactElement {
+  const shadowMount = useNuvioShadowMount();
   const panelRef = useRef<HTMLElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
+  const shadowHostRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    shadowHostRef.current = shadowMount?.host ?? null;
+  }, [shadowMount]);
   const chromeRootRefs = useMemo(
-    () => [panelRef, chipRef] as const,
+    () => [panelRef, chipRef, shadowHostRef] as const,
     [],
   );
   const wsRef = useRef<WebSocket | null>(null);
@@ -106,7 +134,12 @@ export function NuvioDevShellInner(): ReactElement {
 
   const [chromeLayout, setChromeLayout] = useState<OverlayChromePersist>(loadOverlayChromePersist);
   const [chipPos, setChipPos] = useState<Point | null>(() =>
-    cornerAnchorPosition(loadOverlayChromePersist().chip.corner, 220, 120),
+    cornerAnchorPosition(
+      loadOverlayChromePersist().chip.corner,
+      220,
+      120,
+      OVERLAY_CHROME_MARGIN,
+    ),
   );
 
   const patchChrome = useCallback(
@@ -137,6 +170,10 @@ export function NuvioDevShellInner(): ReactElement {
     [patchChrome],
   );
 
+  const onResetPanelPosition = useCallback(() => {
+    patchChrome({ panel: { position: null, collapsed: false } });
+  }, [patchChrome]);
+
   const onChipCollapsedChange = useCallback(
     (collapsed: boolean) => {
       patchChrome({ chip: { collapsed } });
@@ -150,6 +187,15 @@ export function NuvioDevShellInner(): ReactElement {
     },
     [patchChrome],
   );
+
+  const onResetChipPosition = useCallback(() => {
+    const corner = DEFAULT_OVERLAY_CHROME.chip.corner;
+    patchChrome({ chip: { corner, collapsed: false } });
+    const el = chipRef.current;
+    if (el) {
+      setChipPos(cornerAnchorPosition(corner, el.offsetWidth, el.offsetHeight));
+    }
+  }, [patchChrome]);
 
   const anchorChipToCorner = useCallback(
     (corner: ChipCorner) => {
@@ -206,18 +252,79 @@ export function NuvioDevShellInner(): ReactElement {
       if (!chipDragging) {
         anchorChipToCorner(chromeLayout.chip.corner);
       }
+      const panelEl = panelRef.current;
+      const panelPos = chromeLayout.panel.position;
+      if (panelEl && panelPos) {
+        const clamped = clampToViewport(
+          panelPos.x,
+          panelPos.y,
+          panelEl.offsetWidth,
+          panelEl.offsetHeight,
+        );
+        if (clamped.x !== panelPos.x || clamped.y !== panelPos.y) {
+          onPanelPositionChange(clamped);
+        }
+      }
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [anchorChipToCorner, chipDragging, chromeLayout.chip.corner]);
+  }, [
+    anchorChipToCorner,
+    chipDragging,
+    chromeLayout.chip.corner,
+    chromeLayout.panel.position,
+    onPanelPositionChange,
+  ]);
+
+  // Clamp saved floating panel positions so chrome never renders off-screen.
+  useLayoutEffect(() => {
+    const panelPos = chromeLayout.panel.position;
+    if (!panelPos || !panelRef.current) {
+      return;
+    }
+    const panelEl = panelRef.current;
+    const clamped = clampToViewport(
+      panelPos.x,
+      panelPos.y,
+      panelEl.offsetWidth,
+      panelEl.offsetHeight,
+      OVERLAY_CHROME_MARGIN,
+    );
+    if (clamped.x !== panelPos.x || clamped.y !== panelPos.y) {
+      onPanelPositionChange(clamped);
+    }
+  }, [chromeLayout.panel.position, onPanelPositionChange]);
+
+  // Clamp chip if dragged off-screen after viewport resize.
+  useLayoutEffect(() => {
+    if (!chipPos || !chipRef.current || chipDragging) {
+      return;
+    }
+    const el = chipRef.current;
+    const clamped = clampToViewport(chipPos.x, chipPos.y, el.offsetWidth, el.offsetHeight);
+    if (clamped.x !== chipPos.x || clamped.y !== chipPos.y) {
+      setChipPos(clamped);
+    }
+  }, [chipPos, chipDragging]);
 
   const [editMode, setEditMode] = useState(false);
   const [channel, setChannel] = useState<ChannelState>("idle");
   const [knownIds, setKnownIds] = useState<ReadonlySet<string>>(new Set());
   const [indexEntries, setIndexEntries] = useState<readonly IndexWireEntry[]>([]);
   const [duplicateErrors, setDuplicateErrors] = useState<DuplicateIdError[]>([]);
+  const [runtimeDiagnostics, setRuntimeDiagnostics] = useState<RuntimeDiagnostics | null>(null);
+  const [developerDetails, setDeveloperDetails] = useState(() => loadDeveloperDetails());
+
+  const onDeveloperDetailsChange = useCallback((enabled: boolean) => {
+    setDeveloperDetails(enabled);
+    saveDeveloperDetails(enabled);
+  }, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [devicePreset, setDevicePreset] = useState<DevicePreset>("desktop");
+  const [activeBreakpoint, setActiveBreakpoint] = useState<Breakpoint>("base");
+  const [activeTextTargetKey, setActiveTextTargetKey] = useState<string | null>(null);
+  const [hoverTextTargetKey, setHoverTextTargetKey] = useState<string | null>(null);
   const [resolvedFile, setResolvedFile] = useState<string | undefined>(undefined);
   const [resolvedLine, setResolvedLine] = useState<number | undefined>(undefined);
   const [selectError, setSelectError] = useState<string | null>(null);
@@ -250,6 +357,21 @@ export function NuvioDevShellInner(): ReactElement {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
 
+  const selectedEntry = useMemo(
+    () => (selectedId ? indexEntries.find((e) => e.id === selectedId) : undefined),
+    [indexEntries, selectedId],
+  );
+
+  useEffect(() => {
+    if (!selectedId) {
+      setActiveTextTargetKey(null);
+      setHoverTextTargetKey(null);
+      return;
+    }
+    setActiveTextTargetKey(pickDefaultTextTargetKey(selectedEntry));
+    setHoverTextTargetKey(null);
+  }, [selectedId, selectedEntry]);
+
   const toggleEditMode = useCallback(() => {
     setEditMode((prev) => {
       if (prev) {
@@ -260,9 +382,10 @@ export function NuvioDevShellInner(): ReactElement {
     });
   }, []);
 
-  const sendPatchMessage = useCallback((ops: PatchOp[], dryRun: boolean) => {
+  const sendPatchMessage = useCallback(
+    (ops: PatchOp[], dryRun: boolean, patchHostId: string, bp: Breakpoint) => {
     const ws = wsRef.current;
-    const id = selectedIdRef.current;
+    const id = patchHostId.trim() || selectedIdRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN || !id) {
       if (dryRun) {
         setPreviewBusy(false);
@@ -309,13 +432,16 @@ export function NuvioDevShellInner(): ReactElement {
         requestId,
         id,
         ops,
+        activeBreakpoint: bp,
         ...(dryRun ? { dryRun: true } : {}),
       }),
     );
-  }, []);
+    },
+    [],
+  );
 
   const onRequestPreview = useCallback(
-    (ops: PatchOp[]) => {
+    (ops: PatchOp[], patchHostId: string) => {
       setStructuralPreviewActive(false);
       autoApplyStructuralRef.current = false;
       setPreviewValidatedFingerprint(null);
@@ -323,9 +449,9 @@ export function NuvioDevShellInner(): ReactElement {
       setPreviewSummary(null);
       setPreviewError(null);
       setLastPatchError(null);
-      sendPatchMessage(ops, true);
+      sendPatchMessage(ops, true, patchHostId, activeBreakpoint);
     },
-    [sendPatchMessage],
+    [activeBreakpoint, sendPatchMessage],
   );
 
   const onRequestStructuralPreview = useCallback(
@@ -338,13 +464,13 @@ export function NuvioDevShellInner(): ReactElement {
       setPreviewSummary(null);
       setPreviewError(null);
       setLastPatchError(null);
-      sendPatchMessage(ops, true);
+      sendPatchMessage(ops, true, selectedIdRef.current ?? "", activeBreakpoint);
     },
-    [sendPatchMessage],
+    [activeBreakpoint, sendPatchMessage],
   );
 
   const onRequestApply = useCallback(
-    (ops: PatchOp[]) => {
+    (ops: PatchOp[], patchHostId: string) => {
       const fp = JSON.stringify(ops);
       if (fp !== previewValidatedFingerprint) {
         setLastPatchError(
@@ -353,9 +479,9 @@ export function NuvioDevShellInner(): ReactElement {
         return;
       }
       setLastPatchError(null);
-      sendPatchMessage(ops, false);
+      sendPatchMessage(ops, false, patchHostId, activeBreakpoint);
     },
-    [previewValidatedFingerprint, sendPatchMessage],
+    [activeBreakpoint, previewValidatedFingerprint, sendPatchMessage],
   );
 
   const onRequestUndo = useCallback(() => {
@@ -517,6 +643,9 @@ export function NuvioDevShellInner(): ReactElement {
             setIndexEntries(msg.entries);
             setKnownIds(new Set(msg.entries.map((e) => e.id)));
             setDuplicateErrors(msg.duplicateErrors);
+            if (msg.diagnostics) {
+              setRuntimeDiagnostics(msg.diagnostics);
+            }
             const sid = selectedIdRef.current;
             if (sid) {
               const hit = msg.entries.find((e) => e.id === sid);
@@ -531,6 +660,10 @@ export function NuvioDevShellInner(): ReactElement {
                 sendSelect(sid);
               });
             }
+            return;
+          }
+          if (msg.type === "pong" && msg.diagnostics) {
+            setRuntimeDiagnostics(msg.diagnostics);
             return;
           }
           if (msg.type === "selectAck") {
@@ -575,7 +708,12 @@ export function NuvioDevShellInner(): ReactElement {
                 setPreviewValidatedOps(pending.ops);
                 if (autoApplyStructuralRef.current && isStructuralOnlyOps(pending.ops)) {
                   autoApplyStructuralRef.current = false;
-                  sendPatchMessage(pending.ops, false);
+                  sendPatchMessage(
+                    pending.ops,
+                    false,
+                    selectedIdRef.current ?? "",
+                    activeBreakpoint,
+                  );
                 }
               } else {
                 autoApplyStructuralRef.current = false;
@@ -693,127 +831,159 @@ export function NuvioDevShellInner(): ReactElement {
       }
       wsRef.current = null;
     };
-  }, [sendSelect]);
+  }, [activeBreakpoint, sendPatchMessage, sendSelect]);
+
+  useEffect(() => {
+    const width = devicePreset === "mobile" ? 390 : devicePreset === "tablet" ? 768 : 1280;
+    const nextBp: Breakpoint =
+      width >= 1280 ? "xl" : width >= 1024 ? "lg" : width >= 768 ? "md" : width >= 640 ? "sm" : "base";
+    setActiveBreakpoint(nextBp);
+  }, [devicePreset]);
 
   const channelLabel = channel === "ready" ? "connected" : channel;
+  const channelState: NuvioChannelState =
+    channel === "ready"
+      ? "ready"
+      : channel === "connecting"
+        ? "connecting"
+        : channel === "error"
+          ? "error"
+          : "idle";
 
-  return (
+  const chromeUi = (
     <>
       {editMode ? (
-        <>
-          <InteractionLayer
-            enabled={editMode}
-            chromeRootRefs={chromeRootRefs}
-            knownIds={knownIds}
-            selectedId={selectedId}
-            onSelectId={onSelectId}
-          />
-          <PropertyPanelShell
-            shellRef={panelRef}
-            panelCollapsed={chromeLayout.panel.collapsed}
-            panelPosition={chromeLayout.panel.position}
-            onPanelCollapsedChange={onPanelCollapsedChange}
-            onPanelPositionChange={onPanelPositionChange}
-            indexEntries={indexEntries}
-            onSelectIndexedId={onSelectId}
-            onRequestStructuralPreview={onRequestStructuralPreview}
-            selectedId={selectedId}
-            resolvedFile={resolvedFile}
-            resolvedLine={resolvedLine}
-            indexIdCount={knownIds.size}
-            selectError={selectError}
-            channelReady={channel === "ready"}
-            previewSummary={previewSummary}
-            previewError={previewError}
-            lastPatchError={lastPatchError}
-            stagedVersion={stagedVersion}
-            previewValidatedFingerprint={previewValidatedFingerprint}
-            previewValidatedOps={previewValidatedOps}
-            structuralPreviewActive={structuralPreviewActive}
-            undoStackDepth={undoStackDepth}
-            previewBusy={previewBusy}
-            onStagedPatchFingerprint={onStagedPatchFingerprint}
-            onRequestPreview={onRequestPreview}
-            onRequestApply={onRequestApply}
-            onRequestUndo={onRequestUndo}
-            onCancelPreview={onCancelPreview}
-          />
-        </>
+        <PropertyPanelShell
+          shellRef={panelRef}
+          panelCollapsed={chromeLayout.panel.collapsed}
+          panelPosition={chromeLayout.panel.position}
+          onPanelCollapsedChange={onPanelCollapsedChange}
+          onPanelPositionChange={onPanelPositionChange}
+          onResetPanelPosition={onResetPanelPosition}
+          indexEntries={indexEntries}
+          onSelectIndexedId={onSelectId}
+          onRequestStructuralPreview={onRequestStructuralPreview}
+          selectedId={selectedId}
+          resolvedFile={resolvedFile}
+          resolvedLine={resolvedLine}
+          indexIdCount={knownIds.size}
+          knownIds={knownIds}
+          duplicateErrors={duplicateErrors}
+          selectError={selectError}
+          channelReady={channel === "ready"}
+          previewSummary={previewSummary}
+          previewError={previewError}
+          lastPatchError={lastPatchError}
+          stagedVersion={stagedVersion}
+          previewValidatedFingerprint={previewValidatedFingerprint}
+          previewValidatedOps={previewValidatedOps}
+          structuralPreviewActive={structuralPreviewActive}
+          undoStackDepth={undoStackDepth}
+          previewBusy={previewBusy}
+          onStagedPatchFingerprint={onStagedPatchFingerprint}
+          onRequestPreview={onRequestPreview}
+          onRequestApply={onRequestApply}
+          onRequestUndo={onRequestUndo}
+          onCancelPreview={onCancelPreview}
+          runtimeDiagnostics={runtimeDiagnostics}
+          developerDetails={developerDetails}
+          onDeveloperDetailsChange={onDeveloperDetailsChange}
+          activeTextTargetKey={activeTextTargetKey}
+          onActiveTextTargetKeyChange={setActiveTextTargetKey}
+          hoverTextTargetKey={hoverTextTargetKey}
+          onHoverTextTargetKeyChange={setHoverTextTargetKey}
+          devicePreset={devicePreset}
+          onDevicePresetChange={setDevicePreset}
+          activeBreakpoint={activeBreakpoint}
+          onActiveBreakpointChange={setActiveBreakpoint}
+        />
       ) : null}
 
       <div
         ref={(el) => assignRef(chipRef, el)}
         style={{
-          ...NUVO_GLASS_SURFACE_STYLE,
+          ...NUVO_GLASS_SHELL_INLINE,
           ...(chipPos
             ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" }
             : {}),
         }}
-        className={`pointer-events-auto fixed z-[9999] flex flex-col gap-2 rounded-2xl text-left text-sm text-slate-100 ${NUVO_GLASS_CHIP} ${chromeLayout.chip.collapsed ? "min-w-0 max-w-[10rem] p-2" : "min-w-[200px] max-w-sm p-3"} ${
-          chipDragging ? "select-none" : ""
+        className={`${NUVO_ROOT} nuvio-chip ${NUVO_GLASS_SHELL} ${chromeLayout.chip.collapsed ? "nuvio-chip--collapsed" : ""} ${
+          chipDragging ? "nuvio-chip--dragging" : ""
         }`}
       >
-        <div
-          className={`flex items-center gap-2 ${chipDragging ? "cursor-grabbing" : "cursor-grab"}`}
-          onPointerDown={onChipHeaderPointerDown}
-        >
-          <span className="shrink-0 font-semibold tracking-tight">Nuvio</span>
-          <span className="flex-1" aria-hidden="true" />
-          <button
-            type="button"
-            className="shrink-0 rounded px-1.5 py-0.5 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            title={chromeLayout.chip.collapsed ? "Expand chip" : "Collapse chip"}
-            aria-label={chromeLayout.chip.collapsed ? "Expand Nuvio chip" : "Collapse Nuvio chip"}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onChipCollapsedChange(!chromeLayout.chip.collapsed)}
+        <div className={NUVO_GLASS_CONTENT}>
+          <div
+            className={`nuvio-chip-header ${chipDragging ? "nuvio-chip-header--grabbing" : ""}`}
+            onPointerDown={onChipHeaderPointerDown}
           >
-            {chromeLayout.chip.collapsed ? "+" : "−"}
-          </button>
-          <button
-            type="button"
-            className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${
-              editMode
-                ? "bg-sky-600 text-white"
-                : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-            }`}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleEditMode();
-            }}
-          >
-            {editMode ? "Editing" : "Edit"}
-          </button>
+            <span className="nuvio-chip-title">Nuvio</span>
+            <span className="nuvio-chip-spacer" aria-hidden="true" />
+            <button
+              type="button"
+              className="nuvio-button-icon"
+              title={chromeLayout.chip.collapsed ? "Expand chip" : "Collapse chip"}
+              aria-label={
+                chromeLayout.chip.collapsed ? "Expand Nuvio chip" : "Collapse Nuvio chip"
+              }
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => onChipCollapsedChange(!chromeLayout.chip.collapsed)}
+            >
+              {chromeLayout.chip.collapsed ? "+" : "−"}
+            </button>
+            {chromeLayout.chip.collapsed ? null : (
+              <button
+                type="button"
+                className="nuvio-button-icon"
+                title="Reset chip position"
+                aria-label="Reset chip position"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => onResetChipPosition()}
+              >
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              className={`nuvio-button-chip ${editMode ? "nuvio-button-chip--active" : ""}`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleEditMode();
+              }}
+            >
+              {editMode ? "Editing" : "Edit"}
+            </button>
+          </div>
+          {!chromeLayout.chip.collapsed ? (
+            <NuvioChipStatus
+              channel={channelState}
+              channelLabel={channelLabel}
+              indexedCount={knownIds.size}
+              duplicateErrors={duplicateErrors}
+              selectedId={selectedId}
+              selectError={selectError}
+              developerDetails={developerDetails}
+            />
+          ) : null}
         </div>
-        {!chromeLayout.chip.collapsed ? (
-          <>
-            <div className="space-y-1 text-xs text-slate-300/90">
-              <p>
-                <span className="text-slate-500">Channel </span>
-                <span className={channel === "ready" ? "text-emerald-300" : "text-slate-200"}>
-                  {channelLabel}
-                </span>
-                <span className="text-slate-600"> · </span>
-                <span className="text-slate-500">{knownIds.size} ids</span>
-              </p>
-              {knownIds.size === 0 ? (
-                <p className="text-[11px] text-amber-200/90">Restart dev server if index stays empty.</p>
-              ) : null}
-              {duplicateErrors.length > 0 ? (
-                <p className="text-amber-300/90">
-                  Duplicate ids: {duplicateErrors.map((d) => d.id).join(", ")}
-                </p>
-              ) : null}
-              {selectError ? <p className="text-red-300/95">{selectError}</p> : null}
-            </div>
-          </>
-        ) : (
-          <p className="text-[11px] text-slate-500">
-            {channelLabel}
-            {editMode ? " · edit on" : ""}
-          </p>
-        )}
       </div>
+    </>
+  );
+
+  return (
+    <>
+      <InteractionLayer
+        enabled={editMode}
+        chromeRootRefs={chromeRootRefs}
+        knownIds={knownIds}
+        selectedId={selectedId}
+        onSelectId={onSelectId}
+        textTargetHostId={selectedId}
+        textTargets={selectedEntry?.textTargets}
+        activeTextTargetKey={activeTextTargetKey}
+        hoverTextTargetKey={hoverTextTargetKey}
+      />
+      {shadowMount ? createPortal(chromeUi, shadowMount.mount) : chromeUi}
     </>
   );
 }

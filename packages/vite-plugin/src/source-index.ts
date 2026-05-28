@@ -5,6 +5,7 @@ import traverseImport, { type NodePath } from "@babel/traverse";
 import type { JSXOpeningElement } from "@babel/types";
 import fg from "fast-glob";
 import type { DuplicateIdError, IndexWireEntry } from "@nuvio/shared";
+import { analyzeHost, buildIndexEntry, type ClassNameMode } from "./source-index-metadata.js";
 
 function getTraverseFn(): (ast: import("@babel/types").File, visitor: object) => void {
   if (typeof traverseImport === "function") {
@@ -33,7 +34,11 @@ const WRAPPER_TAGS = new Set(["EditableText", "EditableContainer"]);
 /**
  * Extract every contract id occurrence from a single TSX/JSX source string.
  */
-export function extractIdsFromSource(fileAbs: string, code: string): SourceIndexEntry[] {
+export function extractIdsFromSource(
+  fileAbs: string,
+  code: string,
+  options?: { classNameMode?: ClassNameMode },
+): SourceIndexEntry[] {
   const acc: SourceIndexEntry[] = [];
   let ast;
   try {
@@ -69,10 +74,21 @@ export function extractIdsFromSource(fileAbs: string, code: string): SourceIndex
         const line = loc?.line ?? 1;
         const column = loc?.column ?? 0;
 
+        const pushEntry = (id: string) => {
+          const ctx = analyzeHost(p, options?.classNameMode ?? "literal-only");
+          if (!ctx) {
+            acc.push({ id, file: path.resolve(fileAbs), line, column });
+            return;
+          }
+          acc.push(
+            buildIndexEntry({ id, file: path.resolve(fileAbs), line, column }, ctx, p),
+          );
+        };
+
         if (prop === "data-nuvio-id" && attr.value?.type === "StringLiteral") {
           const id = attr.value.value.trim();
           if (id) {
-            acc.push({ id, file: path.resolve(fileAbs), line, column });
+            pushEntry(id);
           }
           continue;
         }
@@ -80,7 +96,7 @@ export function extractIdsFromSource(fileAbs: string, code: string): SourceIndex
         if (WRAPPER_TAGS.has(tagName) && prop === "id" && attr.value?.type === "StringLiteral") {
           const id = attr.value.value.trim();
           if (id) {
-            acc.push({ id, file: path.resolve(fileAbs), line, column });
+            pushEntry(id);
           }
         }
       }
@@ -97,6 +113,7 @@ export function extractIdsFromSource(fileAbs: string, code: string): SourceIndex
 export function buildSourceIndex(
   rootAbs: string,
   globPatterns: string[],
+  options?: { classNameMode?: ClassNameMode },
 ): BuildSourceIndexResult {
   const root = path.resolve(rootAbs);
   const parseErrors: Array<{ file: string; message: string }> = [];
@@ -124,7 +141,7 @@ export function buildSourceIndex(
 
     let occurrences: SourceIndexEntry[];
     try {
-      occurrences = extractIdsFromSource(file, code);
+      occurrences = extractIdsFromSource(file, code, options);
     } catch (e) {
       parseErrors.push({ file, message: String(e) });
       continue;
@@ -198,6 +215,7 @@ function isBetterIndex(candidate: BuildSourceIndexResult, current: BuildSourceIn
 export function pickBestSourceIndex(
   rootCandidates: string[],
   globPatterns: string[],
+  options?: { classNameMode?: ClassNameMode },
 ): BuildSourceIndexResult {
   const roots = [...new Set(rootCandidates.map((r) => path.resolve(r)).filter((r) => r.length > 0))];
   if (roots.length === 0) {
@@ -208,9 +226,9 @@ export function pickBestSourceIndex(
       scannedFileCount: 0,
     };
   }
-  let best = buildSourceIndex(roots[0]!, globPatterns);
+  let best = buildSourceIndex(roots[0]!, globPatterns, options);
   for (let i = 1; i < roots.length; i++) {
-    const built = buildSourceIndex(roots[i]!, globPatterns);
+    const built = buildSourceIndex(roots[i]!, globPatterns, options);
     if (isBetterIndex(built, best)) {
       best = built;
     }

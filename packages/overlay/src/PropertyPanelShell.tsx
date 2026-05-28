@@ -10,7 +10,14 @@ import {
   type ReactElement,
   type RefObject,
 } from "react";
-import type { IndexWireEntry, PatchOp } from "@nuvio/shared";
+import type {
+  Breakpoint,
+  DuplicateIdError,
+  IndexWireEntry,
+  PatchOp,
+  RuntimeDiagnostics,
+  TextWireTarget,
+} from "@nuvio/shared";
 import type { Point } from "./overlay-chrome-storage.js";
 import { useChromeDrag } from "./useChromeDrag.js";
 import {
@@ -23,15 +30,28 @@ import {
   readAlphaPicksFromElement,
 } from "./read-alpha-picks.js";
 import { ComponentTree } from "./ComponentTree.js";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { EditorStackVersions } from "./RuntimeDiagnosticsBlock.js";
+import { SelectionMetadata } from "./SelectionMetadata.js";
+import { SelectionSummary } from "./SelectionSummary.js";
+import { TextTargetPicker } from "./TextTargetPicker.js";
+import { resolveTextTargetElement } from "./text-target-dom.js";
 import {
-  NUVO_GLASS_FRAME,
-  NUVO_GLASS_HEADER,
-  NUVO_GLASS_SECTION,
-  NUVO_GLASS_SURFACE_STYLE,
+  formatFriendlyId,
+  getSimpleDuplicateIdPatchMessage,
+  getSimpleIndexEmptyMessage,
+  getSimplePatchBlockedMessage,
+  getSimpleSelectErrorMessage,
+  isDuplicateIndexedId,
+} from "./selection-summary.js";
+import { escapeAttrSelector } from "./nuvio-dom.js";
+import { readEditableTextFromElement } from "./read-editable-text.js";
+import {
+  NUVO_GLASS_CONTENT,
+  NUVO_GLASS_SHELL,
+  NUVO_GLASS_SHELL_INLINE,
+  NUVO_ROOT,
 } from "./overlay-chrome-classes.js";
 import {
-  buildDuplicateOp,
   buildHideOp,
   buildMoveSiblingOp,
   buildShowOp,
@@ -44,11 +64,17 @@ import { ColorPickerRow } from "./ColorPickerRow.js";
 import { BACKGROUND_COLOR_OPTIONS, TEXT_COLOR_OPTIONS } from "./tailwind-color-options.js";
 
 export type PropertyPanelShellProps = {
+  devicePreset: "desktop" | "tablet" | "mobile";
+  onDevicePresetChange: (preset: "desktop" | "tablet" | "mobile") => void;
+  activeBreakpoint: Breakpoint;
+  onActiveBreakpointChange: (bp: Breakpoint) => void;
   selectedId: string | null;
   resolvedFile: string | undefined;
   resolvedLine: number | undefined;
   /** From server `indexReady`; must be greater than 0 for patchApply to resolve ids. */
   indexIdCount: number;
+  knownIds: ReadonlySet<string>;
+  duplicateErrors: readonly DuplicateIdError[];
   selectError: string | null;
   channelReady: boolean;
   previewSummary: string | null;
@@ -63,8 +89,8 @@ export type PropertyPanelShellProps = {
   undoStackDepth: number;
   previewBusy: boolean;
   onStagedPatchFingerprint: (fingerprint: string) => void;
-  onRequestPreview: (ops: PatchOp[]) => void;
-  onRequestApply: (ops: PatchOp[]) => void;
+  onRequestPreview: (ops: PatchOp[], patchHostId: string) => void;
+  onRequestApply: (ops: PatchOp[], patchHostId: string) => void;
   onRequestUndo: () => void;
   onCancelPreview: () => void;
   shellRef: RefObject<HTMLElement | null>;
@@ -72,10 +98,18 @@ export type PropertyPanelShellProps = {
   panelPosition: Point | null;
   onPanelCollapsedChange: (collapsed: boolean) => void;
   onPanelPositionChange: (position: Point | null) => void;
+  onResetPanelPosition: () => void;
   indexEntries: readonly IndexWireEntry[];
   onSelectIndexedId: (id: string) => void;
   /** Validate/apply structural ops (move, hide, duplicate) without mixing style staging. */
   onRequestStructuralPreview: (ops: PatchOp[]) => void;
+  runtimeDiagnostics: RuntimeDiagnostics | null;
+  developerDetails: boolean;
+  onDeveloperDetailsChange: (enabled: boolean) => void;
+  activeTextTargetKey: string | null;
+  onActiveTextTargetKeyChange: (key: string) => void;
+  hoverTextTargetKey: string | null;
+  onHoverTextTargetKeyChange: (key: string | null) => void;
 };
 
 function assignShellRef(
@@ -97,12 +131,12 @@ function SelectRow({
   options: { value: string; label: string }[];
 }): ReactElement {
   return (
-    <label className="grid grid-cols-[minmax(0,6.5rem)_1fr] items-center gap-x-2 gap-y-1">
-      <span className="text-xs text-slate-500">{label}</span>
+    <label className="nuvio-field-row">
+      <span className="nuvio-label">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+        className="nuvio-control nuvio-select"
       >
         {options.map((o) => (
           <option key={o.value || "__none"} value={o.value}>
@@ -115,10 +149,16 @@ function SelectRow({
 }
 
 export function PropertyPanelShell({
+  devicePreset,
+  onDevicePresetChange,
+  activeBreakpoint,
+  onActiveBreakpointChange,
   selectedId,
   resolvedFile,
   resolvedLine,
   indexIdCount,
+  knownIds,
+  duplicateErrors,
   selectError,
   channelReady,
   previewSummary,
@@ -140,18 +180,33 @@ export function PropertyPanelShell({
   panelPosition,
   onPanelCollapsedChange,
   onPanelPositionChange,
+  onResetPanelPosition,
   indexEntries,
   onSelectIndexedId,
   onRequestStructuralPreview,
+  runtimeDiagnostics,
+  developerDetails,
+  onDeveloperDetailsChange,
+  activeTextTargetKey,
+  onActiveTextTargetKeyChange,
+  hoverTextTargetKey,
+  onHoverTextTargetKeyChange,
 }: PropertyPanelShellProps): ReactElement {
+  void hoverTextTargetKey;
+  type StyleTargetMode = "container" | "text";
   const internalShellRef = useRef<HTMLElement | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
+  const autoValidateTimerRef = useRef<number | null>(null);
+  const lastAutoValidatedFpRef = useRef<string | null>(null);
   const [missing, setMissing] = useState(false);
+  const [patchTargetError, setPatchTargetError] = useState<string | null>(null);
+  const [styleTargetMode, setStyleTargetMode] = useState<StyleTargetMode>("container");
   const [draftText, setDraftText] = useState("");
   const [baselineText, setBaselineText] = useState("");
   const [baselinePicks, setBaselinePicks] = useState<AlphaStylePicks>(EMPTY_ALPHA_PICKS);
   const [picks, setPicks] = useState<AlphaStylePicks>(EMPTY_ALPHA_PICKS);
-  const selectedIdRef = useRef<string | null>(selectedId);
-  selectedIdRef.current = selectedId;
+  const [textEditable, setTextEditable] = useState(true);
+  const [textEditReason, setTextEditReason] = useState<string | null>(null);
 
   const setShellElement = useCallback(
     (el: HTMLElement | null) => {
@@ -188,6 +243,80 @@ export function PropertyPanelShell({
     typeof window !== "undefined" &&
     displayPanelPosition.x > window.innerWidth / 2;
 
+  const selectedEntry = useMemo(
+    () => (selectedId ? indexEntries.find((e) => e.id === selectedId) : undefined),
+    [indexEntries, selectedId],
+  );
+
+  const textTargets = selectedEntry?.textTargets ?? [];
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
+  const activeTextTarget = useMemo((): TextWireTarget | undefined => {
+    if (!activeTextTargetKey) {
+      return undefined;
+    }
+    return textTargets.find((t) => t.key === activeTextTargetKey);
+  }, [textTargets, activeTextTargetKey]);
+
+  const patchTextId = useMemo((): string | null => {
+    if (!selectedId) {
+      return null;
+    }
+    if (activeTextTarget?.nuvioId) {
+      return activeTextTarget.nuvioId;
+    }
+    if (selectedEntry?.textEditable) {
+      return selectedId;
+    }
+    return null;
+  }, [activeTextTarget, selectedEntry?.textEditable, selectedId]);
+
+  const containerStyleId = useMemo((): string | null => {
+    if (!selectedId) {
+      return null;
+    }
+    return selectedEntry?.patchHostId ?? selectedId;
+  }, [selectedEntry?.patchHostId, selectedId]);
+
+  const textStyleId = useMemo((): string | null => {
+    if (!selectedId) {
+      return null;
+    }
+    return activeTextTarget?.patchHostId ?? activeTextTarget?.nuvioId ?? null;
+  }, [activeTextTarget, selectedId]);
+
+  const hasStyleTargetChoice =
+    Boolean(containerStyleId) && Boolean(textStyleId) && containerStyleId !== textStyleId;
+
+  useEffect(() => {
+    if (!selectedId) {
+      setStyleTargetMode("container");
+      return;
+    }
+    if (hasStyleTargetChoice) {
+      setStyleTargetMode("container");
+      return;
+    }
+    if (textStyleId) {
+      setStyleTargetMode("text");
+      return;
+    }
+    setStyleTargetMode("container");
+  }, [selectedId, hasStyleTargetChoice, textStyleId]);
+
+  const patchStyleId = useMemo((): string | null => {
+    if (!selectedId) {
+      return null;
+    }
+    if (styleTargetMode === "text" && textStyleId) {
+      return textStyleId;
+    }
+    return containerStyleId ?? textStyleId ?? selectedId;
+  }, [containerStyleId, selectedId, styleTargetMode, textStyleId]);
+
   useEffect(() => {
     if (!selectedId) {
       setMissing(false);
@@ -197,22 +326,55 @@ export function PropertyPanelShell({
     setMissing(!(el instanceof HTMLElement));
   }, [selectedId]);
 
-  const syncFromSelectedElement = useCallback((): void => {
-    const id = selectedIdRef.current;
-    if (!id) {
+  const syncFromActiveTarget = useCallback((): void => {
+    const hostId = selectedIdRef.current;
+    if (!hostId) {
       return;
     }
-    const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(id)}"]`);
-    if (!(el instanceof HTMLElement)) {
-      return;
+    const textEl =
+      activeTextTarget && textTargets.length > 0
+        ? resolveTextTargetElement(hostId, activeTextTarget)
+        : document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+    const hostEl = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+    const styleEl =
+      patchStyleId && hostEl instanceof HTMLElement
+        ? (hostEl.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`) ??
+          document.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`))
+        : patchStyleId
+          ? document.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`)
+          : textEl;
+
+    if (textEl instanceof HTMLElement) {
+      const { text, textEditable: domEditable, reason } = readEditableTextFromElement(textEl);
+      const indexAllowsText = activeTextTarget
+        ? activeTextTarget.textEditable
+        : selectedEntry?.textEditable !== false;
+      setTextEditable(domEditable && indexAllowsText);
+      setTextEditReason(
+        activeTextTarget && !activeTextTarget.textEditable
+          ? "This text cannot be edited safely."
+          : !domEditable
+            ? (reason ?? null)
+            : null,
+      );
+      setBaselineText(text);
+      setDraftText(text);
+    } else {
+      setTextEditable(false);
+      setTextEditReason("Could not find this text on the page — try selecting it again.");
+      setBaselineText("");
+      setDraftText("");
     }
-    const text = (el.textContent ?? "").trim();
-    const fromClass = readAlphaPicksFromElement(el);
-    setBaselineText(text);
-    setDraftText(text);
-    setBaselinePicks(fromClass);
-    setPicks(fromClass);
-  }, []);
+
+    if (styleEl instanceof HTMLElement) {
+      const fromClass = readAlphaPicksFromElement(styleEl);
+      setBaselinePicks(fromClass);
+      setPicks(fromClass);
+    } else {
+      setBaselinePicks(EMPTY_ALPHA_PICKS);
+      setPicks(EMPTY_ALPHA_PICKS);
+    }
+  }, [activeTextTarget, patchStyleId, selectedEntry?.textEditable, textTargets.length]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -220,30 +382,111 @@ export function PropertyPanelShell({
       setBaselineText("");
       setBaselinePicks(EMPTY_ALPHA_PICKS);
       setPicks(EMPTY_ALPHA_PICKS);
+      setTextEditable(true);
+      setTextEditReason(null);
       return;
     }
-    syncFromSelectedElement();
-  }, [selectedId, syncFromSelectedElement]);
+    syncFromActiveTarget();
+  }, [selectedId, activeTextTargetKey, syncFromActiveTarget]);
 
   /** After Apply/Undo, Vite HMR may update the DOM a tick later; resync draft from the live node. */
   useEffect(() => {
     if (stagedVersion === 0) {
       return;
     }
-    const id = selectedIdRef.current;
-    if (!id) {
+    if (!selectedIdRef.current) {
       return;
     }
-    const t = window.setTimeout(syncFromSelectedElement, 280);
+    const t = window.setTimeout(syncFromActiveTarget, 280);
     return () => window.clearTimeout(t);
-  }, [stagedVersion, syncFromSelectedElement]);
+  }, [stagedVersion, syncFromActiveTarget]);
+
+  const patchIdBlockedMessage = useCallback(
+    (id: string): string | null => {
+      if (isDuplicateIndexedId(id, duplicateErrors)) {
+        return developerDetails
+          ? `Id "${id}" is duplicated in the project and was removed from the dev index. Use a unique data-nuvio-id per element.`
+          : getSimpleDuplicateIdPatchMessage(id);
+      }
+      if (!knownIds.has(id)) {
+        return developerDetails
+          ? `Id "${id}" is not in the dev source index — restart dev server or fix instrumentation.`
+          : "This part of the page isn't set up to save yet. Pick another element or fix duplicate names.";
+      }
+      return null;
+    },
+    [developerDetails, duplicateErrors, knownIds],
+  );
+
+  const resolvePatchApplyId = useCallback((): { id: string } | { error: string } => {
+    if (!selectedId) {
+      return { error: "Nothing is selected." };
+    }
+    const hasText = textEditable && draftText !== baselineText;
+    const hasStyle = alphaPicksDiffer(picks, baselinePicks);
+    if (!hasText && !hasStyle) {
+      return { error: "No changes to apply." };
+    }
+    if (hasText && !patchTextId) {
+      return { error: "Text cannot be patched for this target — add a data-nuvio-id on the text element." };
+    }
+    if (hasStyle && !patchStyleId) {
+      return { error: "Styles cannot be patched for this target." };
+    }
+    if (hasText && patchTextId) {
+      const blocked = patchIdBlockedMessage(patchTextId);
+      if (blocked) {
+        return { error: blocked };
+      }
+    }
+    if (hasStyle && patchStyleId) {
+      const blocked = patchIdBlockedMessage(patchStyleId);
+      if (blocked) {
+        return { error: blocked };
+      }
+    }
+    if (hasText && hasStyle && patchTextId !== patchStyleId) {
+      return {
+        error:
+          "Text and styles target different elements. Validate and apply text first, then edit styles (or pick a single element in Edit target).",
+      };
+    }
+    const id = hasText ? patchTextId! : patchStyleId!;
+    return { id };
+  }, [
+    baselinePicks,
+    baselineText,
+    draftText,
+    patchIdBlockedMessage,
+    patchStyleId,
+    patchTextId,
+    picks,
+    selectedId,
+    textEditable,
+  ]);
 
   const stagedOps = useMemo(
-    () => buildAlphaPatchOps(baselineText, draftText, baselinePicks, picks),
-    [baselineText, draftText, baselinePicks, picks],
+    () =>
+      buildAlphaPatchOps(baselineText, draftText, baselinePicks, picks, {
+        textEditable,
+      }),
+    [baselineText, draftText, baselinePicks, picks, textEditable],
   );
 
   const stagedOpsFingerprint = useMemo(() => JSON.stringify(stagedOps), [stagedOps]);
+
+  useEffect(() => {
+    setPatchTargetError(null);
+    lastAutoValidatedFpRef.current = null;
+  }, [selectedId, activeTextTargetKey, stagedOpsFingerprint]);
+
+  useEffect(() => {
+    return () => {
+      if (autoValidateTimerRef.current != null) {
+        window.clearTimeout(autoValidateTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedId) {
@@ -252,8 +495,8 @@ export function PropertyPanelShell({
     onStagedPatchFingerprint(stagedOpsFingerprint);
   }, [selectedId, stagedOpsFingerprint, onStagedPatchFingerprint]);
 
-  const hasStagedOps =
-    draftText !== baselineText || alphaPicksDiffer(picks, baselinePicks);
+  const hasTextChange = textEditable && draftText !== baselineText;
+  const hasStagedOps = hasTextChange || alphaPicksDiffer(picks, baselinePicks);
   const selectionResolved = Boolean(resolvedFile);
   const patchBlockedReason =
     indexIdCount === 0
@@ -262,6 +505,11 @@ export function PropertyPanelShell({
         ? selectError ??
           "Server did not confirm this id (no source file). Patches stay disabled until selection succeeds."
         : null;
+
+  const displayPatchBlockedReason = developerDetails
+    ? patchBlockedReason
+    : getSimplePatchBlockedMessage(indexIdCount, selectionResolved) ??
+      (selectError ? getSimpleSelectErrorMessage(selectError) : null);
   const previewApplyMismatch =
     hasStagedOps &&
     selectionResolved &&
@@ -270,8 +518,51 @@ export function PropertyPanelShell({
     (!previewSummary ||
       previewError != null ||
       previewValidatedFingerprint !== stagedOpsFingerprint);
+  const patchTargetConflict =
+    textEditable &&
+    draftText !== baselineText &&
+    alphaPicksDiffer(picks, baselinePicks) &&
+    patchTextId != null &&
+    patchStyleId != null &&
+    patchTextId !== patchStyleId;
+
   const patchActionsDisabled =
-    !channelReady || !hasStagedOps || indexIdCount === 0 || !selectionResolved;
+    !channelReady ||
+    !hasStagedOps ||
+    indexIdCount === 0 ||
+    !selectionResolved ||
+    patchTargetConflict;
+
+  useEffect(() => {
+    if (autoValidateTimerRef.current != null) {
+      window.clearTimeout(autoValidateTimerRef.current);
+      autoValidateTimerRef.current = null;
+    }
+    // Debounce style-only validate for slider/color/select changes.
+    if (!selectedId || !hasStagedOps || hasTextChange || patchActionsDisabled) {
+      return;
+    }
+    if (lastAutoValidatedFpRef.current === stagedOpsFingerprint) {
+      return;
+    }
+    autoValidateTimerRef.current = window.setTimeout(() => {
+      const resolved = resolvePatchApplyId();
+      if ("error" in resolved) {
+        return;
+      }
+      lastAutoValidatedFpRef.current = stagedOpsFingerprint;
+      onRequestPreview(stagedOps, resolved.id);
+    }, 300);
+  }, [
+    hasStagedOps,
+    hasTextChange,
+    onRequestPreview,
+    patchActionsDisabled,
+    resolvePatchApplyId,
+    selectedId,
+    stagedOps,
+    stagedOpsFingerprint,
+  ]);
   /** Structural ops (move/hide/duplicate) do not require style/text staging. */
   const structuralActionsDisabled =
     !channelReady ||
@@ -323,6 +614,19 @@ export function PropertyPanelShell({
     { value: "font-semibold", label: "font-semibold" },
     { value: "font-bold", label: "font-bold" },
   ];
+  const lineHeightOpts = [
+    { value: "", label: "—" },
+    { value: "leading-tight", label: "leading-tight" },
+    { value: "leading-snug", label: "leading-snug" },
+    { value: "leading-normal", label: "leading-normal" },
+    { value: "leading-relaxed", label: "leading-relaxed" },
+  ];
+  const letterSpacingOpts = [
+    { value: "", label: "—" },
+    { value: "tracking-tight", label: "tracking-tight" },
+    { value: "tracking-normal", label: "tracking-normal" },
+    { value: "tracking-wide", label: "tracking-wide" },
+  ];
   const roundedOpts = [
     { value: "", label: "—" },
     { value: "rounded-md", label: "rounded-md" },
@@ -345,6 +649,34 @@ export function PropertyPanelShell({
     { value: "mt-4", label: "mt-4" },
     { value: "mb-4", label: "mb-4" },
   ];
+  const padXOpts = [
+    { value: "", label: "—" },
+    { value: "px-2", label: "px-2" },
+    { value: "px-4", label: "px-4" },
+    { value: "px-6", label: "px-6" },
+    { value: "px-8", label: "px-8" },
+  ];
+  const padYOpts = [
+    { value: "", label: "—" },
+    { value: "py-1", label: "py-1" },
+    { value: "py-2", label: "py-2" },
+    { value: "py-4", label: "py-4" },
+    { value: "py-6", label: "py-6" },
+  ];
+  const marginXOpts = [
+    { value: "", label: "—" },
+    { value: "mx-2", label: "mx-2" },
+    { value: "mx-4", label: "mx-4" },
+    { value: "mx-6", label: "mx-6" },
+    { value: "mx-auto", label: "mx-auto" },
+  ];
+  const marginYOpts = [
+    { value: "", label: "—" },
+    { value: "my-1", label: "my-1" },
+    { value: "my-2", label: "my-2" },
+    { value: "my-4", label: "my-4" },
+    { value: "my-6", label: "my-6" },
+  ];
   const textAlignOpts = [
     { value: "", label: "—" },
     { value: "text-left", label: "text-left" },
@@ -359,6 +691,35 @@ export function PropertyPanelShell({
     { value: "gap-4", label: "gap-4" },
     { value: "gap-6", label: "gap-6" },
     { value: "gap-8", label: "gap-8" },
+  ];
+  const flexDirectionOpts = [
+    { value: "", label: "—" },
+    { value: "flex-row", label: "flex-row" },
+    { value: "flex-col", label: "flex-col" },
+  ];
+  const justifyOpts = [
+    { value: "", label: "—" },
+    { value: "justify-start", label: "justify-start" },
+    { value: "justify-center", label: "justify-center" },
+    { value: "justify-end", label: "justify-end" },
+    { value: "justify-between", label: "justify-between" },
+    { value: "justify-around", label: "justify-around" },
+  ];
+  const itemsOpts = [
+    { value: "", label: "—" },
+    { value: "items-start", label: "items-start" },
+    { value: "items-center", label: "items-center" },
+    { value: "items-end", label: "items-end" },
+    { value: "items-stretch", label: "items-stretch" },
+  ];
+  const gridColsOpts = [
+    { value: "", label: "—" },
+    { value: "grid-cols-1", label: "grid-cols-1" },
+    { value: "grid-cols-2", label: "grid-cols-2" },
+    { value: "grid-cols-3", label: "grid-cols-3" },
+    { value: "grid-cols-4", label: "grid-cols-4" },
+    { value: "grid-cols-6", label: "grid-cols-6" },
+    { value: "grid-cols-12", label: "grid-cols-12" },
   ];
   const widthOpts = [
     { value: "", label: "—" },
@@ -416,17 +777,52 @@ export function PropertyPanelShell({
     { value: "shadow-lg", label: "shadow-lg" },
     { value: "shadow-xl", label: "shadow-xl" },
   ];
+  const borderWidthOpts = [
+    { value: "", label: "—" },
+    { value: "border", label: "border" },
+    { value: "border-0", label: "border-0" },
+    { value: "border-2", label: "border-2" },
+    { value: "border-4", label: "border-4" },
+  ];
+  const borderColorOpts = [
+    { value: "", label: "—" },
+    { value: "border-slate-200", label: "border-slate-200" },
+    { value: "border-slate-400", label: "border-slate-400" },
+    { value: "border-slate-700", label: "border-slate-700" },
+    { value: "border-slate-800", label: "border-slate-800" },
+    { value: "border-sky-500", label: "border-sky-500" },
+    { value: "border-white", label: "border-white" },
+  ];
+  const ringWidthOpts = [
+    { value: "", label: "—" },
+    { value: "ring", label: "ring" },
+    { value: "ring-0", label: "ring-0" },
+    { value: "ring-1", label: "ring-1" },
+    { value: "ring-2", label: "ring-2" },
+    { value: "ring-4", label: "ring-4" },
+  ];
+  const ringColorOpts = [
+    { value: "", label: "—" },
+    { value: "ring-slate-400", label: "ring-slate-400" },
+    { value: "ring-sky-500", label: "ring-sky-500" },
+    { value: "ring-emerald-500", label: "ring-emerald-500" },
+    { value: "ring-white", label: "ring-white" },
+  ];
 
   if (panelCollapsed) {
     return (
       <button
         type="button"
         ref={(el) => setShellElement(el)}
-        className={`pointer-events-auto fixed z-[9998] rounded-2xl px-2 py-3 text-xs font-semibold text-slate-100 ${NUVO_GLASS_FRAME} ${
-          tabOnRight ? "right-4 top-1/2 -translate-y-1/2" : "left-4 top-1/2 -translate-y-1/2"
+        className={`${NUVO_ROOT} nuvio-panel-tab ${NUVO_GLASS_SHELL} ${
+          displayPanelPosition
+            ? ""
+            : tabOnRight
+              ? "nuvio-panel-tab--right"
+              : "nuvio-panel-tab--left"
         }`}
         style={{
-          ...NUVO_GLASS_SURFACE_STYLE,
+          ...NUVO_GLASS_SHELL_INLINE,
           ...(displayPanelPosition
             ? {
                 left: tabOnRight ? undefined : displayPanelPosition.x,
@@ -441,10 +837,10 @@ export function PropertyPanelShell({
         title="Expand Editor panel"
         onClick={() => onPanelCollapsedChange(false)}
       >
-        <span className={tabOnRight ? "" : "inline-block -scale-x-100"} aria-hidden="true">
+        <span className={tabOnRight ? "" : "nuvio-flip-x"} aria-hidden="true">
           ›
         </span>
-        <span className="sr-only">Expand Editor</span>
+        <span className="nuvio-sr-only">Expand Editor</span>
       </button>
     );
   }
@@ -455,84 +851,168 @@ export function PropertyPanelShell({
     : {
         left: displayPanelPosition.x,
         top: displayPanelPosition.y,
-        maxHeight: "min(calc(100vh - 2rem), 720px)",
-        height: "min(calc(100vh - 2rem), 720px)",
+        maxHeight: "calc(100vh - 48px)",
       };
 
   return (
     <aside
       ref={setShellElement}
-      style={{ ...NUVO_GLASS_SURFACE_STYLE, ...panelStyle }}
-      className={`pointer-events-auto fixed z-[9998] flex w-[min(100vw-2rem,20rem)] flex-col overflow-hidden rounded-2xl text-sm text-slate-100 ${NUVO_GLASS_FRAME} ${
-        docked ? "left-4 top-4 max-h-[calc(100vh-2rem)]" : ""
-      } ${panelDragging ? "select-none" : ""}`}
+      style={{ ...NUVO_GLASS_SHELL_INLINE, ...panelStyle }}
+      className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL} ${docked ? "nuvio-panel--docked" : ""} ${
+        panelDragging ? "nuvio-panel--dragging" : ""
+      }`}
+      onPointerDown={(e) => e.stopPropagation()}
     >
-      <header
-        className={`flex shrink-0 items-center gap-2 px-3 py-2 ${NUVO_GLASS_HEADER} ${
-          panelDragging ? "cursor-grabbing" : "cursor-grab"
-        }`}
-        onPointerDown={onHeaderPointerDown}
-      >
-        <span className="min-w-0 flex-1 font-semibold">Editor</span>
-        <button
-          type="button"
-          className="shrink-0 rounded px-1.5 py-0.5 text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-          title="Collapse panel"
-          aria-label="Collapse Editor panel"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => onPanelCollapsedChange(true)}
+      <div className={NUVO_GLASS_CONTENT}>
+        <header
+          className={`nuvio-panel-header ${
+            panelDragging ? "nuvio-panel-header--grabbing" : ""
+          }`}
+          onPointerDown={onHeaderPointerDown}
         >
-          −
-        </button>
-      </header>
-      <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
-        {selectedId ? (
-          <p className="text-xs text-slate-400">
-            <span className="font-mono text-sky-300/95">{selectedId}</span>
-            {resolvedFile ? (
-              <span className="text-slate-500">
-                {" "}
-                ·{" "}
-                <span className="font-mono text-slate-300">
-                  {resolvedFile}
-                  {resolvedLine != null ? `:${resolvedLine}` : ""}
+          <span className="nuvio-panel-header-title">Editor</span>
+          <button
+            type="button"
+            className={`nuvio-toggle-details ${developerDetails ? "nuvio-toggle-details--on" : ""}`}
+            title="Show file paths, risk level, and technical diagnostics"
+            aria-label="Developer details"
+            aria-pressed={developerDetails}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onDeveloperDetailsChange(!developerDetails)}
+          >
+            Developer details
+          </button>
+          <button
+            type="button"
+            className="nuvio-button-icon"
+            title="Reset panel position"
+            aria-label="Reset panel position"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onResetPanelPosition()}
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            className="nuvio-button-icon"
+            title="Collapse panel"
+            aria-label="Collapse Editor panel"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onPanelCollapsedChange(true)}
+          >
+            −
+          </button>
+        </header>
+        {developerDetails ? <EditorStackVersions diagnostics={runtimeDiagnostics} /> : null}
+        <div className="nuvio-panel-body">
+          <div className="nuvio-selection-strip">
+            {selectedId ? (
+              developerDetails ? (
+                <>
+                  <span className="nuvio-selection-strip-id">{selectedId}</span>
+                  {resolvedFile ? (
+                    <span className="nuvio-selection-strip-path">
+                      {resolvedFile}
+                      {resolvedLine != null ? `:${resolvedLine}` : ""}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
+                  {formatFriendlyId(selectedId)}
                 </span>
-              </span>
-            ) : null}
-          </p>
-        ) : (
-          <p className="text-xs text-slate-500">Select an element on the page.</p>
-        )}
+              )
+            ) : (
+              <span className="nuvio-text-muted">Click something on the page to edit it.</span>
+            )}
+          </div>
         {indexIdCount === 0 ? (
-          <p className="text-xs text-amber-200/90">Index empty — restart dev server.</p>
+          <p className="nuvio-text-xs nuvio-text-warn">
+            {developerDetails ? "Index empty — restart dev server." : getSimpleIndexEmptyMessage()}
+          </p>
         ) : null}
-        {selectedId && !resolvedFile && selectError ? (
-          <p className="text-xs text-red-300/95">{selectError}</p>
+        {developerDetails && selectedId && !resolvedFile && selectError ? (
+          <p className="nuvio-text-xs nuvio-text-error">{selectError}</p>
         ) : null}
+        {!developerDetails && selectedId && !resolvedFile && selectError ? (
+          <p className="nuvio-text-xs nuvio-text-error">{getSimpleSelectErrorMessage(selectError)}</p>
+        ) : null}
+
+        {selectedEntry ? (
+          developerDetails ? (
+            <SelectionMetadata entry={selectedEntry} />
+          ) : (
+            <SelectionSummary entry={selectedEntry} />
+          )
+        ) : null}
+
+        <section className="nuvio-card nuvio-stack-2">
+          <h3 className="nuvio-section-title">Device + breakpoint</h3>
+          <div className="nuvio-row-wrap">
+            <button
+              type="button"
+              className={`nuvio-button-chip ${devicePreset === "desktop" ? "nuvio-button-chip--active" : ""}`}
+              onClick={() => onDevicePresetChange("desktop")}
+            >
+              Desktop
+            </button>
+            <button
+              type="button"
+              className={`nuvio-button-chip ${devicePreset === "tablet" ? "nuvio-button-chip--active" : ""}`}
+              onClick={() => onDevicePresetChange("tablet")}
+            >
+              Tablet
+            </button>
+            <button
+              type="button"
+              className={`nuvio-button-chip ${devicePreset === "mobile" ? "nuvio-button-chip--active" : ""}`}
+              onClick={() => onDevicePresetChange("mobile")}
+            >
+              Mobile
+            </button>
+          </div>
+          <SelectRow
+            label="Active BP"
+            value={activeBreakpoint}
+            onChange={(v) => onActiveBreakpointChange(v as Breakpoint)}
+            options={[
+              { value: "base", label: "base" },
+              { value: "sm", label: "sm" },
+              { value: "md", label: "md" },
+              { value: "lg", label: "lg" },
+              { value: "xl", label: "xl" },
+            ]}
+          />
+        </section>
 
         {selectedId && missing ? (
-          <p className="text-xs text-amber-300/90">
-            No matching <span className="font-mono">data-nuvio-id</span> node in the document.
+          <p className="nuvio-text-xs nuvio-text-warn">
+            {developerDetails ? (
+              <>
+                No matching <span className="nuvio-text-mono">data-nuvio-id</span> node in the
+                document.
+              </>
+            ) : (
+              "This element isn't on the page anymore. Click it again or pick another."
+            )}
           </p>
         ) : null}
 
-        {selectedId && !missing ? (
-          <section className={`space-y-2 p-2 ${NUVO_GLASS_SECTION}`}>
-            <h3 className="text-xs font-medium text-slate-400">Structure</h3>
+        {developerDetails && selectedId && !missing ? (
+          <section className="nuvio-card nuvio-stack-2">
+            <h3 className="nuvio-section-title">Structure</h3>
             {previewBusy && structuralPreviewActive ? (
-              <p className="text-[11px] text-sky-200/90">Updating layout…</p>
+              <p className="nuvio-text-2xs nuvio-text-accent">Updating layout…</p>
             ) : null}
             {structuralPreviewMessage ? (
-              <p className="rounded border border-red-800/70 bg-red-950/50 px-2 py-1.5 text-xs text-red-200">
-                {structuralPreviewMessage}
-              </p>
+              <p className="nuvio-banner nuvio-banner--error">{structuralPreviewMessage}</p>
             ) : null}
             {structuralPreviewOk ? (
-              <p className="rounded border border-emerald-700/50 bg-emerald-950/25 px-2 py-1.5 font-mono text-[11px] text-emerald-100/95">
+              <p className="nuvio-banner nuvio-banner--success nuvio-banner--success-mono">
                 {structuralPreviewOk}
               </p>
             ) : null}
-            <div className="flex flex-wrap gap-2">
+            <div className="nuvio-row-wrap">
               <button
                 type="button"
                 disabled={structuralActionsDisabled || !siblingMove.canMoveUp}
@@ -541,7 +1021,7 @@ export function PropertyPanelShell({
                     ? "Move earlier in source / left in row"
                     : "Already first in this row"
                 }
-                className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
+                className="nuvio-button"
                 onClick={() => onRequestStructuralPreview(buildMoveSiblingOp("up"))}
               >
                 Move up
@@ -554,7 +1034,7 @@ export function PropertyPanelShell({
                     ? "Move later in source / right in row"
                     : "Already last in this row"
                 }
-                className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
+                className="nuvio-button"
                 onClick={() => onRequestStructuralPreview(buildMoveSiblingOp("down"))}
               >
                 Move down
@@ -562,7 +1042,7 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={structuralActionsDisabled}
-                className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
+                className="nuvio-button"
                 onClick={() => onRequestStructuralPreview(buildHideOp())}
               >
                 Hide
@@ -570,62 +1050,110 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={structuralActionsDisabled}
-                className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
+                className="nuvio-button"
                 onClick={() => onRequestStructuralPreview(buildShowOp())}
               >
                 Show
-              </button>
-              <button
-                type="button"
-                disabled={structuralActionsDisabled}
-                className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
-                onClick={() => onRequestStructuralPreview(buildDuplicateOp())}
-              >
-                Duplicate
               </button>
             </div>
           </section>
         ) : null}
 
+        {selectedId && textTargets.length > 1 && activeTextTargetKey ? (
+          <TextTargetPicker
+            hostId={selectedId}
+            targets={textTargets}
+            activeKey={activeTextTargetKey}
+            onActiveKeyChange={onActiveTextTargetKeyChange}
+            developerDetails={developerDetails}
+            onHoverKeyChange={onHoverTextTargetKeyChange}
+          />
+        ) : null}
+
         {selectedId && !missing ? (
-          <section className={`space-y-2 p-2 ${NUVO_GLASS_SECTION}`}>
-            <h3 className="text-xs font-medium text-slate-400">Style</h3>
+          <section className="nuvio-card nuvio-stack-2">
+            <h3 className="nuvio-section-title">Style</h3>
+            <p className="nuvio-text-2xs nuvio-text-muted">
+              Style edits apply at <span className="nuvio-font-medium">{activeBreakpoint}</span>{" "}
+              breakpoint.
+            </p>
+            {hasStyleTargetChoice ? (
+              <label className="nuvio-block nuvio-stack-1">
+                <span className="nuvio-label">Style target</span>
+                <select
+                  className="nuvio-control nuvio-select"
+                  value={styleTargetMode}
+                  onChange={(e) => setStyleTargetMode(e.target.value as StyleTargetMode)}
+                >
+                  <option value="container">Card/container</option>
+                  <option value="text">Text target</option>
+                </select>
+              </label>
+            ) : null}
             {previewBusy ? (
-              <p className="rounded border border-sky-800/50 bg-sky-950/40 px-2 py-1.5 text-[11px] text-sky-100/95">
+              <p className="nuvio-banner nuvio-banner--info nuvio-text-2xs">
                 Validating patch with the dev server…
               </p>
             ) : null}
             {lastPatchError ? (
-              <p className="rounded border border-red-800/70 bg-red-950/50 px-2 py-1.5 text-xs text-red-200">
-                {lastPatchError}
-              </p>
+              <p className="nuvio-banner nuvio-banner--error">{lastPatchError}</p>
             ) : null}
             {previewError && !structuralPreviewActive ? (
-              <p className="rounded border border-red-800/70 bg-red-950/50 px-2 py-1.5 text-xs text-red-200">
+              <p className="nuvio-banner nuvio-banner--error">
                 {formatPatchUserMessage(previewError)}
               </p>
             ) : null}
-            {patchBlockedReason ? (
-              <p className="rounded border border-amber-800/60 bg-amber-950/40 px-2 py-1.5 text-xs text-amber-100/95">
-                {patchBlockedReason}
+            {displayPatchBlockedReason ? (
+              <p className="nuvio-banner nuvio-banner--warn">{displayPatchBlockedReason}</p>
+            ) : null}
+            {hasStagedOps && !displayPatchBlockedReason && previewApplyMismatch ? (
+              <p className="nuvio-banner nuvio-banner--neutral nuvio-text-2xs nuvio-leading-snug">
+                Run <span className="nuvio-font-medium">Validate</span> after each edit so the
+                summary matches what you apply.
               </p>
             ) : null}
-            {hasStagedOps && !patchBlockedReason && previewApplyMismatch ? (
-              <p className="rounded border border-slate-600/80 bg-slate-900/60 px-2 py-1.5 text-[11px] leading-snug text-slate-300">
-                Run <span className="font-medium text-slate-200">Validate</span> after each edit so
-                the summary matches what you apply.
+            {patchTargetConflict ? (
+              <p className="nuvio-banner nuvio-banner--warn nuvio-text-2xs nuvio-leading-snug">
+                Text and styles apply to different elements. Validate text first, then change
+                styles — or pick one target in Edit target.
               </p>
             ) : null}
-            <label className="block space-y-1">
-              <span className="text-xs text-slate-500">Text</span>
+            {patchTargetError ? (
+              <p className="nuvio-banner nuvio-banner--error nuvio-text-2xs">{patchTargetError}</p>
+            ) : null}
+            {patchStyleId && selectedId && patchStyleId !== selectedId ? (
+              <p className="nuvio-text-2xs nuvio-text-muted nuvio-leading-snug">
+                Styles apply to{" "}
+                <span className="nuvio-font-medium">
+                  {developerDetails ? patchStyleId : formatFriendlyId(patchStyleId)}
+                </span>
+                {developerDetails ? " (not the outer container you clicked)" : ""}.
+              </p>
+            ) : null}
+            {patchTextId ? (
+              <p className="nuvio-text-2xs nuvio-text-muted nuvio-leading-snug">
+                Text applies to{" "}
+                <span className="nuvio-font-medium">
+                  {developerDetails ? patchTextId : formatFriendlyId(patchTextId)}
+                </span>
+                .
+              </p>
+            ) : null}
+            {developerDetails && !textEditable && textEditReason ? (
+              <p className="nuvio-banner nuvio-banner--neutral nuvio-text-2xs">{textEditReason}</p>
+            ) : null}
+            <label className="nuvio-block nuvio-stack-1">
+              <span className="nuvio-label">Text</span>
               <textarea
                 value={draftText}
                 onChange={(e) => setDraftText(e.target.value)}
                 rows={2}
-                className="w-full resize-y rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
+                disabled={!textEditable}
+                className="nuvio-control nuvio-textarea"
               />
             </label>
-            <div className="space-y-2 pt-1">
+            <div className="nuvio-stack-2 nuvio-pt-1">
+              <p className="nuvio-group-title">Typography</p>
               <SelectRow
                 label="Font size"
                 value={picks.fontSize}
@@ -638,6 +1166,24 @@ export function PropertyPanelShell({
                 onChange={(v) => setPicks((p) => ({ ...p, fontWeight: v }))}
                 options={fontWeightOpts}
               />
+              <SelectRow
+                label="Line height"
+                value={picks.lineHeight}
+                onChange={(v) => setPicks((p) => ({ ...p, lineHeight: v }))}
+                options={lineHeightOpts}
+              />
+              <SelectRow
+                label="Letter spacing"
+                value={picks.letterSpacing}
+                onChange={(v) => setPicks((p) => ({ ...p, letterSpacing: v }))}
+                options={letterSpacingOpts}
+              />
+              <SelectRow
+                label="Text align"
+                value={picks.textAlign}
+                onChange={(v) => setPicks((p) => ({ ...p, textAlign: v }))}
+                options={textAlignOpts}
+              />
               <ColorPickerRow
                 label="Text color"
                 value={picks.textColor}
@@ -645,6 +1191,8 @@ export function PropertyPanelShell({
                 options={TEXT_COLOR_OPTIONS}
                 utilityPrefix="text"
               />
+
+              <p className="nuvio-group-title">Spacing</p>
               <ColorPickerRow
                 label="Background"
                 value={picks.bgColor}
@@ -665,17 +1213,60 @@ export function PropertyPanelShell({
                 options={padOpts}
               />
               <SelectRow
+                label="Padding X"
+                value={picks.paddingX}
+                onChange={(v) => setPicks((p) => ({ ...p, paddingX: v }))}
+                options={padXOpts}
+              />
+              <SelectRow
+                label="Padding Y"
+                value={picks.paddingY}
+                onChange={(v) => setPicks((p) => ({ ...p, paddingY: v }))}
+                options={padYOpts}
+              />
+              <SelectRow
                 label="Margin"
                 value={picks.margin}
                 onChange={(v) => setPicks((p) => ({ ...p, margin: v }))}
                 options={marginOpts}
               />
-              <p className="pt-1 text-[10px] font-medium text-slate-500">Layout & effects</p>
               <SelectRow
-                label="Text align"
-                value={picks.textAlign}
-                onChange={(v) => setPicks((p) => ({ ...p, textAlign: v }))}
-                options={textAlignOpts}
+                label="Margin X"
+                value={picks.marginX}
+                onChange={(v) => setPicks((p) => ({ ...p, marginX: v }))}
+                options={marginXOpts}
+              />
+              <SelectRow
+                label="Margin Y"
+                value={picks.marginY}
+                onChange={(v) => setPicks((p) => ({ ...p, marginY: v }))}
+                options={marginYOpts}
+              />
+
+              <p className="nuvio-group-title">Layout</p>
+              <SelectRow
+                label="Flex direction"
+                value={picks.flexDirection}
+                onChange={(v) => setPicks((p) => ({ ...p, flexDirection: v }))}
+                options={flexDirectionOpts}
+              />
+              <SelectRow
+                label="Justify"
+                value={picks.justify}
+                onChange={(v) => setPicks((p) => ({ ...p, justify: v }))}
+                options={justifyOpts}
+              />
+              <SelectRow
+                label="Items align"
+                value={picks.items}
+                onChange={(v) => setPicks((p) => ({ ...p, items: v }))}
+                options={itemsOpts}
+              />
+              <SelectRow
+                label="Grid columns"
+                value={picks.gridCols}
+                onChange={(v) => setPicks((p) => ({ ...p, gridCols: v }))}
+                options={gridColsOpts}
               />
               <SelectRow
                 label="Gap"
@@ -707,6 +1298,8 @@ export function PropertyPanelShell({
                 onChange={(v) => setPicks((p) => ({ ...p, minHeight: v }))}
                 options={minHeightOpts}
               />
+
+              <p className="nuvio-group-title">Visual</p>
               <SelectRow
                 label="Opacity"
                 value={picks.opacity}
@@ -719,31 +1312,67 @@ export function PropertyPanelShell({
                 onChange={(v) => setPicks((p) => ({ ...p, shadow: v }))}
                 options={shadowOpts}
               />
+              <SelectRow
+                label="Border width"
+                value={picks.borderWidth}
+                onChange={(v) => setPicks((p) => ({ ...p, borderWidth: v }))}
+                options={borderWidthOpts}
+              />
+              <SelectRow
+                label="Border color"
+                value={picks.borderColor}
+                onChange={(v) => setPicks((p) => ({ ...p, borderColor: v }))}
+                options={borderColorOpts}
+              />
+              <SelectRow
+                label="Ring width"
+                value={picks.ringWidth}
+                onChange={(v) => setPicks((p) => ({ ...p, ringWidth: v }))}
+                options={ringWidthOpts}
+              />
+              <SelectRow
+                label="Ring color"
+                value={picks.ringColor}
+                onChange={(v) => setPicks((p) => ({ ...p, ringColor: v }))}
+                options={ringColorOpts}
+              />
             </div>
             {previewSummary && !structuralPreviewActive ? (
-              <div className="rounded border border-emerald-700/50 bg-emerald-950/25 p-2 ring-1 ring-emerald-500/20">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-emerald-400/90">
-                  Validated change
-                </p>
-                <p className="mt-1 font-mono text-[11px] leading-snug text-emerald-100/95">{previewSummary}</p>
+              <div className="nuvio-preview-box">
+                <p className="nuvio-preview-box-title">Validated change</p>
+                <p className="nuvio-preview-box-body">{previewSummary}</p>
               </div>
             ) : null}
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="nuvio-row-wrap nuvio-pt-2">
               <button
                 type="button"
                 disabled={patchActionsDisabled}
-                className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
-                onClick={() => onRequestPreview(stagedOps)}
+                className="nuvio-button"
+                onClick={() => {
+                  const resolved = resolvePatchApplyId();
+                  if ("error" in resolved) {
+                    setPatchTargetError(resolved.error);
+                    return;
+                  }
+                  setPatchTargetError(null);
+                  onRequestPreview(stagedOps, resolved.id);
+                }}
               >
                 Validate
               </button>
               <button
                 type="button"
                 disabled={applyDisabled}
-                className="rounded bg-sky-700 px-2 py-1 text-xs font-medium text-white enabled:hover:bg-sky-600 disabled:opacity-40"
+                className="nuvio-button nuvio-button-primary"
                 onClick={() => {
                   if (previewValidatedOps?.length) {
-                    onRequestApply([...previewValidatedOps]);
+                    const resolved = resolvePatchApplyId();
+                    if ("error" in resolved) {
+                      setPatchTargetError(resolved.error);
+                      return;
+                    }
+                    setPatchTargetError(null);
+                    onRequestApply([...previewValidatedOps], resolved.id);
                   }
                 }}
               >
@@ -752,14 +1381,14 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={!channelReady || undoStackDepth <= 0}
-                className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-100 enabled:hover:bg-slate-600 disabled:opacity-40"
+                className="nuvio-button nuvio-button-ghost"
                 onClick={() => onRequestUndo()}
               >
                 Undo last
               </button>
               <button
                 type="button"
-                className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                className="nuvio-button nuvio-button-ghost"
                 onClick={() => onCancelPreview()}
               >
                 Cancel
@@ -768,11 +1397,17 @@ export function PropertyPanelShell({
           </section>
         ) : null}
 
-        <ComponentTree
-          entries={indexEntries}
-          selectedId={selectedId}
-          onSelectId={onSelectIndexedId}
-        />
+        {developerDetails ? (
+          <section className="nuvio-card nuvio-card--tree">
+            <ComponentTree
+              entries={indexEntries}
+              duplicateErrors={duplicateErrors}
+              selectedId={selectedId}
+              onSelectId={onSelectIndexedId}
+            />
+          </section>
+        ) : null}
+        </div>
       </div>
     </aside>
   );

@@ -1,4 +1,7 @@
-export const OVERLAY_CHROME_STORAGE_KEY = "nuvio:overlay-chrome:v1";
+export const OVERLAY_CHROME_STORAGE_KEY = "nuvio:overlay-chrome:v2";
+
+/** Default inset from viewport edges (chip + docked editor). */
+export const OVERLAY_CHROME_MARGIN = 24;
 
 export type ChipCorner = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
@@ -89,7 +92,7 @@ export function clampToViewport(
   y: number,
   width: number,
   height: number,
-  margin = 16,
+  margin = OVERLAY_CHROME_MARGIN,
 ): Point {
   const vw = typeof window !== "undefined" ? window.innerWidth : 1920;
   const vh = typeof window !== "undefined" ? window.innerHeight : 1080;
@@ -99,6 +102,16 @@ export function clampToViewport(
     x: Math.max(margin, Math.min(x, maxX)),
     y: Math.max(margin, Math.min(y, maxY)),
   };
+}
+
+export function isPointOffscreen(
+  point: Point,
+  width: number,
+  height: number,
+  margin = OVERLAY_CHROME_MARGIN,
+): boolean {
+  const clamped = clampToViewport(point.x, point.y, width, height, margin);
+  return clamped.x !== point.x || clamped.y !== point.y;
 }
 
 /** Snap chip to the quadrant nearest the element center. */
@@ -123,7 +136,7 @@ export function cornerAnchorPosition(
   corner: ChipCorner,
   width: number,
   height: number,
-  margin = 16,
+  margin = OVERLAY_CHROME_MARGIN,
 ): Point {
   const vw = typeof window !== "undefined" ? window.innerWidth : 1920;
   const vh = typeof window !== "undefined" ? window.innerHeight : 1080;

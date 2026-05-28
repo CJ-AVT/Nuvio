@@ -1,6 +1,13 @@
+import type { TextWireTarget } from "@nuvio/shared";
 import type { RefObject } from "react";
 import { useEffect, useState, type ReactElement } from "react";
-import { clearNuvioOutlines, paintNuvioOutline } from "./nuvio-outlines.js";
+import { isNuvioChromeComposedPath } from "./nuvio-chrome-hit.js";
+import { resolveTextTargetElement } from "./text-target-dom.js";
+import {
+  clearNuvioOutlines,
+  paintNuvioOutline,
+  paintNuvioOutlineElement,
+} from "./nuvio-outlines.js";
 
 export type InteractionLayerProps = {
   enabled: boolean;
@@ -8,6 +15,11 @@ export type InteractionLayerProps = {
   knownIds: ReadonlySet<string>;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
+  /** Index v3: highlight alternate text targets under the selected host. */
+  textTargetHostId?: string | null;
+  textTargets?: readonly TextWireTarget[];
+  activeTextTargetKey?: string | null;
+  hoverTextTargetKey?: string | null;
 };
 
 function isUnderOverlayChrome(
@@ -45,7 +57,6 @@ function pickIndexedTarget(
     if (!id) {
       continue;
     }
-    // When the dev index is empty or still loading, still allow outlines so Phase 1 UX works.
     if (knownIds.size > 0 && !knownIds.has(id)) {
       continue;
     }
@@ -60,6 +71,10 @@ export function InteractionLayer({
   knownIds,
   selectedId,
   onSelectId,
+  textTargetHostId = null,
+  textTargets = [],
+  activeTextTargetKey = null,
+  hoverTextTargetKey = null,
 }: InteractionLayerProps): ReactElement | null {
   const [hoverId, setHoverId] = useState<string | null>(null);
 
@@ -70,12 +85,19 @@ export function InteractionLayer({
     }
 
     const onMove = (e: MouseEvent) => {
+      if (isNuvioChromeComposedPath(e)) {
+        setHoverId(null);
+        return;
+      }
       const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
       const id = el?.getAttribute("data-nuvio-id") ?? null;
       setHoverId(id);
     };
 
     const onClick = (e: MouseEvent) => {
+      if (isNuvioChromeComposedPath(e)) {
+        return;
+      }
       const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
       if (!el) {
         return;
@@ -103,15 +125,41 @@ export function InteractionLayer({
     if (!enabled) {
       return;
     }
-    const hoverPaint =
-      hoverId && hoverId !== selectedId ? hoverId : null;
+    const hoverPaint = hoverId && hoverId !== selectedId ? hoverId : null;
     if (hoverPaint) {
       paintNuvioOutline(hoverPaint, "hover");
     }
-    if (selectedId) {
+
+    const showTargetHints =
+      textTargetHostId &&
+      selectedId === textTargetHostId &&
+      textTargets.length > 1;
+
+    if (showTargetHints && textTargetHostId) {
+      for (const target of textTargets) {
+        const el = resolveTextTargetElement(textTargetHostId, target);
+        if (!el) {
+          continue;
+        }
+        if (target.key === activeTextTargetKey) {
+          paintNuvioOutlineElement(el, "target-active");
+        } else if (target.key === hoverTextTargetKey) {
+          paintNuvioOutlineElement(el, "target-hover");
+        }
+      }
+      paintNuvioOutline(textTargetHostId, "selected");
+    } else if (selectedId) {
       paintNuvioOutline(selectedId, "selected");
     }
-  }, [enabled, hoverId, selectedId]);
+  }, [
+    enabled,
+    hoverId,
+    selectedId,
+    textTargetHostId,
+    textTargets,
+    activeTextTargetKey,
+    hoverTextTargetKey,
+  ]);
 
   return null;
 }

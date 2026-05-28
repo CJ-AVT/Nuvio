@@ -8,6 +8,9 @@ import { twMerge } from "tailwind-merge";
 import type { PatchOp } from "@nuvio/shared";
 import { validateTailwindFragment } from "./tailwind-whitelist.js";
 
+export type ClassNameMode = "literal-only" | "cn-basic";
+export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
+
 const require = createRequire(import.meta.url);
 const traverse = require("@babel/traverse").default as (ast: t.File, visitor: Visitor) => void;
 const generate = require("@babel/generator").default as (
@@ -71,23 +74,179 @@ function applySetText(openingPath: NodePath<t.JSXOpeningElement>, text: string):
   jsx.node.children = [t.jsxText(text)];
 }
 
-function readStringLiteralClassName(opening: t.JSXOpeningElement): string | null {
+type ClassNameBinding = {
+  read(): string;
+  write(next: string): void;
+};
+
+type BreakpointBuckets = {
+  base: string[];
+  sm: string[];
+  md: string[];
+  lg: string[];
+  xl: string[];
+  passthrough: string[];
+};
+
+function emptyBreakpointBuckets(): BreakpointBuckets {
+  return {
+    base: [],
+    sm: [],
+    md: [],
+    lg: [],
+    xl: [],
+    passthrough: [],
+  };
+}
+
+function classifyTokenByBreakpoint(token: string): { bp: Breakpoint | "passthrough"; value: string } {
+  if (!token.includes(":")) {
+    return { bp: "base", value: token };
+  }
+  const m = token.match(/^(sm|md|lg|xl):(.*)$/);
+  if (!m) {
+    return { bp: "passthrough", value: token };
+  }
+  if (!m[2] || m[2].includes(":")) {
+    return { bp: "passthrough", value: token };
+  }
+  return { bp: m[1] as Breakpoint, value: m[2] };
+}
+
+export function parseClassNameByBreakpoint(className: string): BreakpointBuckets {
+  const buckets = emptyBreakpointBuckets();
+  const tokens = className.trim().split(/\s+/).filter(Boolean);
+  for (const tok of tokens) {
+    const parsed = classifyTokenByBreakpoint(tok);
+    if (parsed.bp === "passthrough") {
+      buckets.passthrough.push(parsed.value);
+      continue;
+    }
+    buckets[parsed.bp].push(parsed.value);
+  }
+  return buckets;
+}
+
+function prefixTokenForBreakpoint(token: string, bp: Breakpoint): string {
+  return bp === "base" ? token : `${bp}:${token}`;
+}
+
+export function mergeAtBreakpoint(
+  className: string,
+  fragment: string,
+  activeBreakpoint: Breakpoint,
+): string {
+  const buckets = parseClassNameByBreakpoint(className);
+  const incomingBuckets = emptyBreakpointBuckets();
+  for (const tok of fragment.trim().split(/\s+/).filter(Boolean)) {
+    const parsed = classifyTokenByBreakpoint(tok);
+    if (parsed.bp === "passthrough") {
+      incomingBuckets.passthrough.push(parsed.value);
+      continue;
+    }
+    const targetBp = parsed.bp === "base" ? activeBreakpoint : parsed.bp;
+    incomingBuckets[targetBp].push(parsed.value);
+  }
+
+  const mergedBase = twMerge(buckets.base.join(" "), incomingBuckets.base.join(" ")).trim();
+  const mergedSm = twMerge(buckets.sm.join(" "), incomingBuckets.sm.join(" ")).trim();
+  const mergedMd = twMerge(buckets.md.join(" "), incomingBuckets.md.join(" ")).trim();
+  const mergedLg = twMerge(buckets.lg.join(" "), incomingBuckets.lg.join(" ")).trim();
+  const mergedXl = twMerge(buckets.xl.join(" "), incomingBuckets.xl.join(" ")).trim();
+
+  const out: string[] = [];
+  if (mergedBase) {
+    out.push(mergedBase);
+  }
+  if (mergedSm) {
+    out.push(
+      ...mergedSm
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t) => prefixTokenForBreakpoint(t, "sm")),
+    );
+  }
+  if (mergedMd) {
+    out.push(
+      ...mergedMd
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t) => prefixTokenForBreakpoint(t, "md")),
+    );
+  }
+  if (mergedLg) {
+    out.push(
+      ...mergedLg
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t) => prefixTokenForBreakpoint(t, "lg")),
+    );
+  }
+  if (mergedXl) {
+    out.push(
+      ...mergedXl
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((t) => prefixTokenForBreakpoint(t, "xl")),
+    );
+  }
+  out.push(...buckets.passthrough, ...incomingBuckets.passthrough);
+  return out.join(" ").trim();
+}
+
+function getClassNameBinding(
+  opening: t.JSXOpeningElement,
+  classNameMode: ClassNameMode,
+): ClassNameBinding | null {
   for (const attr of opening.attributes) {
     if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "className" })) {
       if (t.isStringLiteral(attr.value)) {
-        return attr.value.value;
+        const literal = attr.value;
+        return {
+          read: () => literal.value,
+          write: (next) => {
+            attr.value = t.stringLiteral(next);
+          },
+        };
+      }
+      if (
+        classNameMode === "cn-basic" &&
+        t.isJSXExpressionContainer(attr.value) &&
+        t.isCallExpression(attr.value.expression) &&
+        ((t.isIdentifier(attr.value.expression.callee) &&
+          (attr.value.expression.callee.name === "cn" ||
+            attr.value.expression.callee.name === "clsx")) ||
+          false)
+      ) {
+        const call = attr.value.expression;
+        if (call.arguments.every((arg) => t.isStringLiteral(arg))) {
+          return {
+            read: () => call.arguments.map((arg) => (arg as t.StringLiteral).value).join(" "),
+            write: (next) => {
+              call.arguments = [t.stringLiteral(next)];
+            },
+          };
+        }
       }
       return null;
     }
   }
-  return "";
+  return {
+    read: () => "",
+    write: (next) => {
+      opening.attributes.push(
+        t.jsxAttribute(t.jsxIdentifier("className"), t.stringLiteral(next)),
+      );
+    },
+  };
 }
 
 function parentSupportsLayoutMoves(parentOpening: t.JSXOpeningElement): boolean {
-  const cls = readStringLiteralClassName(parentOpening);
-  if (cls === null) {
+  const binding = getClassNameBinding(parentOpening, "literal-only");
+  if (!binding) {
     return false;
   }
+  const cls = binding.read();
   return /\b(flex|inline-flex|grid|inline-grid)\b/.test(cls) || /\b(flex-|grid-)/.test(cls);
 }
 
@@ -144,9 +303,14 @@ function applyMoveSibling(
   parent.children[swapIndex] = hostNode;
 }
 
-function applySetHidden(openingPath: NodePath<t.JSXOpeningElement>, hidden: boolean): void {
+function applySetHidden(
+  openingPath: NodePath<t.JSXOpeningElement>,
+  hidden: boolean,
+  classNameMode: ClassNameMode,
+  activeBreakpoint: Breakpoint,
+): void {
   if (hidden) {
-    applyMergeClassName(openingPath, "hidden");
+    applyMergeClassName(openingPath, "hidden", classNameMode, activeBreakpoint);
     return;
   }
   const opening = openingPath.node;
@@ -195,6 +359,35 @@ function setNuvioIdOnOpening(opening: t.JSXOpeningElement, id: string): void {
   );
 }
 
+function remapDescendantNuvioIds(element: t.JSXElement, taken: Set<string>): void {
+  const stack: t.JSXElement[] = [];
+  for (const child of element.children) {
+    if (t.isJSXElement(child)) {
+      stack.push(child);
+    }
+  }
+  while (stack.length > 0) {
+    const el = stack.pop()!;
+    for (const attr of el.openingElement.attributes) {
+      if (
+        !t.isJSXAttribute(attr) ||
+        !t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" }) ||
+        !t.isStringLiteral(attr.value)
+      ) {
+        continue;
+      }
+      const nextId = uniqueDuplicateId(attr.value.value, taken);
+      attr.value.value = nextId;
+      taken.add(nextId);
+    }
+    for (const child of el.children) {
+      if (t.isJSXElement(child)) {
+        stack.push(child);
+      }
+    }
+  }
+}
+
 function uniqueDuplicateId(baseId: string, taken: Set<string>): string {
   const candidate = `${baseId}.copy`;
   if (!taken.has(candidate)) {
@@ -227,6 +420,8 @@ function applyDuplicateHost(
     throw new Error("Failed to clone host element");
   }
   setNuvioIdOnOpening(clone.openingElement, newId);
+  taken.add(newId);
+  remapDescendantNuvioIds(clone, taken);
   const parent = parentPath.node;
   const hostIndex = parent.children.indexOf(hostPath.node);
   if (hostIndex < 0) {
@@ -236,27 +431,24 @@ function applyDuplicateHost(
   return newId;
 }
 
-function applyMergeClassName(openingPath: NodePath<t.JSXOpeningElement>, fragment: string): void {
+function applyMergeClassName(
+  openingPath: NodePath<t.JSXOpeningElement>,
+  fragment: string,
+  classNameMode: ClassNameMode,
+  activeBreakpoint: Breakpoint,
+): void {
   validateTailwindFragment(fragment);
   const opening = openingPath.node;
-  let clsAttr: t.JSXAttribute | undefined;
-  for (const attr of opening.attributes) {
-    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "className" })) {
-      clsAttr = attr;
-      break;
-    }
-  }
-  if (!clsAttr) {
-    opening.attributes.push(
-      t.jsxAttribute(t.jsxIdentifier("className"), t.stringLiteral(fragment.trim())),
+  const binding = getClassNameBinding(opening, classNameMode);
+  if (!binding) {
+    throw new Error(
+      classNameMode === "cn-basic"
+        ? "className must be a string literal or simple cn()/clsx() string list in cn-basic mode"
+        : "className must be a string literal for Phase 2 patches",
     );
-    return;
   }
-  if (!t.isStringLiteral(clsAttr.value)) {
-    throw new Error("className must be a string literal for Phase 2 patches");
-  }
-  const current = clsAttr.value.value;
-  clsAttr.value = t.stringLiteral(twMerge(current, fragment.trim()));
+  const current = binding.read();
+  binding.write(mergeAtBreakpoint(current, fragment.trim(), activeBreakpoint));
 }
 
 export type ApplyPatchToSourceResult =
@@ -271,7 +463,10 @@ export async function applyPatchToSource(
   filePath: string,
   hostId: string,
   ops: readonly PatchOp[],
+  options?: { classNameMode?: ClassNameMode; activeBreakpoint?: Breakpoint },
 ): Promise<ApplyPatchToSourceResult> {
+  const classNameMode: ClassNameMode = options?.classNameMode ?? "literal-only";
+  const activeBreakpoint: Breakpoint = options?.activeBreakpoint ?? "base";
   let ast: t.File;
   try {
     ast = parse(source, {
@@ -295,11 +490,11 @@ export async function applyPatchToSource(
       if (op.kind === "setText") {
         applySetText(openingPath, op.text);
       } else if (op.kind === "mergeTailwindClassName") {
-        applyMergeClassName(openingPath, op.classNameFragment);
+        applyMergeClassName(openingPath, op.classNameFragment, classNameMode, activeBreakpoint);
       } else if (op.kind === "moveSibling") {
         applyMoveSibling(openingPath, op.direction);
       } else if (op.kind === "setHidden") {
-        applySetHidden(openingPath, op.hidden);
+        applySetHidden(openingPath, op.hidden, classNameMode, activeBreakpoint);
       } else if (op.kind === "duplicateHost") {
         duplicateNewId = applyDuplicateHost(ast, openingPath, hostId);
       }

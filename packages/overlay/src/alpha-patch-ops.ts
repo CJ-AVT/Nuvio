@@ -4,13 +4,27 @@ import type { PatchOp } from "@nuvio/shared";
 export type AlphaStylePicks = {
   fontSize: string;
   fontWeight: string;
+  lineHeight: string;
+  letterSpacing: string;
+  textAlign: string;
   textColor: string;
   bgColor: string;
-  rounded: string;
   padding: string;
+  paddingX: string;
+  paddingY: string;
   margin: string;
-  textAlign: string;
+  marginX: string;
+  marginY: string;
   gap: string;
+  flexDirection: string;
+  justify: string;
+  items: string;
+  gridCols: string;
+  rounded: string;
+  borderWidth: string;
+  borderColor: string;
+  ringWidth: string;
+  ringColor: string;
   width: string;
   maxWidth: string;
   height: string;
@@ -22,13 +36,27 @@ export type AlphaStylePicks = {
 export const EMPTY_ALPHA_PICKS: AlphaStylePicks = {
   fontSize: "",
   fontWeight: "",
+  lineHeight: "",
+  letterSpacing: "",
+  textAlign: "",
   textColor: "",
   bgColor: "",
-  rounded: "",
   padding: "",
+  paddingX: "",
+  paddingY: "",
   margin: "",
-  textAlign: "",
+  marginX: "",
+  marginY: "",
   gap: "",
+  flexDirection: "",
+  justify: "",
+  items: "",
+  gridCols: "",
+  rounded: "",
+  borderWidth: "",
+  borderColor: "",
+  ringWidth: "",
+  ringColor: "",
   width: "",
   maxWidth: "",
   height: "",
@@ -42,9 +70,11 @@ export function buildAlphaPatchOps(
   draftText: string,
   baselinePicks: AlphaStylePicks,
   draftPicks: AlphaStylePicks,
+  options?: { textEditable?: boolean },
 ): PatchOp[] {
   const ops: PatchOp[] = [];
-  if (draftText !== baselineText) {
+  const allowText = options?.textEditable !== false;
+  if (allowText && draftText !== baselineText) {
     ops.push({ kind: "setText", text: draftText });
   }
   const keys = Object.keys(EMPTY_ALPHA_PICKS) as (keyof AlphaStylePicks)[];
