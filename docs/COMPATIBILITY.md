@@ -67,7 +67,7 @@ Target release: **`0.4.0-alpha.0`** (see [CHANGELOG](../CHANGELOG.md), [nuvio_v0
 
 - Quick edits, container guidance, table section/header/row editing on TailAdmin dogfood.
 - Static `tableData` cell copy via `setTableDataField`.
-- Copy fix context for Cursor handoff.
+- Copy Fix Prompt handoff for blocked edits.
 
 ---
 

@@ -18,6 +18,7 @@ export default defineConfig(({ command }) => ({
     dedupe: ["react", "react-dom"],
   },
   server: {
+    port: 5174,
     fs: {
       allow: [repoRoot],
     },

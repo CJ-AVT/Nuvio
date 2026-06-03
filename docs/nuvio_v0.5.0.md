@@ -87,7 +87,7 @@ Keep coding.
 
 **Primary:** Stop wasting AI tokens on UI tweaks.
 
-**Alternatives:** Your AI built the page. Nuvio finishes it. · The last 10% of vibe coding. · Fix UI without prompting Cursor.
+**Alternatives:** Your AI built the page. Nuvio finishes it. · The last 10% of vibe coding. · Fix UI without re-prompting your AI.
 
 ## Release goal
 
@@ -107,7 +107,7 @@ The engine (protocol v7, index v4, `setTableDataField`, fail-closed patch) **car
 
 ## Who we build for
 
-Primary users: Cursor, v0, Lovable, Bolt, Replit users; indie hackers; startup founders; PMs building apps; former developers returning through AI.
+Primary users: AI-assisted builders (v0, Lovable, Bolt, Replit, etc.); indie hackers; startup founders; PMs building apps; former developers returning through AI.
 
 These users are **not** frontend experts. They do not want to learn Tailwind, React internals, AST patching, or CSS architecture on day one. They want **outcomes**.
 
@@ -127,7 +127,7 @@ Every user should answer **“Can I change this?”** within 2 seconds and **“
 
 > A founder with no React expertise can install Nuvio, open localhost, click a dashboard card, change text and styling, preview and apply changes, and continue building — **without** understanding Tailwind, ASTs, or source indexing.
 
-**Honest boundary:** Public support is **React + Vite + Tailwind v3/v4** on **instrumented** hosts. Chart graphics, API-driven lists, and dynamic `cn()` patterns still hand off to Cursor via **Copy Fix Prompt**.
+**Honest boundary:** Public support is **React + Vite + Tailwind v3/v4** on **instrumented** hosts. Chart graphics, API-driven lists, and dynamic `cn()` patterns still hand off via **Copy Fix Prompt** for edits in your code editor.
 
 ---
 
@@ -508,10 +508,10 @@ For v0.5 stable, use **`dashboard.title`** on TailAdmin Home plus one additional
 | EcommerceMetrics | P-A | ✅ | Verify card task router | — |
 | Recent Orders | P-B | ✅ | Verify table task router | — |
 | StatisticsChart | P-B | ✅ `chart.sales.*` | — | Chart mode + verify |
-| MonthlyTarget | P-B/F | ❌ | — | Add title + card ids |
-| DemographicCard | P-B/F | ❌ | — | Add title + card ids |
-| DefaultInputs / forms | P-C | ⚠️ partial | — | Add label + input pair |
-| AppSidebar | P-E | ⚠️ `app.sidebar` only | — | Add ≥1 nav link id |
+| MonthlyTarget | P-B/F | ✅ `target.monthly.*` | — | Chart mode |
+| DemographicCard | P-B/F | ✅ `demo.card` / `.title` / `.subtitle` | — | Chart mode |
+| DefaultInputs / forms | P-C | ✅ `form.email.label` / `.input` | — | Form mode |
+| AppSidebar | P-E | ✅ `app.sidebar` + `nav.dashboard` | — | Nav mode |
 | Home dashboard title | P-F | ✅ `dashboard.title` | — | Section block or demo-app |
 
 Update [`apps/tailadmin-dogfood/README.md`](../apps/tailadmin-dogfood/README.md) id table when instrumentation completes.
@@ -536,7 +536,7 @@ The **default Simple Mode panel** becomes **task-oriented** and follows **Rule 5
 6. **Pending changes** line + **Preview Changes** → human diff → **Apply to Code** / **Undo** ([`simple-mode-actions.tsx`](../packages/overlay/src/simple-mode-actions.tsx)).
 7. **Advanced** (single collapsed section at bottom): Responsive preview (Desktop/Mobile), text color/size/weight, card style presets, Outline, Show Developer Details.
 
-**Beta scope (0.5.0-beta.0):** task router ships for **Card** and **Table** modes only. Other modes remain on v0.4 Quick edits path until stable.
+**Beta scope (0.5.0-beta.0):** task router shipped for **Card** and **Table** first. **Stable (`0.5.0`):** Button, Form, Nav, Chart, and Section modes are enabled in Simple Mode.
 
 ## Panel order (canonical v0.5 Simple Mode)
 
@@ -713,7 +713,7 @@ Requires per-link ids. Container-only `app.sidebar` shows **Guidance** → pick 
 
 **Menu:** Title · Subtitle · Card Style
 
-Contextual guide [`chart-polish`](../packages/overlay/src/selection-guides.ts) explains chart numbers need Cursor.
+Contextual guide [`chart-polish`](../packages/overlay/src/selection-guides.ts) explains chart numbers usually need source edits.
 
 ## Section mode (P-F) — **stable only**
 
@@ -787,7 +787,7 @@ Payload via [`buildFixHandoffClipboard`](../packages/overlay/src/fix-handoff.ts)
 
 - file, line, component, host id
 - user intent, plain reason
-- suggested next step + optional Cursor prompt
+- suggested next step + optional prompt for your editor or AI assistant
 
 Optional: **Open file** via [`buildEditorUrl`](../packages/overlay/src/fix-handoff.ts) / `NUVIO_EDITOR_URL`.
 
@@ -1272,15 +1272,15 @@ Ship when the **core vibe-coder loop** works on **Cards + Tables** only.
 
 Everything in beta, plus:
 
-- [ ] Task router: Button, Form, Nav, Chart, Section modes (Step 8)
-- [ ] P-C, P-D, P-E, P-F instrumentation complete (Step 9)
-- [ ] §14 B scenarios S1–S11 pass
-- [ ] §15 screenshots SS11–SS14
-- [ ] S8 10-minute new user documented
-- [ ] S9 second external dogfood pass documented
-- [ ] npm `@nuvio/*` at `0.5.0`
-- [ ] COMPATIBILITY + LIMITATIONS aligned with §3
-- [ ] Marketing assets §23 (minimum: 2 demo videos)
+- [x] Task router: Button, Form, Nav, Chart, Section modes (Step 8)
+- [x] P-C, P-D, P-E, P-F instrumentation complete (Step 9) — see §12 gap table
+- [x] §14 B scenarios S1–S11 pass — [DOGFOOD.md](./DOGFOOD.md) § v0.5.0 stable + `pnpm v05:acceptance:stable`
+- [x] §15 screenshots SS11–SS14 — [screenshots/v0.5/](./screenshots/v0.5/) (`SS14` via demo-app)
+- [x] S8 10-minute new user documented — [nuvioUser.md](./nuvioUser.md) + [apps/demo-app/README.md](../apps/demo-app/README.md)
+- [x] S9 second external dogfood pass documented — template in [DOGFOOD.md](./DOGFOOD.md) § v0.5.0 stable
+- [x] npm `@nuvio/*` at `0.5.0`
+- [x] COMPATIBILITY + LIMITATIONS aligned with §3
+- [x] Marketing assets §23 (minimum: 2 demo videos) — [marketing/VIDEO_SCRIPTS_v0.5.md](./marketing/VIDEO_SCRIPTS_v0.5.md)
 
 ### Known v0.4 carry-over exceptions (document if still open)
 
@@ -1393,7 +1393,7 @@ Carry forward from v0.4 §15:
 
 ## Launch audience
 
-1. Cursor users  
+1. AI-assisted IDE users  
 2. v0 users  
 3. Lovable / Bolt users  
 4. Indie hackers  
@@ -1427,7 +1427,7 @@ Tablet mode → adjust section padding → Preview → Apply.
 | YouTube reviews | 5 |
 | Template partnerships | 3 |
 
-**Primary metric:** Number of UI changes completed **without opening Cursor**.
+**Primary metric:** Number of UI changes completed **without leaving the browser for manual code edits**.
 
 ## v0.5.0 definition of success (product)
 
@@ -1458,7 +1458,7 @@ Reason: This element is a layout container, not editable text.
 
 Suggested next step: Select "Recent Orders" title or add data-nuvio-id="orders.title" on the heading.
 
-Optional prompt for Cursor:
+Optional prompt (paste into your editor or AI assistant):
 "In RecentOrders.tsx, add data-nuvio-id orders.title to the Recent Orders heading and ensure the title text is a string literal."
 ```
 

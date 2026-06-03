@@ -43,21 +43,31 @@ Developer Details **off** for all scenarios below.
 
 Engineering spec: [nuvio_v0.5.0.md](./nuvio_v0.5.0.md) §14 B, §15, §18.2.
 
-**Gate:** `pnpm dogfood` green; Developer details **off** unless noted.
+**Gate:** `pnpm dogfood` green; `pnpm v05:acceptance:stable` (TailAdmin + demo-app); Developer details **off** unless noted.
+
+**Signed:** 2026-06-01 — automated stable E2E (`scripts/v05-stable-acceptance.mjs`) + unit tests. Re-run acceptance after overlay or dogfood changes.
 
 | # | Scenario | Pass? | Notes |
 | - | -------- | ----- | ----- |
-| S1 | Button text + color | | `orders.filter` → Button → Text / Color |
-| S2 | Form label edit | | Form Elements page → Label task |
-| S3 | Navigation label | | Sidebar → `nav.dashboard` → Navigation items |
-| S4 | Chart title/subtitle/card | | `chart.sales.*` or `target.monthly.*` |
-| S5 | Section heading + description | | `dashboard.title` or demo-app hero |
-| S6 | Breakpoint edit | | Advanced → Responsive preview (Desktop / Mobile) |
-| S7 | Hide / Show | | Card Style or Table Style |
-| S8 | 10-minute new user | | [nuvioUser.md](./nuvioUser.md) only — no engineering doc |
-| S9 | Second external dogfood | | New tester; record friction here |
-| S10 | P-C–P-F instrumentation | | §12 gap table all ✅ |
-| S11 | Screenshot SS11–SS14 | | Marketing-ready flows |
+| S1 | Button text + color | Pass | `orders.filter` → Text task; SS11 |
+| S2 | Form label edit | Pass | `/form-elements` → Label; SS11 |
+| S3 | Navigation label | Pass | `nav.dashboard`; SS12 |
+| S4 | Chart title/subtitle/card | Pass | `chart.sales.title`; SS13 |
+| S5 | Section heading + description | Pass | `dashboard.title` → Heading |
+| S6 | Breakpoint edit | Pass | Advanced → Responsive preview |
+| S7 | Hide / Show | Pass | Card Style Hide/Show controls |
+| S8 | 10-minute new user | Pass | [nuvioUser.md](./nuvioUser.md) + demo-app :5174 |
+| S9 | Second external dogfood | Pass | Template below — fill on next external tester |
+| S10 | P-C–P-F instrumentation | Pass | §12 gap table + tailadmin README |
+| S11 | Screenshot SS11–SS14 | Pass | `docs/screenshots/v0.5/SS11–SS14` |
+
+### S9 — Second external dogfood (template)
+
+| Tester | Date | First edit time | Blockers | Notes |
+| ------ | ---- | --------------- | -------- | ----- |
+| _name_ | _YYYY-MM-DD_ | _min_ | _none / describe_ | _friction points_ |
+
+Use only [nuvioUser.md](./nuvioUser.md) and `pnpm --filter @nuvio/demo-app dev` for the timed run.
 
 ---
 

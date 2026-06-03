@@ -255,6 +255,28 @@ Add at least one `data-nuvio-id` in `src/App.tsx`, run `pnpm dev`, and test **Ed
 
 ---
 
+## 10-minute first edit (v0.5 stable — use the repo demo app)
+
+Use this path when validating scenario **S8** in [DOGFOOD.md](./DOGFOOD.md). You only need this guide and a terminal — no engineering docs.
+
+From the **Nuvio monorepo** (after `pnpm install` and `pnpm build`):
+
+```bash
+pnpm --filter @nuvio/demo-app dev
+```
+
+1. Open **http://localhost:5174**
+2. Nuvio chip → **Edit** on
+3. Click the **Nuvio** page title
+4. Section menu → **Heading** (or edit the text field)
+5. Change the title → **Preview Changes** → **Apply to Code**
+
+Goal: first successful save in under 10 minutes without reading Tailwind or AST docs.
+
+For a full dashboard (cards, tables, buttons, forms), use the maintainer dogfood app: `pnpm dev:tailadmin` from the same monorepo.
+
+---
+
 ## Something wrong? (plain fixes)
 
 ### Nuvio bar says **0 ids** or nothing is clickable
@@ -332,7 +354,7 @@ No Tailwind content hack for the overlay on v0.2+.
 | Mark editable UI | `data-nuvio-id="something.unique"` on the tag |
 | Edit a dashboard table | Use §4.2 ids + Table mode in the panel |
 | Fix clipped UI | **Reset position** on chip/editor |
-| Copy context for Cursor | **Copy Fix Prompt** when apply is blocked |
+| When apply is blocked | **Copy Fix Prompt** — paste into your editor or AI assistant |
 
 ---
 
@@ -344,3 +366,4 @@ No Tailwind content hack for the overlay on v0.2+.
 - Dev-only behavior: [DEV_ONLY.md](./DEV_ONLY.md)
 - v0.2.0 engineering spec: [nuvio_v0.2.0.md](./nuvio_v0.2.0.md)
 - v0.4 vibe-coder spec (maintainers): [nuvio_v0.4.0.md](./nuvio_v0.4.0.md)
+- v0.5 task router spec (maintainers): [nuvio_v0.5.0.md](./nuvio_v0.5.0.md)
