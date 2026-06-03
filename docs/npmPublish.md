@@ -38,7 +38,7 @@ demo-app, packages/*/src                 Tarball per package: dist/ + README onl
 
 Root scripts (`package.json`):
 
-- **`pnpm publish:stable`** — publish all four to npm **`latest`**
+- **`pnpm publish:stable`** — publish five packages to npm **`latest`** (`shared`, `ast-engine`, `vite-plugin`, `overlay`, `cli`; excludes `@nuvio/next`)
 - **`pnpm publish:alpha`** — same, with dist-tag **`alpha`** (prereleases)
 
 ---
@@ -128,12 +128,13 @@ git push origin main
 
 ### Step 3 — Confirm versions
 
-All four must match (e.g. **`0.1.0`**):
+All five must match (e.g. **`0.5.2`**):
 
 - `packages/shared/package.json`
 - `packages/ast-engine/package.json`
 - `packages/vite-plugin/package.json`
 - `packages/overlay/package.json`
+- `packages/cli/package.json`
 
 ### Step 4 — Tag private repo (recommended)
 
@@ -150,7 +151,7 @@ Skip if tag already exists on the release commit.
 pnpm -r publish --filter "./packages/*" --access public --dry-run
 ```
 
-Confirm four packages and dependency order: **shared → ast-engine → vite-plugin → overlay**.
+Confirm five packages and dependency order: **shared → ast-engine → vite-plugin → overlay → cli**.
 
 ### Step 6 — Publish stable
 

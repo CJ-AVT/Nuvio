@@ -17,7 +17,7 @@
     "test:cli": "pnpm --filter @nuvio/cli test",
     "v051:acceptance": "node scripts/v051-cli-acceptance.mjs",
     "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",
-    "publish:stable": "pnpm -r publish --filter \"./packages/*\" --access public"
+    "publish:stable": "pnpm -r publish --filter \"@nuvio/shared\" --filter \"@nuvio/ast-engine\" --filter \"@nuvio/vite-plugin\" --filter \"@nuvio/overlay\" --filter \"@nuvio/cli\" --access public"
   },
   "engines": {
     "node": ">=20"
