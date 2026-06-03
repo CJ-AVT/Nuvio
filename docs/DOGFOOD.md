@@ -113,7 +113,21 @@ pnpm dev
 | S8b-2 | Click starter → edit → Preview → Apply → HMR | Pass | Safari; Section Title text apply (`Get started 101` → `102`) |
 | S8b-3 | Completed in under 10 min without opening `nuvioUser.md` | Pass | CLI + `nuvio/START_HERE.md` only |
 
-**Signed:** 2026-06-03 — manual S8b on `/tmp/nuvio-s8b-test` + automated gates (§A). Developer Details **off**.
+**Signed (pre-publish):** 2026-06-03 — manual S8b on `/tmp/nuvio-s8b-test` + automated gates (§A). Developer Details **off**.
+
+#### Post-publish S8b — `@nuvio/*@0.5.2` on npm
+
+**App:** `/tmp/nuvio-smoke-052` — `pnpm create vite` (react-ts), `pnpm install`, `pnpm dlx @nuvio/cli@0.5.2 init --yes`, `pnpm dev`.
+
+**Trap:** If `create vite` prompts “Install and start now?” → **No**. Yes starts dev before `init` and the page stays unwired until init runs.
+
+| # | Check | Pass? | Notes |
+| - | ----- | ----- | ----- |
+| S8b-1 | Chip index ≥ 1 id (`page.title`) | Pass | Connected · 1 editable area |
+| S8b-2 | Click starter → edit → Preview → Apply → HMR | Pass | Safari; Section Title (`Get started` → `Get started101`) |
+| S8b-3 | No `nuvioUser.md`; CLI + `nuvio/START_HERE.md` only | Pass | Consumer npm path; no `fs.allow` |
+
+**Signed (post-publish):** 2026-06-03 — `/tmp/nuvio-smoke-052` via `pnpm dlx @nuvio/cli@0.5.2 init --yes`. Developer Details **off**.
 
 Optional: extend `scripts/v051-cli-acceptance.mjs` with Playwright apply loop (not required for first publish).
 

@@ -4,6 +4,10 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ## [Unreleased]
 
+### Changed
+
+- `@nuvio/vite-plugin` peer `vite` now includes **^8.0.0** (removes install warning on current `create vite` templates). Publish **0.5.3** to npm when ready.
+
 ## [0.5.2] — 2026-06-03 (CLI: overlay dev wiring fix)
 
 ### Fixed

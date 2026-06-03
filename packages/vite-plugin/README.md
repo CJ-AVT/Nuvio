@@ -2,7 +2,7 @@
 
 Vite plugin: dev WebSocket channel, **dev-time source index**, secure file writes for Nuvio patches.
 
-**Peer:** `vite` ^5.4 or ^6.
+**Peer:** `vite` ^5.4, ^6, or ^8.
 
 See the [Nuvio README](../../README.md) and [CHANGELOG](../../CHANGELOG.md).
 

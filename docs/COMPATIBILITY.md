@@ -8,7 +8,7 @@ Target release: **`0.5.0`** (see [CHANGELOG](../CHANGELOG.md), [nuvio_v0.5.0.md]
 
 | Area | Supported | Notes |
 | ---- | --------- | ----- |
-| **Bundler (Vite)** | Vite **5.4+** and **6.x** | **Public v0.5 scope** — full task router + TailAdmin P-A–P-F on Vite. |
+| **Bundler (Vite)** | Vite **5.4+**, **6.x**, and **8.x** | **Public v0.5 scope** — full task router + TailAdmin P-A–P-F on Vite. Vite 8 validated post-publish S8b (`create vite` react-ts template, 2026-06-03). |
 | **Bundler (Next)** | Experimental only | `@nuvio/next` remains in repo; **not** in public v0.5 setup docs. Use `pnpm dev:next` for maintainers. |
 | **Framework** | React **18.3+** or **19.x** | Simple Mode: Card, Table, Button, Form, Nav, Chart, Section task menus. |
 | **Wire protocol** | **v7** (unchanged) | Index v4; no protocol bump in v0.5. |
