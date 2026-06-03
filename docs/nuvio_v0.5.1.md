@@ -395,7 +395,7 @@ Add once, with other imports:
 import "@nuvio/overlay/style.css";
 ```
 
-Idempotent: skip if already present.
+Idempotent: skip if already present. **Skip** when `@nuvio/overlay` is `workspace:*` / `file:` / `link:` (monorepo dev aliases overlay source — CSS is already imported from `packages/overlay/src/index.tsx`).
 
 ### B. `vite.config.ts` — `optimizeDeps.exclude`
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { appHasDevShell, resolveAppFile } from "./patch-app-root.js";
 import {
   mainHasOverlayStyles,
+  overlayInstalledFromNpm,
   resolveMainEntry,
 } from "./patch-main-styles.js";
 import {
@@ -39,7 +40,12 @@ export function verifyProject(
   return {
     deps: depsOk ? "OK" : "MISSING",
     vite: viteConfigHasNuvio(viteConfigPath) ? "OK" : "TODO",
-    overlayCss: mainEntry && mainHasOverlayStyles(mainEntry) ? "OK" : "TODO",
+    overlayCss:
+      mainEntry &&
+      (mainHasOverlayStyles(mainEntry) ||
+        !overlayInstalledFromNpm(packageJsonPath))
+        ? "OK"
+        : "TODO",
     optimizeDeps: viteConfigHasOverlayOptimizeExclude(viteConfigPath)
       ? "OK"
       : "TODO",
