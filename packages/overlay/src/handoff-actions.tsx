@@ -1,4 +1,5 @@
 import type { PlainPatchAction } from "./plain-patch-messages.js";
+import { getPlainPatchHandoffStep } from "./plain-patch-messages.js";
 import {
   buildEditorUrl,
   buildFixHandoffClipboard,
@@ -36,9 +37,12 @@ export function HandoffActionBar({
   onAddIdHint,
   onChangeBreakpoint,
 }: HandoffActionBarProps): ReactElement {
-  const editorUrl = buildEditorUrl(file, line);
+  const editorUrl = simpleMode ? null : buildEditorUrl(file, line);
 
   const copyHandoff = (): void => {
+    const suggestedNextStep = tableContext
+      ? MAKE_TABLE_EDITABLE_SNIPPET
+      : getPlainPatchHandoffStep(reason);
     void copyTextToClipboard(
       buildFixHandoffClipboard({
         hostId,
@@ -47,9 +51,7 @@ export function HandoffActionBar({
         componentName,
         userIntent,
         reason,
-        suggestedNextStep: tableContext
-          ? MAKE_TABLE_EDITABLE_SNIPPET
-          : "Add data-nuvio-id on the text element or pick a child target in the outline.",
+        suggestedNextStep,
       }),
     );
   };

@@ -97,7 +97,8 @@ describe("mapUnsupportedReasonToSimple", () => {
     const msg = mapUnsupportedReasonToSimple(
       "className is not a string literal — only literal className strings are patchable in this version.",
     );
-    expect(msg).toContain("dynamic className");
+    expect(msg).toContain("dynamic style");
+    expect(msg).not.toMatch(/\bclassName\b/i);
   });
 
   it("maps map() risk to plain copy", () => {

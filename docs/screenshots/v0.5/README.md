@@ -37,3 +37,21 @@ Outputs PNGs in this folder plus `acceptance-report.json`.
 
 Sign-off: [acceptance-report.json](./acceptance-report.json) — all E2E checks pass (Rule 0 + Rule 6).  
 Manual record: [DOGFOOD.md](../../DOGFOOD.md) § v0.5.0-beta.0.
+
+## Stable (`0.5.0`) — SS11–SS14
+
+| File | Scenario | Capture |
+| ---- | -------- | ------- |
+| SS11-form-label.png | Form label task (P-C) | `v05-stable-acceptance.mjs` on `/form-elements` |
+| SS11-button-text.png | Button text task (P-D) | `orders.filter` |
+| SS12-nav-label.png | Nav label (P-E) | `nav.dashboard` |
+| SS13-chart-title.png | Chart title (P-B) | `chart.sales.title` |
+| SS14-demo-first-edit.png | 10-minute path (S8) | `demo-app` on :5174 |
+
+```bash
+pnpm --filter @nuvio/tailadmin-dogfood dev
+pnpm --filter @nuvio/demo-app dev
+node scripts/v05-stable-acceptance.mjs --url=http://localhost:5173 --demo-url=http://localhost:5174
+```
+
+Report: [stable-acceptance-report.json](./stable-acceptance-report.json)

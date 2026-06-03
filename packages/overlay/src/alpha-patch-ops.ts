@@ -70,7 +70,7 @@ export function buildAlphaPatchOps(
   draftText: string,
   baselinePicks: AlphaStylePicks,
   draftPicks: AlphaStylePicks,
-  options?: { textEditable?: boolean },
+  options?: { textEditable?: boolean; priorDraftPicks?: AlphaStylePicks },
 ): PatchOp[] {
   const ops: PatchOp[] = [];
   const allowText = options?.textEditable !== false;
@@ -80,7 +80,16 @@ export function buildAlphaPatchOps(
   const keys = Object.keys(EMPTY_ALPHA_PICKS) as (keyof AlphaStylePicks)[];
   for (const key of keys) {
     const next = draftPicks[key].trim();
-    if (!next || next === baselinePicks[key]) {
+    const prev = baselinePicks[key].trim();
+    if (next === prev) {
+      continue;
+    }
+    if (!next) {
+      const staged = options?.priorDraftPicks?.[key]?.trim() ?? "";
+      const toRemove = staged && staged !== prev ? staged : prev;
+      if (toRemove) {
+        ops.push({ kind: "removeTailwindClassName", classNameFragment: toRemove });
+      }
       continue;
     }
     ops.push({ kind: "mergeTailwindClassName", classNameFragment: next });

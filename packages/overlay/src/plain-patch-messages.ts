@@ -8,6 +8,8 @@ export type PlainPatchAction =
 export type PlainPatchMessage = {
   sentence: string;
   suggestedAction: PlainPatchAction;
+  /** Short instruction for Copy Fix Prompt clipboard (defaults to sentence). */
+  handoffStep?: string;
 };
 
 const REASON_MAP: ReadonlyArray<{
@@ -31,7 +33,7 @@ const REASON_MAP: ReadonlyArray<{
   {
     match: (r) => r.includes("Custom React component"),
     message: {
-      sentence: "This is a custom component — styles only work when className reaches a real HTML element.",
+      sentence: "This is a custom component — styles only work when they reach a real HTML element.",
       suggestedAction: "useHandoff",
     },
   },
@@ -126,6 +128,16 @@ const REASON_MAP: ReadonlyArray<{
       suggestedAction: "switchTarget",
     },
   },
+  {
+    match: (r) => r.includes("Unknown or disallowed Tailwind"),
+    message: {
+      sentence:
+        "This class uses utilities Nuvio can't edit yet — simplify the styles on this element or edit in your code editor.",
+      suggestedAction: "useHandoff",
+      handoffStep:
+        "Remove or simplify responsive/dark Tailwind classes on this element so Nuvio can edit padding, radius, and shadow.",
+    },
+  },
 ];
 
 export function mapReasonToPlainMessage(reason: string): PlainPatchMessage {
@@ -136,9 +148,21 @@ export function mapReasonToPlainMessage(reason: string): PlainPatchMessage {
     }
   }
   return {
-    sentence: "This change couldn't be applied safely. Use Copy Fix Prompt for Cursor or turn on Developer details.",
+    sentence:
+      "This change couldn't be applied safely. Use Copy Fix Prompt below or turn on Developer details.",
     suggestedAction: "useHandoff",
+    handoffStep:
+      "Inspect the styles on this element and remove conflicting responsive or custom utilities.",
   };
+}
+
+export function getPlainPatchHandoffStep(message: string | null | undefined): string {
+  if (!message) {
+    return "Review this element in source and fix the styles or Nuvio ids.";
+  }
+  const stripped = message.replace(/^Error:\s*/i, "").trim();
+  const mapped = mapReasonToPlainMessage(stripped);
+  return mapped.handoffStep ?? mapped.sentence;
 }
 
 export function formatPatchUserMessagePlain(message: string | null | undefined): string | null {

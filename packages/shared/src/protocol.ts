@@ -178,6 +178,12 @@ export const patchOpMergeTailwindSchema = z.object({
   classNameFragment: z.string(),
 });
 
+/** Remove allowlisted utilities from a string-literal className (reset style pick to Default). */
+export const patchOpRemoveTailwindSchema = z.object({
+  kind: z.literal("removeTailwindClassName"),
+  classNameFragment: z.string(),
+});
+
 /** Reorder host among JSX element siblings under a flex/grid parent (Phase 4). */
 export const patchOpMoveSiblingSchema = z.object({
   kind: z.literal("moveSibling"),
@@ -207,6 +213,7 @@ export const patchOpSetTableDataFieldSchema = z.object({
 export const patchOpSchema = z.discriminatedUnion("kind", [
   patchOpSetTextSchema,
   patchOpMergeTailwindSchema,
+  patchOpRemoveTailwindSchema,
   patchOpMoveSiblingSchema,
   patchOpSetHiddenSchema,
   patchOpDuplicateHostSchema,

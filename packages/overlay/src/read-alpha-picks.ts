@@ -117,6 +117,14 @@ function lastCompositeMatch(tokens: readonly string[], composites: readonly stri
   return hit;
 }
 
+function isPaddingUtility(token: string): boolean {
+  return /^(p|px|py|pt|pb|pl|pr)-/.test(token);
+}
+
+function isShadowUtility(token: string): boolean {
+  return /^shadow(?:-(?:sm|md|lg|xl|2xl|inner|none))?$/.test(token);
+}
+
 /**
  * Map a host element's `class` attribute to staged pick values (panel dropdowns).
  * Resolves responsive (`md:`) and variant (`dark:`) prefixes for the active breakpoint.
@@ -137,7 +145,10 @@ export function readAlphaPicksFromClassName(
     textAlign: lastLiteralMatch(tokens, TEXT_ALIGN),
     textColor: lastPick(tokens, TEXT_COLOR, isTextColorUtility),
     bgColor: lastPick(tokens, BG_COLOR, isBgColorUtility),
-    padding: lastCompositeMatch(tokens, PADDING) || lastLiteralMatch(tokens, PADDING),
+    padding:
+      lastCompositeMatch(tokens, PADDING) ||
+      lastLiteralMatch(tokens, PADDING) ||
+      lastPick(tokens, PADDING, isPaddingUtility),
     paddingX: lastLiteralMatch(tokens, PADDING_X),
     paddingY: lastLiteralMatch(tokens, PADDING_Y),
     margin: lastLiteralMatch(tokens, MARGIN),
@@ -158,7 +169,7 @@ export function readAlphaPicksFromClassName(
     height: lastLiteralMatch(tokens, HEIGHT),
     minHeight: lastLiteralMatch(tokens, MIN_HEIGHT),
     opacity: lastLiteralMatch(tokens, OPACITY),
-    shadow: lastLiteralMatch(tokens, SHADOW),
+    shadow: lastLiteralMatch(tokens, SHADOW) || lastPick(tokens, SHADOW, isShadowUtility),
   };
 }
 

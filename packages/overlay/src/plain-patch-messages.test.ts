@@ -100,4 +100,12 @@ describe("plain-patch-messages", () => {
   it("getPlainPatchAction fallback", () => {
     expect(getPlainPatchAction("totally unknown engine message")).toBe("useHandoff");
   });
+
+  it("Rule 0: plain sentences never contain className", () => {
+    for (const { raw } of REASONS) {
+      const sentence = formatPatchUserMessagePlain(raw) ?? mapReasonToPlainMessage(raw).sentence;
+      expect(sentence).not.toMatch(/\bclassName\b/i);
+    }
+    expect(formatPatchUserMessagePlain("totally unknown engine message")).not.toMatch(/\bclassName\b/i);
+  });
 });

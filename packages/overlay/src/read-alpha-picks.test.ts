@@ -45,6 +45,21 @@ describe("readAlphaPicksFromClassName", () => {
     expect(atBase.bgColor).toBe("bg-white");
   });
 
+  it("reads custom padding and shadow utilities not in static dropdown lists", () => {
+    const picks = readAlphaPicksFromClassName(
+      "rounded-2xl bg-white p-5 md:p-6 xl:shadow-none",
+      "base",
+    );
+    expect(picks.padding).toBe("p-5");
+    expect(picks.rounded).toBe("rounded-2xl");
+    expect(picks.shadow).toBe("");
+    const atXl = readAlphaPicksFromClassName(
+      "rounded-2xl bg-white p-5 md:p-6 xl:shadow-none",
+      "xl",
+    );
+    expect(atXl.shadow).toBe("shadow-none");
+  });
+
   it("reads custom text size and palette colors not in static allowlists", () => {
     const picks = readAlphaPicksFromClassName(
       "mt-2 font-bold text-title-sm xl:text-red-600 text-lime-500",

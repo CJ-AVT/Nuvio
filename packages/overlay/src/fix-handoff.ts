@@ -25,7 +25,7 @@ export function buildFixHandoffClipboard(ctx: FixHandoffContext): string {
     "",
     `Suggested next step: ${ctx.suggestedNextStep}`,
     "",
-    "Optional prompt for Cursor:",
+    "Optional prompt (paste into your editor or AI assistant):",
     `"In ${ctx.file ?? "the component file"}, ${ctx.suggestedNextStep}"`,
   ].join("\n");
 }
@@ -48,24 +48,31 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Build cursor:// or vscode:// link when file path is known. */
+function resolveEditorUrlScheme(): string {
+  const fromMeta =
+    typeof import.meta !== "undefined"
+      ? (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_NUVIO_EDITOR_URL
+      : undefined;
+  const fromProcess =
+    typeof globalThis !== "undefined" &&
+    "process" in globalThis &&
+    (globalThis as { process?: { env?: Record<string, unknown> } }).process?.env?.NUVIO_EDITOR_URL;
+  for (const candidate of [fromMeta, fromProcess]) {
+    if (typeof candidate === "string" && candidate.length > 0) {
+      return candidate;
+    }
+  }
+  return "vscode";
+}
+
+/** Build an editor deep link when file path is known (`VITE_NUVIO_EDITOR_URL` / `NUVIO_EDITOR_URL`, default `vscode`). */
 export function buildEditorUrl(file?: string, line?: number): string | null {
   if (!file) {
     return null;
   }
-  const scheme =
-    typeof globalThis !== "undefined" &&
-    "process" in globalThis &&
-    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
-      ?.NUVIO_EDITOR_URL
-      ? ((globalThis as { process: { env: Record<string, string | undefined> } }).process.env
-          .NUVIO_EDITOR_URL ?? "cursor")
-      : "cursor";
+  const scheme = resolveEditorUrlScheme();
   const normalized = file.replace(/\\/g, "/");
   const atLine = line != null ? `:${line}` : "";
-  if (scheme === "vscode" || scheme === "cursor") {
-    return `${scheme}://file/${normalized}${atLine}`;
-  }
   if (scheme.includes("://")) {
     return `${scheme}${normalized}${atLine}`;
   }

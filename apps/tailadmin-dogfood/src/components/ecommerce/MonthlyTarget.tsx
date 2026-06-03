@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { MoreDotIcon } from "../../icons";
-
 export default function MonthlyTarget() {
   const series = [75.55];
   const options: ApexOptions = {
@@ -55,16 +54,17 @@ export default function MonthlyTarget() {
     labels: ["Progress"],
   };
   const [isOpen, setIsOpen] = useState(false);
-
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
-
   function closeDropdown() {
     setIsOpen(false);
   }
   return (
-    <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]" data-nuvio-id="target.monthly.card">
+    <div
+      className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]"
+      data-nuvio-id="target.monthly.card"
+    >
       <div className="px-5 pt-5 bg-white shadow-default rounded-2xl pb-11 dark:bg-gray-900 sm:px-6 sm:pt-6">
         <div className="flex justify-between">
           <div>
@@ -72,7 +72,7 @@ export default function MonthlyTarget() {
               className="text-lg font-semibold text-gray-800 dark:text-white/90"
               data-nuvio-id="target.monthly.title"
             >
-              Monthly Target
+              Monthly Target 101
             </h3>
             <p
               className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400"

@@ -26,7 +26,7 @@ export const GUIDE_CONTENT: Record<OnboardingGuideId, GuideContent> = {
   },
   "chart-polish": {
     title: "Chart block",
-    body: "You can usually edit the title, subtitle, and card background here. Chart numbers and graphs still need Cursor unless ids and data are wired.",
+    body: "You can usually edit the title, subtitle, and card background here. Chart numbers and graphs still need source edits unless ids and data are wired.",
   },
   "layout-row": {
     title: "Layout container",

@@ -101,6 +101,25 @@ describe("parseClientMessage", () => {
     });
   });
 
+  it("accepts patchApply with removeTailwindClassName", () => {
+    const msg = parseClientMessage(
+      JSON.stringify({
+        type: "patchApply",
+        protocolVersion: PROTOCOL_VERSION,
+        requestId: "r3d",
+        id: "metric.orders.card",
+        ops: [{ kind: "removeTailwindClassName", classNameFragment: "p-4" }],
+      }),
+    );
+    expect(msg).toEqual({
+      type: "patchApply",
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: "r3d",
+      id: "metric.orders.card",
+      ops: [{ kind: "removeTailwindClassName", classNameFragment: "p-4" }],
+    });
+  });
+
   it("accepts patchApply with Phase 4 structural ops", () => {
     const msg = parseClientMessage(
       JSON.stringify({

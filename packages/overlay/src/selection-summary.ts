@@ -78,13 +78,13 @@ export function getSimpleSelectionStatus(entry: IndexWireEntry): {
 export function mapUnsupportedReasonToSimple(reason: string): string {
   const lower = reason.toLowerCase();
   if (lower.includes("string literal") || lower.includes("classname")) {
-    return "This element uses dynamic className code, so style edits are disabled here.";
+    return "This element uses dynamic style classes, so spacing and color edits aren't available here.";
   }
   if (lower.includes(".map()")) {
     return "This element comes from a repeated list. Use explicit ids and verify each item carefully.";
   }
   if (lower.includes("custom react component")) {
-    return "This is a custom React component. Styles only work if className is forwarded to a real DOM node.";
+    return "This is a custom component. Styles only work if they reach a real HTML element.";
   }
   if (lower.includes("leaf elements")) {
     return "This is a container. Choose a text target inside it to edit copy.";

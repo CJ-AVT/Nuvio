@@ -191,6 +191,51 @@ function prefixTokenForBreakpoint(token: string, bp: Breakpoint): string {
   return bp === "base" ? token : `${bp}:${token}`;
 }
 
+const BREAKPOINT_ORDER: Breakpoint[] = ["base", "sm", "md", "lg", "xl"];
+
+function serializeClassNameFromBuckets(buckets: BreakpointBuckets): string {
+  const out: string[] = [];
+  const mergedBase = buckets.base.join(" ").trim();
+  if (mergedBase) {
+    out.push(mergedBase);
+  }
+  for (const bp of BREAKPOINT_ORDER.slice(1)) {
+    const merged = buckets[bp].join(" ").trim();
+    if (merged) {
+      out.push(
+        ...merged
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((t) => prefixTokenForBreakpoint(t, bp)),
+      );
+    }
+  }
+  out.push(...buckets.passthrough);
+  return out.join(" ").trim();
+}
+
+function flattenTokensAtBreakpointFromBuckets(
+  buckets: BreakpointBuckets,
+  activeBreakpoint: Breakpoint,
+): string[] {
+  const idx = BREAKPOINT_ORDER.indexOf(activeBreakpoint);
+  const out: string[] = [];
+  for (const tok of buckets.passthrough) {
+    if (/^dark:/.test(tok)) {
+      out.push(tok.replace(/^dark:/, ""));
+    }
+  }
+  for (let i = 0; i <= idx; i++) {
+    out.push(...buckets[BREAKPOINT_ORDER[i]]);
+  }
+  for (const tok of buckets.passthrough) {
+    if (!/^dark:/.test(tok)) {
+      out.push(tok);
+    }
+  }
+  return out;
+}
+
 export function mergeAtBreakpoint(
   className: string,
   fragment: string,
@@ -214,44 +259,44 @@ export function mergeAtBreakpoint(
   const mergedLg = twMerge(buckets.lg.join(" "), incomingBuckets.lg.join(" ")).trim();
   const mergedXl = twMerge(buckets.xl.join(" "), incomingBuckets.xl.join(" ")).trim();
 
-  const out: string[] = [];
-  if (mergedBase) {
-    out.push(mergedBase);
+  return serializeClassNameFromBuckets({
+    base: mergedBase ? mergedBase.split(/\s+/).filter(Boolean) : [],
+    sm: mergedSm ? mergedSm.split(/\s+/).filter(Boolean) : [],
+    md: mergedMd ? mergedMd.split(/\s+/).filter(Boolean) : [],
+    lg: mergedLg ? mergedLg.split(/\s+/).filter(Boolean) : [],
+    xl: mergedXl ? mergedXl.split(/\s+/).filter(Boolean) : [],
+    passthrough: [...buckets.passthrough, ...incomingBuckets.passthrough],
+  });
+}
+
+/** Strip allowlisted utilities from the active breakpoint (inverse of mergeAtBreakpoint). */
+export function removeAtBreakpoint(
+  className: string,
+  fragment: string,
+  activeBreakpoint: Breakpoint,
+): string {
+  const buckets = parseClassNameByBreakpoint(className);
+  const toRemove = fragment.trim().split(/\s+/).filter(Boolean);
+  if (toRemove.length === 0) {
+    return className.trim();
   }
-  if (mergedSm) {
-    out.push(
-      ...mergedSm
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((t) => prefixTokenForBreakpoint(t, "sm")),
-    );
+
+  const idx = BREAKPOINT_ORDER.indexOf(activeBreakpoint);
+  for (const tok of toRemove) {
+    buckets[activeBreakpoint] = buckets[activeBreakpoint].filter((t) => t !== tok);
+    const stillPresent = flattenTokensAtBreakpointFromBuckets(buckets, activeBreakpoint).includes(tok);
+    if (stillPresent) {
+      for (let i = idx; i >= 0; i--) {
+        const bp = BREAKPOINT_ORDER[i];
+        if (buckets[bp].includes(tok)) {
+          buckets[bp] = buckets[bp].filter((t) => t !== tok);
+          break;
+        }
+      }
+    }
   }
-  if (mergedMd) {
-    out.push(
-      ...mergedMd
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((t) => prefixTokenForBreakpoint(t, "md")),
-    );
-  }
-  if (mergedLg) {
-    out.push(
-      ...mergedLg
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((t) => prefixTokenForBreakpoint(t, "lg")),
-    );
-  }
-  if (mergedXl) {
-    out.push(
-      ...mergedXl
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((t) => prefixTokenForBreakpoint(t, "xl")),
-    );
-  }
-  out.push(...buckets.passthrough, ...incomingBuckets.passthrough);
-  return out.join(" ").trim();
+
+  return serializeClassNameFromBuckets(buckets);
 }
 
 function getClassNameBinding(
@@ -511,6 +556,26 @@ function applyMergeClassName(
   binding.write(mergeAtBreakpoint(current, fragment.trim(), activeBreakpoint));
 }
 
+function applyRemoveClassName(
+  openingPath: NodePath<t.JSXOpeningElement>,
+  fragment: string,
+  classNameMode: ClassNameMode,
+  activeBreakpoint: Breakpoint,
+): void {
+  validateTailwindFragment(fragment);
+  const opening = openingPath.node;
+  const binding = getClassNameBinding(opening, classNameMode);
+  if (!binding) {
+    throw new Error(
+      classNameMode === "cn-basic"
+        ? "className must be a string literal or simple cn()/clsx() string list in cn-basic mode"
+        : "className must be a string literal for Phase 2 patches",
+    );
+  }
+  const current = binding.read();
+  binding.write(removeAtBreakpoint(current, fragment.trim(), activeBreakpoint));
+}
+
 export type ApplyPatchToSourceResult =
   | { ok: true; source: string; diffSummary: string }
   | { ok: false; code: string; message: string };
@@ -570,6 +635,11 @@ export async function applyPatchToSource(
           throw new Error("mergeTailwindClassName requires a JSX host");
         }
         applyMergeClassName(openingPath, op.classNameFragment, classNameMode, activeBreakpoint);
+      } else if (op.kind === "removeTailwindClassName") {
+        if (!openingPath) {
+          throw new Error("removeTailwindClassName requires a JSX host");
+        }
+        applyRemoveClassName(openingPath, op.classNameFragment, classNameMode, activeBreakpoint);
       } else if (op.kind === "moveSibling") {
         if (!openingPath) {
           throw new Error("moveSibling requires a JSX host");
@@ -615,6 +685,8 @@ export async function applyPatchToSource(
         return `set text (${op.text.length} char${op.text.length === 1 ? "" : "s"})`;
       case "mergeTailwindClassName":
         return `merge className (${op.classNameFragment.trim()})`;
+      case "removeTailwindClassName":
+        return `remove className (${op.classNameFragment.trim()})`;
       case "moveSibling":
         return `move sibling ${op.direction}`;
       case "setHidden":

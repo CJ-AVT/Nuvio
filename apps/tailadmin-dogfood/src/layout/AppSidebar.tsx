@@ -241,14 +241,19 @@ const AppSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
-                      data-nuvio-id={subItem.path === "/" ? "nav.dashboard" : undefined}
                       className={`menu-dropdown-item ${
                         isActive(subItem.path)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
                       }`}
                     >
-                      {subItem.name}
+                      {subItem.path === "/" ? (
+                        <span data-nuvio-id="nav.dashboard" className="inline-block">
+                          {subItem.name}
+                        </span>
+                      ) : (
+                        subItem.name
+                      )}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span

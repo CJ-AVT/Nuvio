@@ -70,6 +70,19 @@ describe("task-router", () => {
     expect(detectSimpleRouterMode(nav, "nav.dashboard", [nav])).toBe("nav");
   });
 
+  it("detects chart mode for sales chart hosts", () => {
+    const chartTitle: IndexWireEntry = {
+      id: "chart.sales.title",
+      file: "x.tsx",
+      line: 7,
+      column: 1,
+      textEditable: true,
+      componentName: "StatisticsChart",
+      riskLevel: "safe",
+    };
+    expect(detectSimpleRouterMode(chartTitle, "chart.sales.title", [chartTitle])).toBe("chart");
+  });
+
   it("detects section mode for page titles", () => {
     const title: IndexWireEntry = {
       id: "dashboard.title",

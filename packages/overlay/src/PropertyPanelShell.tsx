@@ -20,6 +20,7 @@ import type {
 } from "@nuvio/shared";
 import type { Point } from "./overlay-chrome-storage.js";
 import { useChromeDrag } from "./useChromeDrag.js";
+import { usePrevious } from "./use-previous.js";
 import {
   EMPTY_ALPHA_PICKS,
   buildAlphaPatchOps,
@@ -269,6 +270,7 @@ export function PropertyPanelShell({
   const [baselineText, setBaselineText] = useState("");
   const [baselinePicks, setBaselinePicks] = useState<AlphaStylePicks>(EMPTY_ALPHA_PICKS);
   const [picks, setPicks] = useState<AlphaStylePicks>(EMPTY_ALPHA_PICKS);
+  const priorPicks = usePrevious(picks);
   const [textEditable, setTextEditable] = useState(true);
   const [textEditReason, setTextEditReason] = useState<string | null>(null);
   const [dismissedGuides, setDismissedGuides] = useState<ReadonlySet<string>>(() =>
@@ -562,7 +564,11 @@ export function PropertyPanelShell({
       return { error: "Nothing is selected." };
     }
     const hasText = textEditable && draftText !== baselineText;
-    const hasStyle = alphaPicksDiffer(picks, baselinePicks);
+    const styleOps = buildAlphaPatchOps(baselineText, draftText, baselinePicks, picks, {
+      textEditable: false,
+      priorDraftPicks: priorPicks,
+    });
+    const hasStyle = styleOps.length > 0;
     if (!hasText && !hasStyle) {
       return { error: "No changes to apply." };
     }
@@ -617,6 +623,7 @@ export function PropertyPanelShell({
   const stagedOps = useMemo((): PatchOp[] => {
     const styleOps = buildAlphaPatchOps(baselineText, draftText, baselinePicks, picks, {
       textEditable: false,
+      priorDraftPicks: priorPicks,
     });
     const binding = selectedEntry?.tableDataField;
     if (binding && textEditable && draftText !== baselineText) {
@@ -633,12 +640,14 @@ export function PropertyPanelShell({
     }
     return buildAlphaPatchOps(baselineText, draftText, baselinePicks, picks, {
       textEditable,
+      priorDraftPicks: priorPicks,
     });
   }, [
     baselineText,
     draftText,
     baselinePicks,
     picks,
+    priorPicks,
     selectedEntry?.tableDataField,
     textEditable,
   ]);
@@ -666,7 +675,7 @@ export function PropertyPanelShell({
   }, [selectedId, stagedOpsFingerprint, onStagedPatchFingerprint]);
 
   const hasTextChange = textEditable && draftText !== baselineText;
-  const hasStagedOps = hasTextChange || alphaPicksDiffer(picks, baselinePicks);
+  const hasStagedOps = stagedOps.length > 0;
   const selectionResolved = Boolean(resolvedFile);
 
   const containerGuidanceVisible = Boolean(
@@ -745,7 +754,7 @@ export function PropertyPanelShell({
       autoValidateTimerRef.current = null;
     }
     // Debounce style-only validate for slider/color/select changes.
-    if (!selectedId || !hasStagedOps || hasTextChange || patchActionsDisabled) {
+    if (!selectedId || stagedOps.length === 0 || hasTextChange || patchActionsDisabled) {
       return;
     }
     if (lastAutoValidatedFpRef.current === stagedOpsFingerprint) {
@@ -1381,7 +1390,12 @@ export function PropertyPanelShell({
               </p>
             ) : null}
             {lastPatchError ? (
-              <p className="nuvio-banner nuvio-banner--error">{lastPatchError}</p>
+              <p className="nuvio-banner nuvio-banner--error">
+                {developerDetails
+                  ? lastPatchError
+                  : (formatPatchUserMessagePlain(lastPatchError) ??
+                    getSimpleSelectErrorMessage(lastPatchError))}
+              </p>
             ) : null}
             {displayPreviewError && !structuralPreviewActive && developerDetails ? (
               <p className="nuvio-banner nuvio-banner--error">{displayPreviewError}</p>
@@ -1826,7 +1840,9 @@ export function PropertyPanelShell({
 
         {simpleMode &&
         selectedId &&
-        (displayPreviewError || displayPatchBlockedReason || selectedEntry?.riskLevel === "unsupported") ? (
+        (displayPreviewError ||
+          displayPatchBlockedReason ||
+          (selectedEntry?.riskLevel === "unsupported" && selectedEntry?.textEditable !== true)) ? (
           <HandoffActionBar
             reason={
               displayPreviewError ??

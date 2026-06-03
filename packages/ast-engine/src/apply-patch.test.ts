@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   applyPatchToSource,
   mergeAtBreakpoint,
+  removeAtBreakpoint,
   parseClassNameByBreakpoint,
 } from "./apply-patch.js";
 import { validateTailwindFragment } from "./tailwind-whitelist.js";
@@ -98,6 +99,19 @@ export function X() {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.source).toMatch(/p-6/);
+      expect(r.source).not.toMatch(/p-4/);
+    }
+  });
+
+  it("golden: removeTailwindClassName clears padding when reset to Default", async () => {
+    const src = `export const _ = () => <div data-nuvio-id="card" className="rounded-xl p-4 shadow-sm">x</div>;`;
+    const r = await applyPatchToSource(src, "/proj/Card.tsx", "card", [
+      { kind: "removeTailwindClassName", classNameFragment: "p-4" },
+    ]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.source).toMatch(/rounded-xl/);
+      expect(r.source).toMatch(/shadow-sm/);
       expect(r.source).not.toMatch(/p-4/);
     }
   });
@@ -482,6 +496,20 @@ describe("breakpoint class merge helpers", () => {
     expect(merged).toContain("p-4");
     expect(merged).toContain("md:p-6");
     expect(merged).toContain("lg:p-12");
+  });
+});
+
+describe("removeAtBreakpoint", () => {
+  it("removes base padding when reset to Default", () => {
+    expect(removeAtBreakpoint("rounded-xl p-4 shadow-sm", "p-4", "base")).toBe("rounded-xl shadow-sm");
+  });
+
+  it("removes only active breakpoint override", () => {
+    expect(removeAtBreakpoint("p-4 md:p-6 lg:p-8", "p-6", "md")).toBe("p-4 lg:p-8");
+  });
+
+  it("removes cascaded base padding when clearing at a larger breakpoint", () => {
+    expect(removeAtBreakpoint("p-4 md:p-6", "p-4", "md")).toBe("md:p-6");
   });
 });
 

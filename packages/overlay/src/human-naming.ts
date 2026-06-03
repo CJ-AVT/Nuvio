@@ -316,6 +316,11 @@ export function formatSelectionTitle(
     return "Button Text";
   }
 
+  if (id.startsWith("nav.")) {
+    const preview = textPreviewForId(id, entry);
+    return preview ? `${preview} Link` : "Navigation Link";
+  }
+
   return formatFriendlyId(id, entry, indexEntries);
 }
 
