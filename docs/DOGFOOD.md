@@ -105,7 +105,7 @@ pnpm add -D /path/to/Nuvio/packages/vite-plugin /path/to/Nuvio/packages/overlay
 pnpm dev
 ```
 
-**Post-publish** (consumer path): `pnpm dlx @nuvio/cli@0.5.1 init --yes` then `pnpm dev` (no `fs.allow` needed).
+**Post-publish** (consumer path): `pnpm dlx @nuvio/cli@0.5.2 init --yes` then `pnpm dev` (init adds `main.tsx` style import + `optimizeDeps.exclude`; no `fs.allow` needed).
 
 | # | Check | Pass? | Notes |
 | - | ----- | ----- | ----- |

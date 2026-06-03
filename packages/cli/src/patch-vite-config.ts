@@ -30,6 +30,91 @@ function hasNuvioPluginCall(ast: t.File): boolean {
   return found;
 }
 
+const OVERLAY_DEP = "@nuvio/overlay";
+
+function excludeListsOverlay(expr: t.Expression | null | undefined): boolean {
+  if (!expr || !t.isArrayExpression(expr)) return false;
+  return expr.elements.some(
+    (el) => t.isStringLiteral(el) && el.value === OVERLAY_DEP,
+  );
+}
+
+/** Prebundled overlay breaks dynamic style.css (404 on styles/overlay.css). */
+function ensureOptimizeDepsExclude(ast: t.File): boolean {
+  let patched = false;
+  traverse(ast, {
+    CallExpression(path: NodePath<t.CallExpression>) {
+      const callee = path.node.callee;
+      if (!t.isIdentifier(callee, { name: "defineConfig" })) return;
+      const arg = path.node.arguments[0];
+      if (!t.isObjectExpression(arg)) return;
+
+      let optimizeDeps: t.ObjectProperty | undefined;
+      for (const prop of arg.properties) {
+        if (
+          t.isObjectProperty(prop) &&
+          t.isIdentifier(prop.key, { name: "optimizeDeps" })
+        ) {
+          optimizeDeps = prop;
+          break;
+        }
+      }
+
+      if (!optimizeDeps) {
+        arg.properties.push(
+          t.objectProperty(
+            t.identifier("optimizeDeps"),
+            t.objectExpression([
+              t.objectProperty(
+                t.identifier("exclude"),
+                t.arrayExpression([t.stringLiteral(OVERLAY_DEP)]),
+              ),
+            ]),
+          ),
+        );
+        patched = true;
+        return;
+      }
+
+      if (!t.isObjectExpression(optimizeDeps.value)) return;
+      let excludeProp: t.ObjectProperty | undefined;
+      for (const p of optimizeDeps.value.properties) {
+        if (t.isObjectProperty(p) && t.isIdentifier(p.key, { name: "exclude" })) {
+          excludeProp = p;
+          break;
+        }
+      }
+      if (!excludeProp) {
+        optimizeDeps.value.properties.push(
+          t.objectProperty(
+            t.identifier("exclude"),
+            t.arrayExpression([t.stringLiteral(OVERLAY_DEP)]),
+          ),
+        );
+        patched = true;
+        return;
+      }
+      if (
+        t.isArrayExpression(excludeProp.value) &&
+        !excludeListsOverlay(excludeProp.value)
+      ) {
+        excludeProp.value.elements.push(t.stringLiteral(OVERLAY_DEP));
+        patched = true;
+      }
+    },
+  });
+  return patched;
+}
+
+export function viteConfigHasOverlayOptimizeExclude(filePath: string): boolean {
+  const source = readFileSync(filePath, "utf8");
+  return (
+    /optimizeDeps\s*:\s*\{[^}]*exclude\s*:\s*\[[^\]]*@nuvio\/overlay/.test(
+      source,
+    ) || /exclude\s*:\s*\[[^\]]*["']@nuvio\/overlay["']/.test(source)
+  );
+}
+
 function appendNuvioPlugin(ast: t.File): boolean {
   let patched = false;
   traverse(ast, {
@@ -52,7 +137,10 @@ export function patchViteConfigFile(filePath: string): PatchOutcome {
     return { ok: false, error: "parse failed" };
   }
 
-  if (hasNuvioImport(ast) && hasNuvioPluginCall(ast)) {
+  const depsPatched = ensureOptimizeDepsExclude(ast);
+  const alreadyPlugin = hasNuvioImport(ast) && hasNuvioPluginCall(ast);
+
+  if (alreadyPlugin && !depsPatched) {
     return { ok: true, skipped: true };
   }
 
@@ -72,7 +160,7 @@ export function patchViteConfigFile(filePath: string): PatchOutcome {
   }
 
   writeFileSync(filePath, printTs(ast, source), "utf8");
-  return { ok: true };
+  return { ok: true, skipped: alreadyPlugin && depsPatched };
 }
 
 export function viteConfigHasNuvio(filePath: string): boolean {

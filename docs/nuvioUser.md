@@ -4,7 +4,7 @@
 
 You only need this guide and a terminal. Copy the commands exactly.
 
-**Current release:** [`@nuvio/*` **0.5.1** on npm](https://www.npmjs.com/org/nuvio) — full task router (cards, tables, buttons, forms, navigation, charts, sections).
+**Current release:** [`@nuvio/*` **0.5.2** on npm](https://www.npmjs.com/org/nuvio) — CLI onboarding + overlay dev wiring fix. Use **`@nuvio/cli@0.5.2`** (0.5.1 may need manual overlay CSS steps — see Manual setup).
 
 **v0.2+:** Nuvio ships its own overlay styles. You do **not** add `@nuvio/overlay` to Tailwind `content`.
 
@@ -15,7 +15,7 @@ You only need this guide and a terminal. Copy the commands exactly.
 From your Vite + React + Tailwind project folder:
 
 ```bash
-pnpm dlx @nuvio/cli@0.5.1 init
+pnpm dlx @nuvio/cli@0.5.2 init
 pnpm dev
 ```
 
@@ -90,13 +90,30 @@ import { nuvio } from "@nuvio/vite-plugin";
 
 export default defineConfig({
   plugins: [react(), nuvio()],
+  optimizeDeps: {
+    exclude: ["@nuvio/overlay"],
+  },
   resolve: {
     dedupe: ["react", "react-dom"],
   },
 });
 ```
 
-**What changed:** you added `import { nuvio }` and `nuvio()` next to `react()` in `plugins`.
+**What changed:** you added `import { nuvio }` and `nuvio()` next to `react()` in `plugins`, plus `optimizeDeps.exclude` so the overlay **Edit** button works.
+
+---
+
+## Step 2b — Overlay styles in `main.tsx`
+
+**File:** `src/main.tsx` (create-vite projects have this file)
+
+Add with your other imports:
+
+```ts
+import "@nuvio/overlay/style.css";
+```
+
+**CLI `init` (0.5.2+)** adds this automatically. Skip if you used the CLI.
 
 ---
 

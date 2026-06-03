@@ -1,7 +1,7 @@
 # Nuvio v0.5.1 — CLI onboarding (`@nuvio/cli`)
 
-**Document status:** **Implemented in monorepo** — pending manual S8b sign-off, npm publish, and `v0.5.1` tag  
-**Release target:** all public `@nuvio/*` at **0.5.1** on npm (see §3 publish matrix; excludes `@nuvio/next`)  
+**Document status:** **Implemented** — CLI onboarding complete; overlay dev wiring completed in **`@nuvio/cli@0.5.2`** (see §7.1)  
+**Release target:** all public `@nuvio/*` at **0.5.2** on npm for the zero-guide path (see §3 publish matrix; excludes `@nuvio/next`)  
 **Audience:** Implementers (Cursor/ChatGPT agents: follow §3–§13, §23–§25; do not modify locked packages per §2)
 
 > **Note:** If you have additional ChatGPT recommendation text not reflected here, paste it into §24 feedback table before coding.
@@ -137,7 +137,8 @@ S8 remains valid; S8b is the new primary external onboarding story after 0.5.1 s
 | `nuvio init` command | ✅ | |
 | Detect React + Vite (+ Tailwind warn/gate) | ✅ | |
 | Install `@nuvio/vite-plugin` + `@nuvio/overlay` (devDeps) | ✅ | |
-| Patch `vite.config.*` — add `nuvio()` | ✅ | |
+| Patch `vite.config.*` — add `nuvio()` + `optimizeDeps.exclude` | ✅ | §7.1 (**0.5.2+**) |
+| Patch `src/main.*` — `import "@nuvio/overlay/style.css"` | ✅ | §7.1 (**0.5.2+**) |
 | Patch app root — `<NuvioDevShell />` | ✅ | |
 | One starter `data-nuvio-id="page.title"` | ✅ | |
 | Create `nuvio/START_HERE.md`, `nuvio/README.md` (pointer), `nuvio/AGENT.md` | ✅ | |
@@ -379,6 +380,44 @@ resolve: { dedupe: ["react", "react-dom"] },
 ```
 
 Only when safe; skip if `resolve` block is non-trivial.
+
+## 7.1 Overlay dev wiring (required — **0.5.2+**)
+
+Without these, Vite may prebundle `@nuvio/overlay` and the chip **Edit** button appears broken (404 on `styles/overlay.css` in the browser console). **S8b post-publish** found this; **0.5.1** CLI did not apply these patches.
+
+**`nuvio init` must patch both automatically** (no [`nuvioUser.md`](nuvioUser.md) steps for consumers):
+
+### A. `src/main.tsx` (or `src/main.jsx`)
+
+Add once, with other imports:
+
+```ts
+import "@nuvio/overlay/style.css";
+```
+
+Idempotent: skip if already present.
+
+### B. `vite.config.ts` — `optimizeDeps.exclude`
+
+Inside `defineConfig({ ... })`:
+
+```ts
+optimizeDeps: {
+  exclude: ["@nuvio/overlay"],
+},
+```
+
+Idempotent: merge `@nuvio/overlay` into existing `exclude` if present; add block if missing.
+
+### Why 0.5.1 shipped without this
+
+| Factor | Detail |
+| ------ | ------ |
+| Monorepo dogfood | `demo-app` / TailAdmin **alias** overlay to `packages/overlay/src` — never hits npm prebundle path |
+| CI / unit tests | `init --no-install` on fixtures without `main.tsx` until later; no browser console check |
+| S8b timing | Full npm consumer path (dlx + published packages) was validated **after** `0.5.1` tag |
+
+**Remediation:** publish **`@nuvio/cli@0.5.2`** (aligned `@nuvio/*` versions). Consumers on **0.5.1** add §7.1 snippets manually or re-run `pnpm dlx @nuvio/cli@0.5.2 init`.
 
 ## Failure
 

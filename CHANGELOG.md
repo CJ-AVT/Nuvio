@@ -4,6 +4,16 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ## [Unreleased]
 
+## [0.5.2] — 2026-06-03 (CLI: overlay dev wiring fix)
+
+### Fixed
+
+- `@nuvio/cli` `init` now patches `src/main.tsx` with `import "@nuvio/overlay/style.css"` and adds `optimizeDeps.exclude: ["@nuvio/overlay"]` to `vite.config.ts` so the Edit chip works on fresh Vite apps (no manual steps).
+
+### Note
+
+- **0.5.1** on npm shipped without these patches; discovered during S8b post-publish smoke. Use **`@nuvio/cli@0.5.2`** (or add the two snippets manually).
+
 ## [0.5.1] — 2026-06-03 (CLI onboarding)
 
 ### Added

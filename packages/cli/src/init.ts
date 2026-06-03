@@ -8,6 +8,7 @@ import {
 import { packagesNeedInstall, runInstall } from "./install-packages.js";
 import { patchViteConfigFile } from "./patch-vite-config.js";
 import { patchAppRootFile, resolveAppFile } from "./patch-app-root.js";
+import { patchMainOverlayStyles, resolveMainEntry } from "./patch-main-styles.js";
 import { patchStarterId } from "./patch-starter-id.js";
 import { projectHasPageTitleId } from "./scan-ids.js";
 import { createPlan, type InitPlan, type ResultTier } from "./plan.js";
@@ -138,7 +139,9 @@ export async function runInit(opts: InitOptions): Promise<number> {
   }
 
   const appFile = resolveAppFile(root);
+  const mainEntry = resolveMainEntry(root);
   if (appFile) plan.modify.push(appFile.replace(`${root}/`, ""));
+  if (mainEntry) plan.modify.push(mainEntry.replace(`${root}/`, ""));
   plan.modify.push(project.viteConfigName);
   plan.create.push(
     "nuvio/START_HERE.md",
@@ -201,6 +204,13 @@ export async function runInit(opts: InitOptions): Promise<number> {
     }
   } else {
     plan.failedSteps.push("app (no App.tsx/main.tsx)");
+  }
+
+  if (mainEntry) {
+    const mainStyles = patchMainOverlayStyles(mainEntry);
+    if (mainStyles.ok && !mainStyles.skipped) {
+      plan.modify.push(mainEntry.replace(`${root}/`, ""));
+    }
   }
 
   let starterOk = false;

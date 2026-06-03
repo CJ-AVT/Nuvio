@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { detectPackageManager } from "../src/detect-pm.js";
 import { detectProject } from "../src/detect-project.js";
 import { patchAppRootFile, resolveAppFile } from "../src/patch-app-root.js";
+import { patchMainOverlayStyles, resolveMainEntry } from "../src/patch-main-styles.js";
 import { patchViteConfigFile } from "../src/patch-vite-config.js";
 import { patchStarterId } from "../src/patch-starter-id.js";
 import { projectHasPageTitleId } from "../src/scan-ids.js";
@@ -47,6 +48,8 @@ describe("patch vite config", () => {
     const after = readFileSync(vitePath, "utf8");
     expect(after).toContain('@nuvio/vite-plugin');
     expect(after).toContain("nuvio()");
+    expect(after).toContain("@nuvio/overlay");
+    expect(after).toContain("optimizeDeps");
   });
 
   it("is idempotent", () => {
@@ -64,6 +67,27 @@ describe("patch vite config", () => {
     const vitePath = join(root, "vite.config.ts");
     const result = patchViteConfigFile(vitePath);
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("patch main overlay styles", () => {
+  it("adds overlay style.css import", () => {
+    const root = fixture("vite-react-ts-minimal");
+    const mainPath = resolveMainEntry(root)!;
+    const result = patchMainOverlayStyles(mainPath);
+    expect(result.ok).toBe(true);
+    expect(readFileSync(mainPath, "utf8")).toContain(
+      '@nuvio/overlay/style.css',
+    );
+  });
+
+  it("is idempotent", () => {
+    const root = fixture("vite-react-ts-minimal");
+    const mainPath = resolveMainEntry(root)!;
+    patchMainOverlayStyles(mainPath);
+    const once = readFileSync(mainPath, "utf8");
+    patchMainOverlayStyles(mainPath);
+    expect(readFileSync(mainPath, "utf8")).toBe(once);
   });
 });
 
@@ -126,6 +150,11 @@ describe("runInit", () => {
     expect(projectHasPageTitleId(root)).toBe(true);
     expect(existsSync(join(root, "nuvio/START_HERE.md"))).toBe(true);
     expect(existsSync(join(root, "nuvio/AGENT.md"))).toBe(true);
+    const main = readFileSync(join(root, "src/main.tsx"), "utf8");
+    const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
+    expect(main).toContain("@nuvio/overlay/style.css");
+    expect(vite).toContain("optimizeDeps");
+    expect(vite).toContain("@nuvio/overlay");
   });
 
   it("second init is idempotent", async () => {
@@ -133,9 +162,11 @@ describe("runInit", () => {
     await runInit({ cwd: root, yes: true, noInstall: true });
     const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
     const app = readFileSync(join(root, "src/App.tsx"), "utf8");
+    const main = readFileSync(join(root, "src/main.tsx"), "utf8");
     await runInit({ cwd: root, yes: true, noInstall: true });
     expect(readFileSync(join(root, "vite.config.ts"), "utf8")).toBe(vite);
     expect(readFileSync(join(root, "src/App.tsx"), "utf8")).toBe(app);
+    expect(readFileSync(join(root, "src/main.tsx"), "utf8")).toBe(main);
   });
 
   it("partial when no heading", async () => {

@@ -36,7 +36,12 @@ try {
 
   const vite = readFileSync(join(work, "vite.config.ts"), "utf8");
   const app = readFileSync(join(work, "src/App.tsx"), "utf8");
+  const mainPath = join(work, "src/main.tsx");
+  const main = existsSync(mainPath) ? readFileSync(mainPath, "utf8") : "";
   if (!vite.includes("nuvio()")) fail("vite.config missing nuvio()");
+  if (!vite.includes("@nuvio/overlay")) fail("vite.config missing optimizeDeps exclude");
+  if (!main.includes("@nuvio/overlay/style.css"))
+    fail("main.tsx missing @nuvio/overlay/style.css");
   if (!app.includes("NuvioDevShell")) fail("App missing NuvioDevShell");
   if (!app.includes('data-nuvio-id="page.title"'))
     fail("App missing page.title id");
