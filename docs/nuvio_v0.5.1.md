@@ -1,7 +1,7 @@
 # Nuvio v0.5.1 — CLI onboarding (`@nuvio/cli`)
 
-**Document status:** **Implemented** — CLI onboarding complete; overlay dev wiring completed in **`@nuvio/cli@0.5.2`** (see §7.1)  
-**Release target:** all public `@nuvio/*` at **0.5.2** on npm for the zero-guide path (see §3 publish matrix; excludes `@nuvio/next`)  
+**Document status:** **Implemented** — CLI onboarding complete; overlay dev wiring in §7.1; **current npm line: [`0.5.3`](nuvio_v0.5.3.md)**  
+**Release target:** spec written for **0.5.1**; shipped through **0.5.2** (wiring) → **0.5.3** (Vite 8 peer + launch docs)  
 **Audience:** Implementers (Cursor/ChatGPT agents: follow §3–§13, §23–§25; do not modify locked packages per §2)
 
 > **Note:** If you have additional ChatGPT recommendation text not reflected here, paste it into §24 feedback table before coding.

@@ -135,6 +135,7 @@ Add `data-nuvio-id` on editable elements, then `pnpm dev`.
 
 ## Optional links
 
+- Release summary (maintainers / launch): [nuvio_v0.5.3.md](./nuvio_v0.5.3.md)
 - Limits: [LIMITATIONS.md](./LIMITATIONS.md)
 - Versions (Vite 5/6/8): [COMPATIBILITY.md](./COMPATIBILITY.md)
 - Maintainer demo app / dogfood: [DOGFOOD.md](./DOGFOOD.md)

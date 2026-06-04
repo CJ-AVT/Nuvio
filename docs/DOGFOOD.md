@@ -105,7 +105,7 @@ pnpm add -D /path/to/Nuvio/packages/vite-plugin /path/to/Nuvio/packages/overlay
 pnpm dev
 ```
 
-**Post-publish** (consumer path): `pnpm dlx @nuvio/cli@0.5.2 init --yes` then `pnpm dev` (init adds `main.tsx` style import + `optimizeDeps.exclude`; no `fs.allow` needed).
+**Post-publish** (consumer path): `pnpm dlx @nuvio/cli@0.5.3 init --yes` then `pnpm dev` (init adds `main.tsx` style import + `optimizeDeps.exclude`; no `fs.allow` needed). See [`nuvio_v0.5.3.md`](nuvio_v0.5.3.md).
 
 | # | Check | Pass? | Notes |
 | - | ----- | ----- | ----- |
@@ -117,7 +117,7 @@ pnpm dev
 
 #### Post-publish S8b — `@nuvio/*@0.5.2` on npm
 
-**App:** `/tmp/nuvio-smoke-052` — `pnpm create vite` (react-ts), `pnpm install`, `pnpm dlx @nuvio/cli@0.5.2 init --yes`, `pnpm dev`.
+**App:** `/tmp/nuvio-smoke-052` — `pnpm create vite` (react-ts), `pnpm install`, `pnpm dlx @nuvio/cli@0.5.2 init --yes`, `pnpm dev`. (Superseded for launch by **0.5.3** — same path with `@0.5.3`.)
 
 **Trap:** If `create vite` prompts “Install and start now?” → **No**. Yes starts dev before `init` and the page stays unwired until init runs.
 
