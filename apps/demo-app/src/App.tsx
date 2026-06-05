@@ -16,9 +16,14 @@ export default function App(): ReactElement {
             data-nuvio-id="demo.hero.lead"
           >
             Click any element, pick what you want to change, then{" "}
-            <strong className="font-medium text-slate-300">Preview Changes</strong> and{" "}
-            <strong className="font-medium text-slate-300">Apply to Code</strong> — no
-            React or Tailwind knowledge required.
+            <strong className="font-medium text-slate-300">
+              Preview Changes
+            </strong>{" "}
+            and{" "}
+            <strong className="font-medium text-slate-300">
+              Apply to Code
+            </strong>{" "}
+            — no React or Tailwind knowledge required.
           </p>
         </section>
 
@@ -27,7 +32,7 @@ export default function App(): ReactElement {
             className="text-base font-bold text-slate-300"
             data-nuvio-id="demo.section.features.title"
           >
-            Feature cards
+            Feature cards 101
           </h2>
           <div
             className="flex flex-col gap-3 sm:flex-row"
@@ -69,7 +74,8 @@ export default function App(): ReactElement {
             className="text-xs text-slate-500 text-left"
             data-nuvio-id="demo.footer.note"
           >
-            Reference demo — open the Nuvio panel and edit without touching your editor.
+            Reference demo — open the Nuvio panel and edit without touching your
+            editor.
           </p>
         </footer>
       </main>

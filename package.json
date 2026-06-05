@@ -16,6 +16,8 @@
     "v05:acceptance": "pnpm v05:acceptance:beta && pnpm v05:acceptance:stable",
     "test:cli": "pnpm --filter @nuvio/cli test",
     "v051:acceptance": "node scripts/v051-cli-acceptance.mjs",
+    "telemetry:smoke": "node scripts/telemetry-smoke.mjs",
+    "posthog:verify": "node scripts/posthog-verify.mjs",
     "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",
     "publish:stable": "pnpm -r publish --filter \"@nuvio/shared\" --filter \"@nuvio/ast-engine\" --filter \"@nuvio/vite-plugin\" --filter \"@nuvio/overlay\" --filter \"@nuvio/cli\" --access public"
   },

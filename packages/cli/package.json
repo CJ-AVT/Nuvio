@@ -1,6 +1,6 @@
 {
   "name": "@nuvio/cli",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Nuvio CLI: one-command Vite + React onboarding (nuvio init).",
   "license": "MIT",
   "repository": {
@@ -8,11 +8,22 @@
     "url": "https://github.com/ehah/Nuvio.git",
     "directory": "packages/cli"
   },
-  "keywords": ["nuvio", "vite", "cli", "onboarding", "devtools"],
+  "keywords": [
+    "nuvio",
+    "vite",
+    "cli",
+    "onboarding",
+    "devtools"
+  ],
   "publishConfig": {
     "access": "public"
   },
-  "files": ["dist", "templates", "package.json", "README.md"],
+  "files": [
+    "dist",
+    "templates",
+    "package.json",
+    "README.md"
+  ],
   "type": "module",
   "bin": {
     "nuvio": "./dist/cli-entry.js"
@@ -32,7 +43,8 @@
     "@babel/parser": "^7.26.9",
     "@babel/traverse": "^7.26.9",
     "@babel/types": "^7.26.9",
-    "fast-glob": "^3.3.3"
+    "fast-glob": "^3.3.3",
+    "posthog-node": "^5.36.2"
   },
   "devDependencies": {
     "@types/babel__generator": "^7.6.8",

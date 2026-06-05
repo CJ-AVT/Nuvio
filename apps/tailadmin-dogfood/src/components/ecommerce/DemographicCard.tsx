@@ -19,7 +19,7 @@ export default function DemographicCard() {
       <div className="flex justify-between">
         <div>
           <h3
-            className="text-lg font-semibold text-gray-800 xl:text-gray-500 xl:text-lg dark:text-white/90"
+            className="text-lg font-semibold text-gray-800 sm:text-red-400 xl:text-lg xl:text-red-600 dark:text-white/90"
             data-nuvio-id="demo.title"
           >
             Customers Demographic

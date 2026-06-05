@@ -1,6 +1,12 @@
 import { resolve } from "node:path";
 import { runInit, type InitOptions } from "./init.js";
 import type { PackageManager } from "./detect-pm.js";
+import {
+  buildCliTelemetryProps,
+  captureCliEvent,
+  shutdownTelemetry,
+} from "./telemetry.js";
+import { detectPackageManager } from "./detect-pm.js";
 
 function printHelp(): void {
   console.log(`nuvio — Nuvio CLI
@@ -87,8 +93,15 @@ export async function runCli(argv: string[]): Promise<number> {
   try {
     return await runInit(opts);
   } catch (e) {
+    const pm = detectPackageManager(opts.cwd, opts.pm);
+    captureCliEvent("nuvio_init_failed", {
+      ...buildCliTelemetryProps(pm),
+      error_code: "unexpected_error",
+    });
     if (opts.verbose) console.error(e);
     else console.error("Something went wrong. Run with --verbose for details.");
     return 2;
+  } finally {
+    await shutdownTelemetry();
   }
 }

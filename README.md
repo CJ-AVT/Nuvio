@@ -19,6 +19,8 @@ You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x or 4.x
 
 **v0.2+:** overlay UI is **self-contained** — you do **not** add `@nuvio/overlay` to Tailwind `content`. Full guide: [nuvioUser.md](docs/nuvioUser.md).
 
+**Telemetry (v0.5.4+):** anonymous, opt-out usage metrics — disable with `NUVIO_TELEMETRY=0`. See [PostHog_telemetry.md](docs/PostHog_telemetry.md).
+
 ### Manual install (without CLI)
 
 ```bash

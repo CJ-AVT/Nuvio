@@ -1,6 +1,8 @@
 # Nuvio telemetry spec (v0.3)
 
-This file defines a **spec only** for telemetry in v0.3. Collection is optional and disabled by default.
+**Implemented in v0.5.4** — see [PostHog_telemetry.md](PostHog_telemetry.md) for the shipped PostHog integration (anonymous, opt-out).
+
+This file retains the original v0.3 **design notes**. v0.5.4 supersedes the opt-in / disabled-by-default model below.
 
 ## Goals
 

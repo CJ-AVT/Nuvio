@@ -52,6 +52,12 @@ import {
   loadDeveloperDetails,
   saveDeveloperDetails,
 } from "./developer-details-storage.js";
+import {
+  captureApplyFailed,
+  captureFirstSelection,
+  captureOverlayConnected,
+  captureOverlayEvent,
+} from "./telemetry.js";
 
 type ChannelState = "idle" | "connecting" | "ready" | "error";
 
@@ -345,6 +351,7 @@ export function NuvioDevShellInner(): ReactElement {
   const resolvedFileRef = useRef<string | undefined>(undefined);
   const selectedIdRef = useRef<string | null>(null);
   const lastIndexEntriesRef = useRef<readonly IndexWireEntry[]>([]);
+  const duplicateErrorsRef = useRef<readonly DuplicateIdError[]>([]);
   const lastStagedOpsFpRef = useRef<string | null>(null);
   const autoApplyStructuralRef = useRef(false);
   const [structuralPreviewActive, setStructuralPreviewActive] = useState(false);
@@ -356,6 +363,10 @@ export function NuvioDevShellInner(): ReactElement {
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+
+  useEffect(() => {
+    duplicateErrorsRef.current = duplicateErrors;
+  }, [duplicateErrors]);
 
   const selectedEntry = useMemo(
     () => (selectedId ? indexEntries.find((e) => e.id === selectedId) : undefined),
@@ -391,7 +402,7 @@ export function NuvioDevShellInner(): ReactElement {
         setPreviewBusy(false);
         setPreviewError(
           !ws || ws.readyState !== WebSocket.OPEN
-            ? "Dev channel is not connected — wait for “connected” in the chip, then try Validate again."
+            ? "Dev channel is not connected — wait for “connected” in the chip, then try Preview Changes again."
             : "Nothing is selected — click an element on the page first.",
         );
       } else {
@@ -474,7 +485,7 @@ export function NuvioDevShellInner(): ReactElement {
       const fp = JSON.stringify(ops);
       if (fp !== previewValidatedFingerprint) {
         setLastPatchError(
-          "Run Validate first — staged edits changed since the last successful validation.",
+          "Run Preview Changes first — staged edits changed since the last successful preview.",
         );
         return;
       }
@@ -565,6 +576,7 @@ export function NuvioDevShellInner(): ReactElement {
       setLastPatchError(null);
       setSelectedId(id);
       setSelectError(null);
+      captureFirstSelection();
       const hit = lastIndexEntriesRef.current.find((e) => e.id === id);
       if (hit) {
         setResolvedFile(shortDisplayPath(hit.file));
@@ -601,6 +613,7 @@ export function NuvioDevShellInner(): ReactElement {
         }
         retryMs = 400;
         setChannel("ready");
+        captureOverlayConnected();
         patchPendingMapRef.current.clear();
         if (previewTimeoutRef.current) {
           clearTimeout(previewTimeoutRef.current);
@@ -706,6 +719,7 @@ export function NuvioDevShellInner(): ReactElement {
                 setPreviewError(null);
                 setPreviewValidatedFingerprint(savedFp);
                 setPreviewValidatedOps(pending.ops);
+                captureOverlayEvent("preview_changes");
                 if (autoApplyStructuralRef.current && isStructuralOnlyOps(pending.ops)) {
                   autoApplyStructuralRef.current = false;
                   sendPatchMessage(
@@ -736,8 +750,12 @@ export function NuvioDevShellInner(): ReactElement {
                 if (msg.undoStackDepth !== undefined) {
                   setUndoStackDepth(msg.undoStackDepth);
                 }
+                captureOverlayEvent("apply_to_code");
               } else {
                 setLastPatchError(msg.errorMessage ?? msg.errorCode ?? "Apply failed");
+                captureApplyFailed(msg.errorCode, {
+                  duplicateIdsActive: duplicateErrorsRef.current.length > 0,
+                });
               }
               return;
             }

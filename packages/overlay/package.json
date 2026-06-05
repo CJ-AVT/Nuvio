@@ -1,6 +1,6 @@
 {
   "name": "@nuvio/overlay",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Nuvio dev overlay: edit mode, selection, Editor panel, Validate/Apply/Undo against the Vite dev server.",
   "license": "MIT",
   "repository": {
@@ -8,13 +8,25 @@
     "url": "https://github.com/ehah/Nuvio.git",
     "directory": "packages/overlay"
   },
-  "keywords": ["nuvio", "vite", "overlay", "devtools", "react"],
+  "keywords": [
+    "nuvio",
+    "vite",
+    "overlay",
+    "devtools",
+    "react"
+  ],
   "publishConfig": {
     "access": "public"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "type": "module",
-  "sideEffects": ["./dist/index.js", "./dist/style.css"],
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/style.css"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -39,7 +51,8 @@
     "react-dom": "^18.3.1 || ^19.0.0"
   },
   "dependencies": {
-    "@nuvio/shared": "workspace:*"
+    "@nuvio/shared": "workspace:*",
+    "posthog-js": "^1.380.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.8",

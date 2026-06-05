@@ -133,9 +133,24 @@ Add `data-nuvio-id` on editable elements, then `pnpm dev`.
 
 ---
 
+## Telemetry
+
+Nuvio collects anonymous usage metrics to improve onboarding and reliability. No source code, file contents, file paths, project names, emails, or personal data are sent.
+
+Disable anytime with:
+
+```bash
+NUVIO_TELEMETRY=0
+```
+
+In the browser overlay: `localStorage.setItem("nuvio.telemetry", "0")` (then refresh). Details: [PostHog_telemetry.md](./PostHog_telemetry.md).
+
+---
+
 ## Optional links
 
 - Release summary (maintainers / launch): [nuvio_v0.5.3.md](./nuvio_v0.5.3.md)
+- Telemetry spec: [PostHog_telemetry.md](./PostHog_telemetry.md)
 - Limits: [LIMITATIONS.md](./LIMITATIONS.md)
 - Versions (Vite 5/6/8): [COMPATIBILITY.md](./COMPATIBILITY.md)
 - Maintainer demo app / dogfood: [DOGFOOD.md](./DOGFOOD.md)

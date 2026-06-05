@@ -32,6 +32,12 @@ export function parseClassNameByBreakpoint(className: string): BreakpointBuckets
   return buckets;
 }
 
+/** True when `className` includes at least one `sm:`–`xl:` utility (not only base). */
+export function classNameHasResponsiveUtilities(className: string): boolean {
+  const buckets = parseClassNameByBreakpoint(className);
+  return BREAKPOINT_ORDER.some((bp) => bp !== "base" && buckets[bp].length > 0);
+}
+
 /** Pseudo/state prefixes ignored when reading the visible style at rest (not hover/focus). */
 const INTERACTIVE_VARIANT_RE =
   /^(?:hover|focus|focus-within|active|disabled|group-hover|peer-hover|first|last|odd|even):/;

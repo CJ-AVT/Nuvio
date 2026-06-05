@@ -95,6 +95,11 @@ import {
 import { pickContextualGuide, shouldShowWelcome } from "./selection-guides.js";
 import { ColorPickerRow } from "./ColorPickerRow.js";
 import { BACKGROUND_COLOR_OPTIONS, TEXT_COLOR_OPTIONS } from "./tailwind-color-options.js";
+import { classNameHasResponsiveUtilities } from "./tailwind-token-read.js";
+
+/** Shared action labels — same in Simple Mode and Developer details. */
+export const NUVO_PREVIEW_CHANGES_LABEL = "Preview Changes";
+export const NUVO_APPLY_TO_CODE_LABEL = "Apply to Code";
 
 export type PropertyPanelShellProps = {
   devicePreset: "desktop" | "tablet" | "mobile";
@@ -210,6 +215,87 @@ function SelectRow({
         ))}
       </select>
     </label>
+  );
+}
+
+type DevicePreset = PropertyPanelShellProps["devicePreset"];
+
+function DeviceBreakpointPanel({
+  devicePreset,
+  onDevicePresetChange,
+  activeBreakpoint,
+  onActiveBreakpointChange,
+  developerDetails,
+  variant,
+}: {
+  devicePreset: DevicePreset;
+  onDevicePresetChange: (preset: DevicePreset) => void;
+  activeBreakpoint: Breakpoint;
+  onActiveBreakpointChange: (bp: Breakpoint) => void;
+  developerDetails: boolean;
+  variant: "section" | "compact";
+}): ReactElement {
+  const controls = (
+    <>
+      <div className="nuvio-row-wrap">
+        <button
+          type="button"
+          className={`nuvio-button-chip ${devicePreset === "desktop" ? "nuvio-button-chip--active" : ""}`}
+          onClick={() => onDevicePresetChange("desktop")}
+        >
+          Desktop
+        </button>
+        <button
+          type="button"
+          className={`nuvio-button-chip ${devicePreset === "tablet" ? "nuvio-button-chip--active" : ""}`}
+          onClick={() => onDevicePresetChange("tablet")}
+        >
+          Tablet
+        </button>
+        <button
+          type="button"
+          className={`nuvio-button-chip ${devicePreset === "mobile" ? "nuvio-button-chip--active" : ""}`}
+          onClick={() => onDevicePresetChange("mobile")}
+        >
+          Mobile
+        </button>
+      </div>
+      <SelectRow
+        label={developerDetails ? "Active BP" : "Applies on"}
+        value={activeBreakpoint}
+        onChange={(v) => onActiveBreakpointChange(v as Breakpoint)}
+        options={[
+          { value: "base", label: developerDetails ? "base" : formatPlainBreakpointLabel("base") },
+          { value: "sm", label: developerDetails ? "sm" : formatPlainBreakpointLabel("sm") },
+          { value: "md", label: developerDetails ? "md" : formatPlainBreakpointLabel("md") },
+          { value: "lg", label: developerDetails ? "lg" : formatPlainBreakpointLabel("lg") },
+          { value: "xl", label: developerDetails ? "xl" : formatPlainBreakpointLabel("xl") },
+        ]}
+        developerDetails={developerDetails}
+      />
+      {!developerDetails ? (
+        <p className="nuvio-text-2xs nuvio-text-muted">
+          Applies on:{" "}
+          <span className="nuvio-font-medium">{formatPlainBreakpointLabel(activeBreakpoint)}</span>
+        </p>
+      ) : null}
+    </>
+  );
+
+  if (variant === "compact") {
+    return (
+      <div className="nuvio-stack-1">
+        <p className="nuvio-label">Responsive preview</p>
+        {controls}
+      </div>
+    );
+  }
+
+  return (
+    <section className="nuvio-card nuvio-stack-2">
+      <h3 className="nuvio-section-title">Device + breakpoint</h3>
+      {controls}
+    </section>
   );
 }
 
@@ -348,8 +434,8 @@ export function PropertyPanelShell({
     );
   }, [baselinePicks, baselineText, developerDetails, draftText, picks]);
 
-  const previewButtonLabel = developerDetails ? "Validate" : "Preview Changes";
-  const applyButtonLabel = developerDetails ? "Apply" : "Apply to Code";
+  const previewButtonLabel = NUVO_PREVIEW_CHANGES_LABEL;
+  const applyButtonLabel = NUVO_APPLY_TO_CODE_LABEL;
   const simpleMode = !developerDetails;
   const selectionTitle =
     selectedId && selectedEntry
@@ -437,6 +523,23 @@ export function PropertyPanelShell({
     }
     return containerStyleId ?? textStyleId ?? selectedId;
   }, [containerStyleId, selectedId, styleTargetMode, textStyleId]);
+
+  const [styleHostClassName, setStyleHostClassName] = useState("");
+
+  useEffect(() => {
+    if (!selectedId) {
+      setStyleHostClassName("");
+      return;
+    }
+    const styleId = patchStyleId ?? selectedId;
+    const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(styleId)}"]`);
+    setStyleHostClassName(el instanceof HTMLElement ? el.className : "");
+  }, [selectedId, patchStyleId, stagedVersion]);
+
+  const showResponsiveDeviceControls = useMemo(
+    () => classNameHasResponsiveUtilities(styleHostClassName),
+    [styleHostClassName],
+  );
 
   useEffect(() => {
     if (!selectedId) {
@@ -601,7 +704,7 @@ export function PropertyPanelShell({
     if (hasText && hasStyle && patchTextId !== patchStyleId) {
       return {
         error: developerDetails
-          ? "Text and styles target different elements. Validate and apply text first, then edit styles (or pick a single element in Edit target)."
+          ? "Text and styles target different elements. Preview and apply text first, then edit styles (or pick a single element in Edit target)."
           : "Text and styles apply to different parts. Preview text first, then change styles.",
       };
     }
@@ -1415,7 +1518,7 @@ export function PropertyPanelShell({
             {patchTargetConflict ? (
               <p className="nuvio-banner nuvio-banner--warn nuvio-text-2xs nuvio-leading-snug">
                 {developerDetails
-                  ? "Text and styles apply to different elements. Validate text first, then change styles — or pick one target in Edit target."
+                  ? "Text and styles apply to different elements. Preview text first, then change styles — or pick one target in Edit target."
                   : "Text and styles apply to different parts. Preview text first, then change styles."}
               </p>
             ) : null}
@@ -1774,9 +1877,7 @@ export function PropertyPanelShell({
             ) : null}
             {previewSummary && !structuralPreviewActive && developerDetails ? (
               <div className="nuvio-preview-box">
-                <p className="nuvio-preview-box-title">
-                  {developerDetails ? "Validated change" : "Preview Changes"}
-                </p>
+                <p className="nuvio-preview-box-title">Ready to apply</p>
                 <p className="nuvio-preview-box-body">
                   {developerDetails ? previewSummary : humanPreviewBlock || previewSummary}
                 </p>
@@ -1911,25 +2012,16 @@ export function PropertyPanelShell({
           <details className="nuvio-card nuvio-advanced-panel">
             <summary className="nuvio-section-title nuvio-advanced-summary">Advanced</summary>
             <div className="nuvio-stack-2 nuvio-pt-1">
-              <div className="nuvio-stack-1">
-                <p className="nuvio-label">Responsive preview</p>
-                <div className="nuvio-row-wrap">
-                  <button
-                    type="button"
-                    className={`nuvio-button-chip ${devicePreset === "desktop" ? "nuvio-button-chip--active" : ""}`}
-                    onClick={() => onDevicePresetChange("desktop")}
-                  >
-                    Desktop
-                  </button>
-                  <button
-                    type="button"
-                    className={`nuvio-button-chip ${devicePreset === "mobile" ? "nuvio-button-chip--active" : ""}`}
-                    onClick={() => onDevicePresetChange("mobile")}
-                  >
-                    Mobile
-                  </button>
-                </div>
-              </div>
+              {showResponsiveDeviceControls ? (
+                <DeviceBreakpointPanel
+                  variant="compact"
+                  devicePreset={devicePreset}
+                  onDevicePresetChange={onDevicePresetChange}
+                  activeBreakpoint={activeBreakpoint}
+                  onActiveBreakpointChange={onActiveBreakpointChange}
+                  developerDetails={false}
+                />
+              ) : null}
               {showQuickStyle ? (
                 <>
                   <ColorPickerRow
@@ -1995,50 +2087,16 @@ export function PropertyPanelShell({
 
         {!simpleMode ? (
           <>
-        <section className="nuvio-card nuvio-stack-2">
-          <h3 className="nuvio-section-title">Device + breakpoint</h3>
-          <div className="nuvio-row-wrap">
-            <button
-              type="button"
-              className={`nuvio-button-chip ${devicePreset === "desktop" ? "nuvio-button-chip--active" : ""}`}
-              onClick={() => onDevicePresetChange("desktop")}
-            >
-              Desktop
-            </button>
-            <button
-              type="button"
-              className={`nuvio-button-chip ${devicePreset === "tablet" ? "nuvio-button-chip--active" : ""}`}
-              onClick={() => onDevicePresetChange("tablet")}
-            >
-              Tablet
-            </button>
-            <button
-              type="button"
-              className={`nuvio-button-chip ${devicePreset === "mobile" ? "nuvio-button-chip--active" : ""}`}
-              onClick={() => onDevicePresetChange("mobile")}
-            >
-              Mobile
-            </button>
-          </div>
-          <SelectRow
-            label={developerDetails ? "Active BP" : "Applies on"}
-            value={activeBreakpoint}
-            onChange={(v) => onActiveBreakpointChange(v as Breakpoint)}
-            options={[
-              { value: "base", label: developerDetails ? "base" : formatPlainBreakpointLabel("base") },
-              { value: "sm", label: developerDetails ? "sm" : formatPlainBreakpointLabel("sm") },
-              { value: "md", label: developerDetails ? "md" : formatPlainBreakpointLabel("md") },
-              { value: "lg", label: developerDetails ? "lg" : formatPlainBreakpointLabel("lg") },
-              { value: "xl", label: developerDetails ? "xl" : formatPlainBreakpointLabel("xl") },
-            ]}
+        {showResponsiveDeviceControls ? (
+          <DeviceBreakpointPanel
+            variant="section"
+            devicePreset={devicePreset}
+            onDevicePresetChange={onDevicePresetChange}
+            activeBreakpoint={activeBreakpoint}
+            onActiveBreakpointChange={onActiveBreakpointChange}
+            developerDetails={developerDetails}
           />
-          {!developerDetails ? (
-            <p className="nuvio-text-2xs nuvio-text-muted">
-              Applies on:{" "}
-              <span className="nuvio-font-medium">{formatPlainBreakpointLabel(activeBreakpoint)}</span>
-            </p>
-          ) : null}
-        </section>
+        ) : null}
 
         {selectedId ? (
           <section className="nuvio-card nuvio-card--tree">

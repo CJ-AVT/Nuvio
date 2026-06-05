@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
+  classNameHasResponsiveUtilities,
   flattenTokensAtBreakpoint,
   isBgColorUtility,
   isTextColorUtility,
   lastMatchingToken,
 } from "./tailwind-token-read.js";
+
+describe("classNameHasResponsiveUtilities", () => {
+  it("returns false for base-only utilities", () => {
+    expect(classNameHasResponsiveUtilities("text-lg font-semibold text-gray-800")).toBe(false);
+  });
+
+  it("returns true when sm–xl prefixed utilities exist", () => {
+    expect(classNameHasResponsiveUtilities("text-gray-700 xl:text-orange-500")).toBe(true);
+  });
+});
 
 describe("flattenTokensAtBreakpoint", () => {
   it("includes xl bucket utilities when active breakpoint is xl", () => {

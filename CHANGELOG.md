@@ -4,6 +4,18 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ## [Unreleased]
 
+## [0.5.4] — 2026-06-05 (anonymous telemetry)
+
+### Added
+
+- Anonymous, opt-out PostHog telemetry in `@nuvio/cli` (`nuvio init` funnel) and `@nuvio/overlay` (connect → select → preview → apply funnel).
+- Disable CLI telemetry: `NUVIO_TELEMETRY=0` (or `false`). Disable overlay telemetry: `localStorage.setItem("nuvio.telemetry", "0")`.
+- Privacy notice in `nuvio init` success output. Spec: [PostHog_telemetry.md](docs/PostHog_telemetry.md).
+
+### Changed
+
+- All public `@nuvio/*` packages aligned at **0.5.4**.
+
 ## [0.5.3] — 2026-06-03 (Vite 8 peer)
 
 ### Changed
