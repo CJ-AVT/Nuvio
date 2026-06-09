@@ -1,6 +1,7 @@
 import traverse from "./babel-traverse.js";
 import type { NodePath } from "./babel-traverse.js";
 import * as t from "@babel/types";
+import fg from "fast-glob";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseTs, printTs } from "./parse-ts.js";
@@ -125,4 +126,20 @@ export function appHasDevShell(filePath: string): boolean {
   } catch {
     return /NuvioDevShell/.test(source);
   }
+}
+
+/** True when any src TSX/JSX file mounts NuvioDevShell (not only App.tsx). */
+export function projectHasDevShell(root: string): boolean {
+  const appFile = resolveAppFile(root);
+  if (appFile && appHasDevShell(appFile)) return true;
+
+  const files = fg.sync(["src/**/*.{tsx,jsx}"], {
+    cwd: root,
+    absolute: true,
+    onlyFiles: true,
+  });
+  for (const file of files) {
+    if (appHasDevShell(file)) return true;
+  }
+  return false;
 }

@@ -71,12 +71,12 @@ After `nuvio init`, nuvio:
 2. Registers the Vite plugin (dev server only)
 3. Mounts the nuvio overlay in your app shell
 4. Adds a starter editable region (`page.title` on your first heading)
-5. Lets you click instrumented elements and edit in the browser
+5. Lets you click elements and edit in the browser — tagged or **Make Editable** (click-to-tag)
 6. Generates source-backed patches and writes them to your files
 
 **Preview before apply.** **Undo** after apply. **No production bundle** — the overlay renders nothing when `import.meta.env.DEV` is false.
 
-Want more of the UI editable? Add `data-nuvio-id="unique.name"` to JSX hosts. See `nuvio/AGENT.md` after init.
+Click untagged elements to tag them automatically, or add `data-nuvio-id="unique.name"` manually. See `nuvio/AGENT.md` after init.
 
 ---
 
@@ -88,7 +88,7 @@ nuvio collects **anonymous usage events** to improve onboarding and reliability.
 
 - CLI / overlay version
 - OS and Node version (CLI)
-- Event names (e.g. `nuvio_cli_invoked`, `nuvio_init_completed`, `apply_to_code`)
+- Event names (e.g. `nuvio_cli_invoked`, `tag_element_completed`, `apply_to_code`)
 - Coarse install outcome (success / partial / failed)
 
 **Not collected**
@@ -124,15 +124,17 @@ Details: [docs/PostHog_telemetry.md](docs/PostHog_telemetry.md)
 
 **Editing constraints**
 
-- `className` on edited elements should be a **string literal** (not `cn(...)` or dynamic expressions) for style patches
-- Each `data-nuvio-id` must be **unique** in your project
-- Full dashboard UIs need explicit ids — the CLI adds a starter title; use `nuvio/AGENT.md` for more
+- Supported `className` modes: string literals, `cn()`, conditional `cn`, static `classnames()` maps — see [LIMITATIONS.md](docs/LIMITATIONS.md)
+- Each `data-nuvio-id` must be **unique** in your project (`nuvio scan` lists duplicates)
+- Use **Make Editable** for new hosts, or `nuvio/AGENT.md` for dashboard patterns
+
+**CLI diagnostics**
+
+- `nuvio doctor` · `nuvio scan` · `nuvio stats` — see [nuvioUser.md](docs/nuvioUser.md)
 
 **On the roadmap**
 
 - Next.js `nuvio init` (experimental `@nuvio/next` exists in the monorepo today)
-- `nuvio doctor` for setup checks
-- Click-to-tag in the overlay
 
 **Not planned near-term**
 
@@ -244,7 +246,8 @@ For nuvio contributors and release work — not needed to use nuvio in your app.
 | [docs/PostHog_telemetry.md](docs/PostHog_telemetry.md) | Telemetry spec |
 | [docs/PRD.md](docs/PRD.md) | Product requirements |
 | [docs/implPlan.md](docs/implPlan.md) | Implementation plan |
-| [docs/nuvio_v0.5.3.md](docs/nuvio_v0.5.3.md) | Current npm release notes |
+| [docs/v1.0.md](docs/v1.0.md) | Master roadmap — **one npm ship at v1.0.0** |
+| [CHANGELOG.md](CHANGELOG.md) | Published + unreleased changes |
 
 ### Monorepo setup
 

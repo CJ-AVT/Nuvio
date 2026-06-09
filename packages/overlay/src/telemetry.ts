@@ -8,7 +8,18 @@ export type OverlayTelemetryEvent =
   | "first_selection"
   | "preview_changes"
   | "apply_to_code"
-  | "apply_failed";
+  | "apply_failed"
+  | "tag_element_started"
+  | "tag_element_completed"
+  | "tag_element_failed";
+
+export type TagElementFailureReason =
+  | "duplicate_id"
+  | "invalid_id"
+  | "node_not_found"
+  | "already_tagged"
+  | "write_error"
+  | "tag_error";
 
 export type ApplyFailureReason =
   | "duplicate_id"
@@ -17,7 +28,7 @@ export type ApplyFailureReason =
   | "apply_error";
 
 type OverlayEventProps = {
-  reason?: ApplyFailureReason;
+  reason?: ApplyFailureReason | TagElementFailureReason;
 };
 
 let initialized = false;
@@ -127,6 +138,29 @@ export function captureFirstSelection(): void {
   if (firstSelectionSent) return;
   firstSelectionSent = true;
   captureOverlayEvent("first_selection");
+}
+
+export function mapTagElementFailureReason(errorCode: string | undefined): TagElementFailureReason {
+  if (errorCode === "duplicate_id") return "duplicate_id";
+  if (errorCode === "invalid_id") return "invalid_id";
+  if (errorCode === "node_not_found" || errorCode === "parse_error") return "node_not_found";
+  if (errorCode === "already_tagged") return "already_tagged";
+  if (errorCode === "write_error" || errorCode === "read_error") return "write_error";
+  return "tag_error";
+}
+
+export function captureTagElementStarted(): void {
+  captureOverlayEvent("tag_element_started");
+}
+
+export function captureTagElementCompleted(): void {
+  captureOverlayEvent("tag_element_completed");
+}
+
+export function captureTagElementFailed(errorCode: string | undefined): void {
+  captureOverlayEvent("tag_element_failed", {
+    reason: mapTagElementFailureReason(errorCode),
+  });
 }
 
 export function captureApplyFailed(

@@ -16,7 +16,16 @@ function riskClass(level: IndexWireEntry["riskLevel"]): string {
 
 function classNamePatchLabel(entry: IndexWireEntry): string {
   if (entry.hasLiteralClassName === false) {
-    return "className not patchable (computed expression)";
+    return "className not patchable (unsupported expression)";
+  }
+  if (entry.classNameMode === "cn-conditional") {
+    return "className patchable (cn conditional)";
+  }
+  if (entry.classNameMode === "classnames-static") {
+    return "className patchable (classnames map)";
+  }
+  if (entry.classNameMode === "cn-basic") {
+    return "className patchable (cn string list)";
   }
   if (entry.hasLiteralClassName === true) {
     return "className patchable (string literal)";
@@ -51,6 +60,12 @@ export function SelectionMetadata({
         <span className={riskClass(entry.riskLevel)}>{risk}</span>
         <span className="nuvio-text-muted-dim"> · </span>
         <span className="nuvio-text-muted">{classNamePatchLabel(entry)}</span>
+        {entry.libraryHint ? (
+          <>
+            <span className="nuvio-text-muted-dim"> · </span>
+            <span className="nuvio-text-muted">{entry.libraryHint}</span>
+          </>
+        ) : null}
       </p>
       <p className="nuvio-text-2xs nuvio-text-muted">
         Text{" "}

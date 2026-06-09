@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import { detectShadcnComponentMode, type IndexWireEntry } from "@nuvio/shared";
 import { detectTableMode } from "./table-panel.js";
 
 function resolveCardContext(
@@ -104,6 +104,21 @@ export function detectSimpleRouterMode(
   }
   if (detectTableMode(entry)) {
     return "table";
+  }
+  if (entry.libraryHint === "shadcn") {
+    const shadcnMode = detectShadcnComponentMode(entry.tagName);
+    if (shadcnMode === "card") {
+      return "card";
+    }
+    if (shadcnMode === "button") {
+      return "button";
+    }
+    if (shadcnMode === "table") {
+      return "table";
+    }
+    if (shadcnMode === "form") {
+      return "form";
+    }
   }
   if (resolveCardContext(selectedId, indexEntries) || entry.id.endsWith(".card") || entry.hierarchyRole === "card") {
     return "card";

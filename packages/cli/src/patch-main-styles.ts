@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { nuvioOverlayLinkKind, readPackageJson } from "./nuvio-deps.js";
 import type { PatchOutcome } from "./patch-vite-config.js";
 
 const MAIN_CANDIDATES = ["src/main.tsx", "src/main.jsx", "main.tsx", "main.jsx"] as const;
@@ -7,18 +8,8 @@ const STYLE_IMPORT = 'import "@nuvio/overlay/style.css";';
 
 /** `import "@nuvio/overlay/style.css"` only resolves for npm installs, not workspace/file/link. */
 export function overlayInstalledFromNpm(packageJsonPath: string): boolean {
-  const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8")) as Record<
-    string,
-    unknown
-  >;
-  const dev = pkg.devDependencies as Record<string, string> | undefined;
-  const raw = dev?.["@nuvio/overlay"];
-  if (!raw) return false;
-  return (
-    !raw.startsWith("workspace:") &&
-    !raw.startsWith("link:") &&
-    !raw.startsWith("file:")
-  );
+  const pkg = readPackageJson(packageJsonPath);
+  return nuvioOverlayLinkKind(pkg) === "npm";
 }
 
 export function resolveMainEntry(root: string): string | null {

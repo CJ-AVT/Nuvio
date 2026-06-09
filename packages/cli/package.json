@@ -1,7 +1,7 @@
 {
   "name": "@nuvio/cli",
-  "version": "0.5.5",
-  "description": "Nuvio CLI: one-command Vite + React onboarding (nuvio init).",
+  "version": "1.0.0",
+  "description": "Nuvio CLI: Vite + React onboarding and project diagnostics (init, doctor, scan, stats).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -32,13 +32,15 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/cli-entry.ts --format esm --clean --external @babel/parser --external @babel/traverse --external @babel/generator --external @babel/types --external fast-glob",
+    "build": "tsup src/cli-entry.ts --format esm --clean --external @babel/parser --external @babel/traverse --external @babel/generator --external @babel/types --external fast-glob --external @nuvio/vite-plugin --external @nuvio/shared --external @nuvio/ast-engine",
     "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@nuvio/shared": "workspace:*",
+    "@nuvio/vite-plugin": "workspace:*",
     "@babel/generator": "^7.26.9",
     "@babel/parser": "^7.26.9",
     "@babel/traverse": "^7.26.9",

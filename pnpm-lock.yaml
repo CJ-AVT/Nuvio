@@ -256,6 +256,92 @@ importers:
         specifier: ^6.4.2
         version: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(lightningcss@1.32.0)
 
+  examples/shadcn-dashboard:
+    dependencies:
+      '@nuvio/overlay':
+        specifier: workspace:*
+        version: link:../../packages/overlay
+      '@nuvio/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.6(react@19.2.6)
+      tailwind-merge:
+        specifier: ^3.0.1
+        version: 3.6.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.8
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(lightningcss@1.32.0))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.0(postcss@8.5.14)
+      postcss:
+        specifier: ^8.5.2
+        version: 8.5.14
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
+      vite:
+        specifier: ^6.1.0
+        version: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  examples/vite-basic:
+    dependencies:
+      '@nuvio/overlay':
+        specifier: workspace:*
+        version: link:../../packages/overlay
+      '@nuvio/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.8
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(lightningcss@1.32.0))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.0(postcss@8.5.14)
+      postcss:
+        specifier: ^8.5.2
+        version: 8.5.14
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
+      vite:
+        specifier: ^6.1.0
+        version: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(lightningcss@1.32.0)
+
   packages/ast-engine:
     dependencies:
       '@babel/generator':
@@ -310,6 +396,12 @@ importers:
       '@babel/types':
         specifier: ^7.26.9
         version: 7.29.0
+      '@nuvio/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@nuvio/vite-plugin':
+        specifier: workspace:*
+        version: link:../vite-plugin
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3

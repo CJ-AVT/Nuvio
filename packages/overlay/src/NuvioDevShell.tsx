@@ -23,6 +23,9 @@ import {
   parseServerMessage,
 } from "@nuvio/shared";
 import { InteractionLayer } from "./InteractionLayer.js";
+import { MakeEditablePanel } from "./MakeEditablePanel.js";
+import type { UntaggedLocTarget } from "./nuvio-loc-dom.js";
+import { suggestNuvioId } from "./suggest-nuvio-id.js";
 import {
   cornerAnchorPosition,
   clampToViewport,
@@ -57,6 +60,9 @@ import {
   captureFirstSelection,
   captureOverlayConnected,
   captureOverlayEvent,
+  captureTagElementCompleted,
+  captureTagElementFailed,
+  captureTagElementStarted,
 } from "./telemetry.js";
 
 type ChannelState = "idle" | "connecting" | "ready" | "error";
@@ -334,6 +340,11 @@ export function NuvioDevShellInner(): ReactElement {
   const [resolvedFile, setResolvedFile] = useState<string | undefined>(undefined);
   const [resolvedLine, setResolvedLine] = useState<number | undefined>(undefined);
   const [selectError, setSelectError] = useState<string | null>(null);
+  const [untaggedTarget, setUntaggedTarget] = useState<UntaggedLocTarget | null>(null);
+  const [tagSuggestedId, setTagSuggestedId] = useState("");
+  const [tagBusy, setTagBusy] = useState(false);
+  const [tagError, setTagError] = useState<string | null>(null);
+  const tagPendingRequestIdRef = useRef<string | null>(null);
 
   const [previewSummary, setPreviewSummary] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -388,6 +399,9 @@ export function NuvioDevShellInner(): ReactElement {
       if (prev) {
         clearNuvioOutlines();
         setSelectedId(null);
+        setUntaggedTarget(null);
+        setTagError(null);
+        setTagBusy(false);
       }
       return !prev;
     });
@@ -557,11 +571,66 @@ export function NuvioDevShellInner(): ReactElement {
     );
   }, []);
 
+  const onSelectUntagged = useCallback(
+    (target: UntaggedLocTarget | null) => {
+      setUntaggedTarget(target);
+      setTagError(null);
+      setTagBusy(false);
+      if (target) {
+        setTagSuggestedId(
+          suggestNuvioId({
+            tagName: target.tagName,
+            existingIds: knownIds,
+            libraryHint: runtimeDiagnostics?.detectedLibraries?.[0],
+          }),
+        );
+        setSelectedId(null);
+        setSelectError(null);
+        setResolvedFile(undefined);
+        setResolvedLine(undefined);
+      }
+    },
+    [knownIds, runtimeDiagnostics?.detectedLibraries],
+  );
+
+  const onCancelUntagged = useCallback(() => {
+    setUntaggedTarget(null);
+    setTagError(null);
+    setTagBusy(false);
+  }, []);
+
+  const onConfirmMakeEditable = useCallback(() => {
+    const ws = wsRef.current;
+    const target = untaggedTarget;
+    const id = tagSuggestedId.trim();
+    if (!ws || ws.readyState !== WebSocket.OPEN || !target || !id) {
+      return;
+    }
+    const requestId = `tag-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
+    tagPendingRequestIdRef.current = requestId;
+    setTagBusy(true);
+    setTagError(null);
+    captureTagElementStarted();
+    ws.send(
+      JSON.stringify({
+        type: "tagElement",
+        protocolVersion: PROTOCOL_VERSION,
+        requestId,
+        file: target.file,
+        line: target.line,
+        column: target.column,
+        nuvioId: id,
+      }),
+    );
+  }, [tagSuggestedId, untaggedTarget]);
+
   const onSelectId = useCallback(
     (id: string | null) => {
       if (!id) {
         return;
       }
+      setUntaggedTarget(null);
+      setTagError(null);
       lastStagedOpsFpRef.current = null;
       patchPendingMapRef.current.clear();
       if (previewTimeoutRef.current) {
@@ -677,6 +746,25 @@ export function NuvioDevShellInner(): ReactElement {
           }
           if (msg.type === "pong" && msg.diagnostics) {
             setRuntimeDiagnostics(msg.diagnostics);
+            return;
+          }
+          if (msg.type === "tagElementAck") {
+            if (tagPendingRequestIdRef.current !== msg.requestId) {
+              return;
+            }
+            tagPendingRequestIdRef.current = null;
+            setTagBusy(false);
+            if (msg.ok && msg.id) {
+              captureTagElementCompleted();
+              setUntaggedTarget(null);
+              setTagError(null);
+              setSelectedId(msg.id);
+              captureFirstSelection();
+              sendSelect(msg.id);
+            } else {
+              captureTagElementFailed(msg.errorCode);
+              setTagError(msg.errorMessage ?? "Could not tag this element");
+            }
             return;
           }
           if (msg.type === "selectAck") {
@@ -870,7 +958,30 @@ export function NuvioDevShellInner(): ReactElement {
 
   const chromeUi = (
     <>
-      {editMode ? (
+      {editMode && untaggedTarget ? (
+        <aside
+          ref={(el) => assignRef(panelRef, el)}
+          style={NUVO_GLASS_SHELL_INLINE}
+          className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL}`}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className={NUVO_GLASS_CONTENT}>
+            <header className="nuvio-panel-header">
+              <span className="nuvio-panel-header-title">Make Editable</span>
+            </header>
+            <MakeEditablePanel
+              target={untaggedTarget}
+              suggestedId={tagSuggestedId}
+              onSuggestedIdChange={setTagSuggestedId}
+              onConfirm={onConfirmMakeEditable}
+              onCancel={onCancelUntagged}
+              busy={tagBusy}
+              error={tagError}
+            />
+          </div>
+        </aside>
+      ) : null}
+      {editMode && !untaggedTarget ? (
         <PropertyPanelShell
           shellRef={panelRef}
           panelCollapsed={chromeLayout.panel.collapsed}
@@ -998,6 +1109,8 @@ export function NuvioDevShellInner(): ReactElement {
         knownIds={knownIds}
         selectedId={selectedId}
         onSelectId={onSelectId}
+        untaggedTarget={untaggedTarget}
+        onSelectUntagged={onSelectUntagged}
         textTargetHostId={selectedId}
         textTargets={selectedEntry?.textTargets}
         activeTextTargetKey={activeTextTargetKey}

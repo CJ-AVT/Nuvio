@@ -43,7 +43,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.orders.card"
-        className="rounded-2xl border border-gray-200 bg-white p-5 xl:rounded-xl xl:p-2 xl:bg-zinc-400 dark:border-gray-800 dark:bg-white/[0.03]"
+        className="rounded-2xl border border-gray-200 bg-white p-5 md:p-4 md:gap-2 xl:rounded-xl xl:p-2 xl:px-4 xl:py-2 xl:shadow-md xl:bg-lime-200 dark:border-gray-800 dark:bg-white/[0.03]"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />

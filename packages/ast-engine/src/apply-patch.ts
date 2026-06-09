@@ -8,8 +8,10 @@ import { twMerge } from "tailwind-merge";
 import type { PatchOp } from "@nuvio/shared";
 import { validateTailwindFragment } from "./tailwind-whitelist.js";
 import { applySetTableDataField } from "./set-table-data-field.js";
+import { getClassNameBinding } from "./classname-binding.js";
+import type { ClassNameMode } from "./classname-mode.js";
 
-export type ClassNameMode = "literal-only" | "cn-basic";
+export type { ClassNameMode } from "./classname-mode.js";
 export type Breakpoint = "base" | "sm" | "md" | "lg" | "xl";
 
 const require = createRequire(import.meta.url);
@@ -133,11 +135,6 @@ function applySetText(openingPath: NodePath<t.JSXOpeningElement>, text: string):
   // Replace rich / mixed children with a single text node (drops inline markup).
   jsx.node.children = [t.jsxText(text)];
 }
-
-type ClassNameBinding = {
-  read(): string;
-  write(next: string): void;
-};
 
 type BreakpointBuckets = {
   base: string[];
@@ -297,53 +294,6 @@ export function removeAtBreakpoint(
   }
 
   return serializeClassNameFromBuckets(buckets);
-}
-
-function getClassNameBinding(
-  opening: t.JSXOpeningElement,
-  classNameMode: ClassNameMode,
-): ClassNameBinding | null {
-  for (const attr of opening.attributes) {
-    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "className" })) {
-      if (t.isStringLiteral(attr.value)) {
-        const literal = attr.value;
-        return {
-          read: () => literal.value,
-          write: (next) => {
-            attr.value = t.stringLiteral(next);
-          },
-        };
-      }
-      if (
-        classNameMode === "cn-basic" &&
-        t.isJSXExpressionContainer(attr.value) &&
-        t.isCallExpression(attr.value.expression) &&
-        ((t.isIdentifier(attr.value.expression.callee) &&
-          (attr.value.expression.callee.name === "cn" ||
-            attr.value.expression.callee.name === "clsx")) ||
-          false)
-      ) {
-        const call = attr.value.expression;
-        if (call.arguments.every((arg) => t.isStringLiteral(arg))) {
-          return {
-            read: () => call.arguments.map((arg) => (arg as t.StringLiteral).value).join(" "),
-            write: (next) => {
-              call.arguments = [t.stringLiteral(next)];
-            },
-          };
-        }
-      }
-      return null;
-    }
-  }
-  return {
-    read: () => "",
-    write: (next) => {
-      opening.attributes.push(
-        t.jsxAttribute(t.jsxIdentifier("className"), t.stringLiteral(next)),
-      );
-    },
-  };
 }
 
 function parentSupportsLayoutMoves(parentOpening: t.JSXOpeningElement): boolean {
@@ -546,14 +496,23 @@ function applyMergeClassName(
   const opening = openingPath.node;
   const binding = getClassNameBinding(opening, classNameMode);
   if (!binding) {
-    throw new Error(
-      classNameMode === "cn-basic"
-        ? "className must be a string literal or simple cn()/clsx() string list in cn-basic mode"
-        : "className must be a string literal for Phase 2 patches",
-    );
+    throw new Error(classNamePatchErrorMessage(classNameMode));
   }
   const current = binding.read();
   binding.write(mergeAtBreakpoint(current, fragment.trim(), activeBreakpoint));
+}
+
+function classNamePatchErrorMessage(mode: ClassNameMode): string {
+  switch (mode) {
+    case "cn-conditional":
+      return "className must be cn()/clsx() with string literals and condition && \"token\" branches";
+    case "classnames-static":
+      return "className must be classnames()/clsx() with string literals and a static object map";
+    case "cn-basic":
+      return "className must be a string literal or simple cn()/clsx() string list";
+    default:
+      return "className must be a string literal for Phase 2 patches";
+  }
 }
 
 function applyRemoveClassName(
@@ -566,11 +525,7 @@ function applyRemoveClassName(
   const opening = openingPath.node;
   const binding = getClassNameBinding(opening, classNameMode);
   if (!binding) {
-    throw new Error(
-      classNameMode === "cn-basic"
-        ? "className must be a string literal or simple cn()/clsx() string list in cn-basic mode"
-        : "className must be a string literal for Phase 2 patches",
-    );
+    throw new Error(classNamePatchErrorMessage(classNameMode));
   }
   const current = binding.read();
   binding.write(removeAtBreakpoint(current, fragment.trim(), activeBreakpoint));

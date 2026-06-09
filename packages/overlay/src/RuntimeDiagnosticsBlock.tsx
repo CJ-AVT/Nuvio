@@ -45,18 +45,23 @@ export function EditorStackVersions({
 }: {
   diagnostics: RuntimeDiagnostics | null;
 }): ReactElement | null {
-  if (!diagnostics?.viteVersion && !diagnostics?.reactVersion && !diagnostics?.tailwindVersion) {
+  const hasVersions =
+    diagnostics?.viteVersion || diagnostics?.reactVersion || diagnostics?.tailwindVersion;
+  const hasLibraries = (diagnostics?.detectedLibraries?.length ?? 0) > 0;
+  if (!hasVersions && !hasLibraries) {
     return null;
   }
   return (
     <p className="nuvio-editor-versions">
-      {diagnostics.viteVersion ? `Vite ${diagnostics.viteVersion}` : null}
-      {diagnostics.viteVersion && diagnostics.reactVersion ? " · " : null}
-      {diagnostics.reactVersion ? `React ${diagnostics.reactVersion}` : null}
-      {(diagnostics.viteVersion || diagnostics.reactVersion) && diagnostics.tailwindVersion
+      {diagnostics?.viteVersion ? `Vite ${diagnostics.viteVersion}` : null}
+      {diagnostics?.viteVersion && diagnostics?.reactVersion ? " · " : null}
+      {diagnostics?.reactVersion ? `React ${diagnostics.reactVersion}` : null}
+      {(diagnostics?.viteVersion || diagnostics?.reactVersion) && diagnostics?.tailwindVersion
         ? " · "
         : null}
-      {diagnostics.tailwindVersion ? `Tailwind ${diagnostics.tailwindVersion}` : null}
+      {diagnostics?.tailwindVersion ? `Tailwind ${diagnostics.tailwindVersion}` : null}
+      {(hasVersions && hasLibraries) ? " · " : null}
+      {hasLibraries ? `Libraries: ${diagnostics!.detectedLibraries!.join(", ")}` : null}
     </p>
   );
 }

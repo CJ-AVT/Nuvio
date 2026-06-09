@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { appHasDevShell, resolveAppFile } from "./patch-app-root.js";
+import { hasNuvioPackages, nuvioOverlayLinkKind, readPackageJson } from "./nuvio-deps.js";
+import { projectHasDevShell } from "./patch-app-root.js";
 import {
   mainHasOverlayStyles,
   overlayInstalledFromNpm,
@@ -20,21 +20,22 @@ export type Verification = {
   starterId: "OK" | "MISSING";
 };
 
+function optimizeDepsSatisfied(
+  viteConfigPath: string,
+  packageJsonPath: string,
+): boolean {
+  if (viteConfigHasOverlayOptimizeExclude(viteConfigPath)) return true;
+  const pkg = readPackageJson(packageJsonPath);
+  return nuvioOverlayLinkKind(pkg) === "workspace";
+}
+
 export function verifyProject(
   root: string,
   packageJsonPath: string,
   viteConfigPath: string,
 ): Verification {
-  const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8")) as Record<
-    string,
-    unknown
-  >;
-  const dev = pkg.devDependencies as Record<string, string> | undefined;
-  const depsOk =
-    Boolean(dev?.["@nuvio/vite-plugin"]) &&
-    Boolean(dev?.["@nuvio/overlay"]);
-
-  const appFile = resolveAppFile(root);
+  const pkg = readPackageJson(packageJsonPath);
+  const depsOk = hasNuvioPackages(pkg);
   const mainEntry = resolveMainEntry(root);
 
   return {
@@ -46,10 +47,10 @@ export function verifyProject(
         !overlayInstalledFromNpm(packageJsonPath))
         ? "OK"
         : "TODO",
-    optimizeDeps: viteConfigHasOverlayOptimizeExclude(viteConfigPath)
+    optimizeDeps: optimizeDepsSatisfied(viteConfigPath, packageJsonPath)
       ? "OK"
       : "TODO",
-    shell: appFile && appHasDevShell(appFile) ? "OK" : "TODO",
+    shell: projectHasDevShell(root) ? "OK" : "TODO",
     starterId: projectHasPageTitleId(root) ? "OK" : "MISSING",
   };
 }
@@ -57,7 +58,7 @@ export function verifyProject(
 export function printVerification(v: Verification): void {
   console.log("Verification:");
   console.log(
-    `  devDependencies: @nuvio/vite-plugin, @nuvio/overlay — ${v.deps}`,
+    `  dependencies: @nuvio/vite-plugin, @nuvio/overlay — ${v.deps}`,
   );
   console.log(`  vite.config: nuvio() — ${v.vite}`);
   console.log(`  main.tsx: @nuvio/overlay/style.css — ${v.overlayCss}`);

@@ -140,6 +140,29 @@ describe("parseClientMessage", () => {
     }
   });
 
+  it("accepts tagElement", () => {
+    const msg = parseClientMessage(
+      JSON.stringify({
+        type: "tagElement",
+        protocolVersion: PROTOCOL_VERSION,
+        requestId: "t1",
+        file: "src/App.tsx",
+        line: 4,
+        column: 9,
+        nuvioId: "page.title",
+      }),
+    );
+    expect(msg).toEqual({
+      type: "tagElement",
+      protocolVersion: PROTOCOL_VERSION,
+      requestId: "t1",
+      file: "src/App.tsx",
+      line: 4,
+      column: 9,
+      nuvioId: "page.title",
+    });
+  });
+
   it("accepts patchUndo", () => {
     const msg = parseClientMessage(
       JSON.stringify({

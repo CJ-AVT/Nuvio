@@ -1,0 +1,220 @@
+import { detectPackageManager } from "./detect-pm.js";
+import { PreflightError } from "./detect-project.js";
+import { nuvioOverlayLinkKind } from "./nuvio-deps.js";
+import { scanProject } from "./project-scan.js";
+import {
+  buildCliTelemetryProps,
+  captureCliEvent,
+  type DoctorRunTelemetry,
+} from "./telemetry.js";
+import { verifyProject } from "./verify.js";
+
+export type DoctorCheckStatus = "pass" | "warn" | "fail";
+
+export type DoctorCheck = {
+  id: string;
+  label: string;
+  status: DoctorCheckStatus;
+  detail?: string;
+};
+
+export type DoctorResult = {
+  projectName: string;
+  checks: DoctorCheck[];
+  passCount: number;
+  warnCount: number;
+  failCount: number;
+};
+
+export type DoctorOptions = {
+  cwd: string;
+  json?: boolean;
+  checkDevServer?: boolean;
+  devServerPort?: number;
+};
+
+async function checkDevServerReachable(port: number): Promise<DoctorCheck> {
+  const url = `http://127.0.0.1:${port}/`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(1_500) });
+    if (res.ok) {
+      return {
+        id: "dev_server",
+        label: `Dev server reachable (${url})`,
+        status: "pass",
+      };
+    }
+    return {
+      id: "dev_server",
+      label: "Dev server reachable",
+      status: "warn",
+      detail: `HTTP ${res.status} from ${url}`,
+    };
+  } catch {
+    return {
+      id: "dev_server",
+      label: "Dev server reachable",
+      status: "warn",
+      detail: `Start pnpm dev — could not reach ${url}`,
+    };
+  }
+}
+
+function summarize(result: DoctorResult): void {
+  const total = result.checks.length;
+  const passed = result.passCount;
+  const label =
+    result.failCount > 0
+      ? "nuvio not ready"
+      : result.warnCount > 0
+        ? "nuvio partially ready"
+        : "nuvio ready";
+  console.log(`\nResult: ${passed}/${total} passed — ${label}`);
+}
+
+export async function runDoctor(opts: DoctorOptions): Promise<number> {
+  let scan: ReturnType<typeof scanProject>;
+  try {
+    scan = scanProject(opts.cwd);
+  } catch (e) {
+    if (e instanceof PreflightError) {
+      console.error(e.message);
+      return 1;
+    }
+    throw e;
+  }
+
+  const { ctx, detectedLibraries, index } = scan;
+  const pkg = ctx.packageJson;
+  const projectName = String(pkg.name ?? "project");
+  const verification = verifyProject(
+    ctx.root,
+    ctx.packageJsonPath,
+    ctx.viteConfigPath,
+  );
+
+  const checks: DoctorCheck[] = [
+    {
+      id: "deps_plugin",
+      label: "@nuvio/vite-plugin installed",
+      status: verification.deps === "OK" ? "pass" : "fail",
+    },
+    {
+      id: "deps_overlay",
+      label: "@nuvio/overlay installed",
+      status: verification.deps === "OK" ? "pass" : "fail",
+    },
+    {
+      id: "vite_plugin",
+      label: "vite.config contains nuvio()",
+      status: verification.vite === "OK" ? "pass" : "fail",
+    },
+    {
+      id: "optimize_deps",
+      label: "optimizeDeps.exclude includes @nuvio/overlay",
+      status: verification.optimizeDeps === "OK" ? "pass" : "fail",
+      detail:
+        verification.optimizeDeps === "OK" &&
+        nuvioOverlayLinkKind(pkg) === "workspace"
+          ? "workspace install — optional"
+          : undefined,
+    },
+    {
+      id: "overlay_css",
+      label: "main entry imports @nuvio/overlay/style.css",
+      status: verification.overlayCss === "OK" ? "pass" : "fail",
+      detail:
+        verification.overlayCss === "OK" &&
+        nuvioOverlayLinkKind(pkg) === "workspace"
+          ? "workspace install — optional"
+          : undefined,
+    },
+    {
+      id: "dev_shell",
+      label: "NuvioDevShell mounted in app",
+      status: verification.shell === "OK" ? "pass" : "fail",
+    },
+    {
+      id: "tailwind",
+      label: "Tailwind detected",
+      status: ctx.tailwindOk ? "pass" : "warn",
+      detail: ctx.tailwindOk
+        ? undefined
+        : "Style edits may not apply visually without Tailwind",
+    },
+    {
+      id: "editable_hosts",
+      label: "At least one data-nuvio-id indexed",
+      status: index.entries.length > 0 ? "pass" : "fail",
+      detail:
+        index.entries.length > 0
+          ? `${index.entries.length} host(s)`
+          : "Run dev → Make Editable, or add ids manually",
+    },
+  ];
+
+  if (detectedLibraries.length > 0) {
+    checks.push({
+      id: "libraries",
+      label: "Component libraries detected",
+      status: "pass",
+      detail: detectedLibraries.join(", "),
+    });
+  }
+
+  if (index.duplicateErrors.length > 0) {
+    checks.push({
+      id: "duplicate_ids",
+      label: "No duplicate data-nuvio-id values",
+      status: "fail",
+      detail: `${index.duplicateErrors.length} duplicate id(s) — run nuvio scan`,
+    });
+  } else {
+    checks.push({
+      id: "duplicate_ids",
+      label: "No duplicate data-nuvio-id values",
+      status: "pass",
+    });
+  }
+
+  if (opts.checkDevServer !== false) {
+    checks.push(await checkDevServerReachable(opts.devServerPort ?? 5173));
+  }
+
+  const passCount = checks.filter((c) => c.status === "pass").length;
+  const warnCount = checks.filter((c) => c.status === "warn").length;
+  const failCount = checks.filter((c) => c.status === "fail").length;
+
+  const result: DoctorResult = {
+    projectName,
+    checks,
+    passCount,
+    warnCount,
+    failCount,
+  };
+
+  const pm = detectPackageManager(ctx.root);
+  const telemetry: DoctorRunTelemetry = {
+    ...buildCliTelemetryProps(pm, ctx),
+    pass_count: passCount,
+    warn_count: warnCount,
+    fail_count: failCount,
+    ready: failCount === 0,
+  };
+  captureCliEvent("doctor_run", telemetry);
+
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return failCount > 0 ? 1 : 0;
+  }
+
+  console.log(`nuvio doctor — ${projectName}\n`);
+  for (const check of checks) {
+    const icon =
+      check.status === "pass" ? "✅" : check.status === "warn" ? "⚠" : "❌";
+    const suffix = check.detail ? ` — ${check.detail}` : "";
+    console.log(`  ${icon} ${check.label}${suffix}`);
+  }
+  summarize(result);
+  return failCount > 0 ? 1 : 0;
+}

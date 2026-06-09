@@ -76,6 +76,20 @@ describe("runCli telemetry", () => {
     expect(shutdownMock).toHaveBeenCalled();
   });
 
+  it("fires nuvio_cli_invoked with command doctor", async () => {
+    const code = await runCli([
+      "node",
+      "nuvio",
+      "doctor",
+      "--skip-dev-server",
+      "--cwd",
+      "/tmp/nuvio-cli-doctor-telemetry-missing",
+    ]);
+    expect(code).toBe(1);
+    expect(invokedCommand()).toBe("doctor");
+    expect(shutdownMock).toHaveBeenCalled();
+  });
+
   it("does not throw when telemetry capture fails", async () => {
     captureMock.mockImplementation(() => {
       throw new Error("posthog down");

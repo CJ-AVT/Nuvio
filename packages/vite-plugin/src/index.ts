@@ -6,9 +6,14 @@ import type { Logger, Plugin } from "vite";
 import { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
 import { applyPatchToSource } from "@nuvio/ast-engine";
+import { resolvePatchClassNameMode } from "./resolve-classname-mode.js";
+import { detectProjectLibraries } from "./detect-libraries.js";
+import { handleTagElementMessage } from "./handle-tag-element.js";
+import { injectJsxLocAttributes } from "./jsx-loc-transform.js";
 import {
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
+  type DuplicateIdError,
   type IndexWireEntry,
   type RuntimeDiagnostics,
   parseClientMessage,
@@ -131,10 +136,26 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
   let cachedIndexPayload: string | null = null;
   let runtimeDiagnostics: RuntimeDiagnostics = { overlayCssMode: "self-contained" };
   const idToEntry = new Map<string, IndexWireEntry>();
+  let lastDuplicateErrors: DuplicateIdError[] = [];
+  let projectRoot = process.cwd();
 
   return {
     name: "nuvio",
     apply: "serve",
+    transform(code, id) {
+      if (!enabled) {
+        return null;
+      }
+      if (!id || id.includes("node_modules") || !/\.(tsx|jsx)$/.test(id)) {
+        return null;
+      }
+      const fileAbs = path.isAbsolute(id) ? id : path.resolve(projectRoot, id);
+      const { code: next, changed } = injectJsxLocAttributes(code, fileAbs, projectRoot);
+      if (!changed) {
+        return null;
+      }
+      return { code: next, map: null };
+    },
     configureServer(server) {
       if (!enabled) {
         server.config.logger.info(
@@ -148,6 +169,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           ? path.dirname(server.config.configFile)
           : "";
       const serverRoot = path.resolve(server.config.root);
+      projectRoot = path.resolve(fromConfigFile || serverRoot);
       const rootCandidates = [
         path.resolve(fromConfigFile || serverRoot),
         serverRoot,
@@ -167,12 +189,12 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       };
 
       const rebuildIndex = (): void => {
-        let built = pickBestSourceIndex(rootCandidates, scanGlobs, { classNameMode });
+        const detectedLibraries = detectProjectLibraries(serverRoot);
+        const indexOptions = { classNameMode, detectedLibraries };
+        let built = pickBestSourceIndex(rootCandidates, scanGlobs, indexOptions);
         built = supplementIndexFromAppTsx(serverRoot, built, classNameMode, log.warn);
         if (built.entries.length === 0) {
-          const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], {
-            classNameMode,
-          });
+          const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], indexOptions);
           if (fallback.entries.length > 0) {
             log.warn(
               `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)) from ${serverRoot}.`,
@@ -185,11 +207,13 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         for (const e of built.entries) {
           idToEntry.set(e.id, e);
         }
+        lastDuplicateErrors = built.duplicateErrors;
 
         const versions = readRuntimeVersions(serverRoot);
         runtimeDiagnostics = {
           ...versions,
           overlayCssMode: "self-contained",
+          detectedLibraries: detectedLibraries.length > 0 ? detectedLibraries : undefined,
         };
 
         cachedIndexPayload = serializeServerMessage({
@@ -365,6 +389,18 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
             return;
           }
 
+          if (msg.type === "tagElement") {
+            const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+            await handleTagElementMessage(ws, msg, {
+              writeGuardRoot,
+              projectRoot,
+              idToEntry,
+              duplicateIds: lastDuplicateErrors,
+              onIndexRebuilt: debouncedRebuild,
+            });
+            return;
+          }
+
           if (msg.type === "patchUndo") {
             const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
             const last = undoStack.pop();
@@ -469,7 +505,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
               return;
             }
             const result = await applyPatchToSource(source, entry.file, msg.id, msg.ops, {
-              classNameMode,
+              classNameMode: resolvePatchClassNameMode(entry, classNameMode),
               activeBreakpoint: msg.activeBreakpoint,
             });
             if (!result.ok) {

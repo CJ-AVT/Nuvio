@@ -1,6 +1,18 @@
 import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import type { IndexWireEntry, RiskLevel } from "@nuvio/shared";
+import {
+  classifyHostClassNameMode,
+  readFlattenedClassName,
+  type ClassNameMode,
+} from "@nuvio/ast-engine";
+import {
+  libraryGuidanceForEntry,
+  resolveEntryLibraryHint,
+  type IndexWireEntry,
+  type LibraryId,
+  type RiskLevel,
+  type WireClassNameMode,
+} from "@nuvio/shared";
 import type { JSXElement, JSXOpeningElement } from "@babel/types";
 import {
   collectStyleTargets,
@@ -10,7 +22,7 @@ import {
 } from "./source-index-text-targets.js";
 
 const NATIVE_TAG = /^[a-z][\w-]*$/;
-export type ClassNameMode = "literal-only" | "cn-basic";
+export type { ClassNameMode };
 
 export type AnalyzeHostContext = {
   tagName: string;
@@ -18,6 +30,8 @@ export type AnalyzeHostContext = {
   hasLiteralClassName: boolean;
   classNameValue?: string;
   classNameComputed: boolean;
+  classNameMode: WireClassNameMode;
+  libraryHint?: LibraryId;
   insideMap: boolean;
   textEditable: boolean;
 };
@@ -59,44 +73,34 @@ function readClassName(opening: JSXOpeningElement): {
   return { hasLiteralClassName: false, classNameComputed: false };
 }
 
-function readClassNameWithMode(
-  opening: JSXOpeningElement,
-  classNameMode: ClassNameMode,
-): {
+function readClassNameDetected(opening: JSXOpeningElement): {
   hasLiteralClassName: boolean;
   classNameValue?: string;
   classNameComputed: boolean;
+  classNameMode: WireClassNameMode;
 } {
+  const mode = classifyHostClassNameMode(opening);
+  if (mode === "unsupported") {
+    return {
+      hasLiteralClassName: false,
+      classNameComputed: true,
+      classNameMode: mode,
+    };
+  }
+  const flattened = readFlattenedClassName(opening, mode);
+  if (flattened !== undefined) {
+    return {
+      hasLiteralClassName: true,
+      classNameValue: flattened,
+      classNameComputed: false,
+      classNameMode: mode,
+    };
+  }
   const direct = readClassName(opening);
-  if (direct.hasLiteralClassName || classNameMode !== "cn-basic") {
-    return direct;
-  }
-  for (const attr of opening.attributes) {
-    if (
-      attr.type !== "JSXAttribute" ||
-      attr.name.type !== "JSXIdentifier" ||
-      attr.name.name !== "className"
-    ) {
-      continue;
-    }
-    if (
-      attr.value?.type === "JSXExpressionContainer" &&
-      attr.value.expression.type === "CallExpression" &&
-      attr.value.expression.callee.type === "Identifier" &&
-      (attr.value.expression.callee.name === "cn" ||
-        attr.value.expression.callee.name === "clsx") &&
-      attr.value.expression.arguments.every((arg) => arg.type === "StringLiteral")
-    ) {
-      return {
-        hasLiteralClassName: true,
-        classNameValue: attr.value.expression.arguments
-          .map((arg) => (arg as t.StringLiteral).value)
-          .join(" "),
-        classNameComputed: false,
-      };
-    }
-  }
-  return direct;
+  return {
+    ...direct,
+    classNameMode: mode,
+  };
 }
 
 function isInsideMap(path: NodePath<JSXOpeningElement>): boolean {
@@ -249,7 +253,7 @@ function inferHierarchyRole(
 
 export function analyzeHost(
   openingPath: NodePath<JSXOpeningElement>,
-  classNameMode: ClassNameMode = "literal-only",
+  _legacyClassNameMode?: ClassNameMode,
 ): AnalyzeHostContext | null {
   const opening = openingPath.node;
   const parent = openingPath.parentPath;
@@ -257,7 +261,7 @@ export function analyzeHost(
     return null;
   }
   const tagName = getTagName(opening);
-  const classInfo = readClassNameWithMode(opening, classNameMode);
+  const classInfo = readClassNameDetected(opening);
   const insideMap = isInsideMap(openingPath);
   const textEditable = !jsxElementHasElementChildren(parent.node);
   return {
@@ -266,12 +270,16 @@ export function analyzeHost(
     hasLiteralClassName: classInfo.hasLiteralClassName,
     classNameValue: classInfo.classNameValue,
     classNameComputed: classInfo.classNameComputed,
+    classNameMode: classInfo.classNameMode,
     insideMap,
     textEditable,
   };
 }
 
-export function computeRiskMetadata(ctx: AnalyzeHostContext): {
+export function computeRiskMetadata(
+  ctx: AnalyzeHostContext,
+  libraryHint?: LibraryId,
+): {
   riskLevel: RiskLevel;
   unsupportedReasons: string[];
   textEditable: boolean;
@@ -292,21 +300,34 @@ export function computeRiskMetadata(ctx: AnalyzeHostContext): {
   if (ctx.classNameComputed) {
     setRisk("unsupported");
     unsupportedReasons.push(
-      "className is not a string literal — only literal className strings are patchable in this version.",
+      ctx.classNameMode === "unsupported"
+        ? "className uses a dynamic pattern nuvio cannot patch safely yet (e.g. variables, template literals, or complex cn() args)."
+        : "className is not patchable for this element.",
     );
   }
 
   if (ctx.insideMap) {
     setRisk("caution");
     unsupportedReasons.push(
-      "Element is inside a .map() — text/class changes may affect every rendered item.",
+      "Element is inside a .map() ? text/class changes may affect every rendered item.",
     );
   }
 
   if (!isNative) {
     setRisk("caution");
+    const libraryNote = libraryGuidanceForEntry({
+      id: "",
+      file: "",
+      line: 0,
+      column: 0,
+      tagName: ctx.tagName,
+      libraryHint,
+      riskLevel,
+      hasLiteralClassName: ctx.hasLiteralClassName,
+    });
     unsupportedReasons.push(
-      "Custom React component — className must forward to a DOM node for visual changes.",
+      libraryNote ??
+        "Custom React component ? className must forward to a DOM node for visual changes.",
     );
   }
 
@@ -320,7 +341,7 @@ export function computeRiskMetadata(ctx: AnalyzeHostContext): {
 
   if (ctx.hasLiteralClassName && ctx.classNameValue?.includes("dark:")) {
     setRisk("caution");
-    unsupportedReasons.push("Responsive/dark: utilities present — edit with care.");
+    unsupportedReasons.push("Responsive/dark: utilities present ? edit with care.");
   }
 
   const structuralEditable =
@@ -340,8 +361,11 @@ export function buildIndexEntry(
   base: { id: string; file: string; line: number; column: number },
   ctx: AnalyzeHostContext,
   openingPath?: NodePath<JSXOpeningElement>,
+  detectedLibraries: readonly LibraryId[] = [],
 ): IndexWireEntry {
-  const risk = computeRiskMetadata(ctx);
+  const libraryHint =
+    ctx.libraryHint ?? resolveEntryLibraryHint(base.file, ctx.tagName, detectedLibraries);
+  const risk = computeRiskMetadata(ctx, libraryHint);
   const textTargets =
     openingPath !== undefined
       ? collectTextTargets(openingPath, base.id, ctx, base.file)
@@ -384,5 +408,7 @@ export function buildIndexEntry(
     primaryTextTargetKey,
     textTargets: textTargets && textTargets.length > 0 ? textTargets : undefined,
     styleTargets: styleTargets && styleTargets.length > 0 ? styleTargets : undefined,
+    classNameMode: ctx.classNameMode,
+    libraryHint,
   };
 }

@@ -2,7 +2,7 @@
 
 **For vibe-coders:** edit your app in the browser while it runs locally. Click text, tweak styles, save back to your code.
 
-**On npm:** [`@nuvio/cli@0.5.3`](https://www.npmjs.com/package/@nuvio/cli) (installs matching `@nuvio/vite-plugin` + `@nuvio/overlay`). Two commands below — no Tailwind `content` hack for the overlay.
+**On npm:** [`@nuvio/cli@1.0.0`](https://www.npmjs.com/package/@nuvio/cli) (installs matching `@nuvio/vite-plugin` + `@nuvio/overlay`).
 
 ---
 
@@ -11,18 +11,18 @@
 In your **Vite + React** project folder (`package.json` + `vite.config.ts`):
 
 ```bash
-pnpm dlx @nuvio/cli@0.5.3 init --yes
+pnpm dlx @nuvio/cli@1.0.0 init --yes
 pnpm dev
 ```
 
-Open the localhost URL → Nuvio chip → **Edit** on → click the page title (`page.title`) → **Preview Changes** → **Apply to Code**.
+Open the localhost URL → Nuvio chip → **Edit on** → click the page title (`page.title`) or any untagged element → **Make Editable** → **Preview Changes** → **Apply to Code**.
 
 - `--yes` skips the confirm prompt. Without it, the CLI asks **Proceed? [y/N]** first.
-- Run init in your **app folder**, not the Nuvio monorepo.
+- Run init in your **app folder**, not the Nuvio monorepo root.
 - Tailwind is recommended for class edits; init warns but still runs if Tailwind is missing.
 - More help in your project after init: `nuvio/START_HERE.md`.
 
-**What init does (you don’t do this by hand):** installs `@nuvio/vite-plugin` + `@nuvio/overlay` at **0.5.3**, wires `vite.config`, mounts `NuvioDevShell` in `App.tsx`, adds overlay CSS in `main.tsx`, sets `data-nuvio-id="page.title"` on the first heading, creates `nuvio/`. Safe to run again. Does **not** start `pnpm dev` for you.
+**What init does (you don’t do this by hand):** installs `@nuvio/vite-plugin` + `@nuvio/overlay` at **1.0.0**, wires `vite.config`, mounts `NuvioDevShell` in `App.tsx`, adds overlay CSS in `main.tsx`, sets `data-nuvio-id="page.title"` on the first heading, creates `nuvio/`. Safe to run again. Does **not** start `pnpm dev` for you.
 
 ---
 
@@ -53,30 +53,34 @@ Then Quick Start (`init --yes` + `pnpm dev`).
 ## After setup — how editing works
 
 1. `pnpm dev` — Nuvio only runs in local dev, not production.
-2. Chip → **Edit** on → click something with a `data-nuvio-id`.
+2. Chip → **Edit on** → click a tagged element or use **Make Editable** on untagged UI.
 3. Change text or styles in the panel (tasks: Heading, Card, Table, Button, Form, Nav, etc.).
 4. **Preview Changes** → **Apply to Code** — source files update. **Undo last** if needed.
 
 **Simple Mode:** plain-language screens; **Advanced** and **Developer details** are optional.
 
-### Mark more UI (when you outgrow the starter title)
+### Click-to-tag (no manual id required)
 
-Put a **unique** id on each element you want to click (string literal, not dynamic):
+Click any **untagged** native element → panel offers **Make Editable** → confirm → nuvio inserts `data-nuvio-id` in source. Restart dev server after upgrading nuvio so the loc transform is active.
+
+### Mark more UI manually (optional)
 
 ```tsx
 <h1 data-nuvio-id="home.title" className="text-4xl font-bold">Welcome</h1>
 ```
 
-**Rules:** unique names (`home.title`, `nav.dashboard`), `className` as a normal quoted string if you edit classes.
+**Rules:** unique names (`home.title`, `nav.dashboard`). `className` may be a string literal or supported `cn()` patterns on that host.
 
-**Dashboards (cards, tables, buttons, forms):** ask your AI agent to read `nuvio/AGENT.md` in your project — patterns are there so this guide stays short.
+**Dashboards (cards, tables, buttons):** ask your AI agent to read `nuvio/AGENT.md` — or use Make Editable in the browser.
+
+**Component libraries:** [shadcn](libraries/shadcn.md) · [TailAdmin](libraries/tailadmin.md) · [DaisyUI](libraries/daisyui.md)
 
 ---
 
 ## Manual setup (no CLI)
 
 ```bash
-pnpm add -D @nuvio/vite-plugin@0.5.3 @nuvio/overlay@0.5.3
+pnpm add -D @nuvio/vite-plugin@1.0.0 @nuvio/overlay@1.0.0
 ```
 
 **`vite.config.ts`** — add `nuvio()` and exclude overlay from prebundle:
@@ -105,7 +109,19 @@ import { NuvioDevShell } from "@nuvio/overlay";
 // …inside return: <NuvioDevShell />
 ```
 
-Add `data-nuvio-id` on editable elements, then `pnpm dev`.
+Add `data-nuvio-id` on editable elements or use Make Editable, then `pnpm dev`.
+
+---
+
+## Project diagnostics
+
+```bash
+nuvio doctor          # pass/fail checklist (deps, vite, overlay, indexed ids)
+nuvio scan            # list data-nuvio-id hosts with file:line
+nuvio stats           # short summary; add --json for scripts
+```
+
+Use `--cwd <path>` to point at another project root. Disable anonymous telemetry: `NUVIO_TELEMETRY=0`.
 
 ---
 
@@ -113,10 +129,10 @@ Add `data-nuvio-id` on editable elements, then `pnpm dev`.
 
 | Problem | Fix |
 | ------- | --- |
-| **No Nuvio chip** | `create vite` started dev before init → **Ctrl+C**, `pnpm dlx @nuvio/cli@0.5.3 init --yes`, `pnpm dev`. Init must run in the app folder. |
-| **Edit dead / no styles** | `pnpm dlx @nuvio/cli@0.5.3 init --yes`, then `rm -rf node_modules/.vite`, `pnpm dev`. |
-| **0 ids / nothing clickable** | Add `data-nuvio-id` in `src/**/*.tsx`, save, restart dev. |
-| **Apply greyed out** | Edit on → click an id’d element; `className` must be a string literal; fix duplicate ids. |
+| **No Nuvio chip** | `create vite` started dev before init → **Ctrl+C**, `pnpm dlx @nuvio/cli@1.0.0 init --yes`, `pnpm dev`. |
+| **Edit dead / no styles** | `nuvio doctor`, then `rm -rf node_modules/.vite`, `pnpm dev`. |
+| **0 ids / nothing clickable** | Use **Make Editable**, or add `data-nuvio-id`, save, restart dev. |
+| **Apply greyed out** | Edit on → click an id’d element; fix duplicate ids (`nuvio scan`). |
 | **Panel clipped** | **Reset position** on chip/editor, hard-refresh, restart dev. |
 | **Install failed** | `node -v` ≥ 20; run from folder with `package.json`. |
 
@@ -126,9 +142,10 @@ Add `data-nuvio-id` on editable elements, then `pnpm dev`.
 
 | I want to… | Do this |
 | ---------- | ------- |
-| Wire a project | `pnpm dlx @nuvio/cli@0.5.3 init --yes` then `pnpm dev` |
-| First edit | Edit on → click title → Preview → Apply |
-| More editable UI | `data-nuvio-id="unique.name"` + `nuvio/AGENT.md` for dashboards |
+| Wire a project | `pnpm dlx @nuvio/cli@1.0.0 init --yes` then `pnpm dev` |
+| First edit | Edit on → click title or Make Editable → Preview → Apply |
+| Check wiring | `nuvio doctor` |
+| More editable UI | Make Editable in browser, or `nuvio/AGENT.md` for dashboards |
 | Undo | **Undo last** on the chip |
 
 ---
@@ -149,8 +166,10 @@ In the browser overlay: `localStorage.setItem("nuvio.telemetry", "0")` (then ref
 
 ## Optional links
 
-- Release summary (maintainers / launch): [nuvio_v0.5.3.md](./nuvio_v0.5.3.md)
+- **1.0 release notes:** [nuvio_v1.0.md](./nuvio_v1.0.md)
+- **Upgrade from 0.5.x:** [MIGRATION_0.5_to_1.0.md](./MIGRATION_0.5_to_1.0.md)
+- **Examples:** [examples/README.md](../examples/README.md)
 - Telemetry spec: [PostHog_telemetry.md](./PostHog_telemetry.md)
 - Limits: [LIMITATIONS.md](./LIMITATIONS.md)
-- Versions (Vite 5/6/8): [COMPATIBILITY.md](./COMPATIBILITY.md)
-- Maintainer demo app / dogfood: [DOGFOOD.md](./DOGFOOD.md)
+- Versions: [COMPATIBILITY.md](./COMPATIBILITY.md)
+- Maintainer dogfood: [DOGFOOD.md](./DOGFOOD.md)

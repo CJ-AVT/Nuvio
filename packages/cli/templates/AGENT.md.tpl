@@ -6,9 +6,10 @@ This project uses [nuvio](https://www.npmjs.com/org/nuvio) (dev-only visual edit
 When the user asks to make UI editable or wire nuvio:
 
 1. Do **not** change unrelated files.
-2. Add **string literal** `data-nuvio-id="region.name"` on JSX elements they should click in the browser.
-3. Keep `className="..."` as a **string literal** on that same tag when they need Tailwind class patches (avoid `cn(...)` on the patch target).
-4. Never use `{condition ? "id" : undefined}` for `data-nuvio-id` — use a string literal on the branch they edit.
+2. Prefer **Make Editable** in the browser for new hosts (click-to-tag) — no manual id required for basic flow.
+3. When adding ids by hand: **string literal** `data-nuvio-id="region.name"` on the JSX host they should click.
+4. `className` may be a string literal, `cn("a", "b")`, or `cn("base", cond && "token")` on supported hosts.
+5. Never use `{condition ? "id" : undefined}` for `data-nuvio-id` — use a string literal on the branch they edit.
 
 **Card pattern:**
 - `metric.orders.card` (container)
@@ -19,6 +20,8 @@ When the user asks to make UI editable or wire nuvio:
 - `orders.section`, `orders.title`
 - `orders.header.products` (column headers)
 - `orders.row.${id}.nameText` (row text — template literal id is OK for rows)
+
+**Libraries:** shadcn (`components/ui/`), TailAdmin, DaisyUI — see https://github.com/ehah/Nuvio/tree/main/docs/libraries
 
 **After instrumentation:** user runs `{{PM_RUN}}`, Edit on, Preview Changes, Apply to Code.
 

@@ -5,9 +5,13 @@ import type { Duplex } from "node:stream";
 import { watch } from "node:fs";
 import { WebSocket, WebSocketServer } from "ws";
 import { applyPatchToSource } from "@nuvio/ast-engine";
+import { handleTagElementMessage } from "./handle-tag-element.js";
+import { resolvePatchClassNameMode } from "./resolve-classname-mode.js";
+import { detectProjectLibraries } from "./detect-libraries.js";
 import {
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
+  type DuplicateIdError,
   type IndexWireEntry,
   type RuntimeDiagnostics,
   parseClientMessage,
@@ -132,6 +136,7 @@ export function attachNuvioDevSession(
   let cachedIndexPayload: string | null = null;
   let runtimeDiagnostics: RuntimeDiagnostics = { overlayCssMode: "self-contained" };
   const idToEntry = new Map<string, IndexWireEntry>();
+  let lastDuplicateErrors: DuplicateIdError[] = [];
   const wss = new WebSocketServer({ noServer: true });
 
   type UndoSnapshot = { file: string; contents: string };
@@ -148,10 +153,12 @@ export function attachNuvioDevSession(
     if (!enabled) {
       return;
     }
-    let built = pickBestSourceIndex(rootCandidates, scanGlobs, { classNameMode });
+    const detectedLibraries = detectProjectLibraries(serverRoot);
+    const indexOptions = { classNameMode, detectedLibraries };
+    let built = pickBestSourceIndex(rootCandidates, scanGlobs, indexOptions);
     built = supplementIndexFromAppTsx(serverRoot, built, classNameMode, log.warn);
     if (built.entries.length === 0) {
-      const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], { classNameMode });
+      const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], indexOptions);
       if (fallback.entries.length > 0) {
         log.warn(
           `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)).`,
@@ -164,10 +171,12 @@ export function attachNuvioDevSession(
     for (const e of built.entries) {
       idToEntry.set(e.id, e);
     }
+    lastDuplicateErrors = built.duplicateErrors;
 
     runtimeDiagnostics = {
       ...readRuntimeVersions(serverRoot),
       overlayCssMode: "self-contained",
+      detectedLibraries: detectedLibraries.length > 0 ? detectedLibraries : undefined,
     };
 
     cachedIndexPayload = serializeServerMessage({
@@ -309,6 +318,18 @@ export function attachNuvioDevSession(
         return;
       }
 
+      if (msg.type === "tagElement") {
+        const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+        await handleTagElementMessage(ws, msg, {
+          writeGuardRoot,
+          projectRoot: writeGuardRoot,
+          idToEntry,
+          duplicateIds: lastDuplicateErrors,
+          onIndexRebuilt: debouncedRebuild,
+        });
+        return;
+      }
+
       if (msg.type === "patchUndo") {
         const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
         const last = undoStack.pop();
@@ -411,7 +432,7 @@ export function attachNuvioDevSession(
           return;
         }
         const result = await applyPatchToSource(source, entry.file, msg.id, msg.ops, {
-          classNameMode,
+          classNameMode: resolvePatchClassNameMode(entry, classNameMode),
           activeBreakpoint: msg.activeBreakpoint,
         });
         if (!result.ok) {

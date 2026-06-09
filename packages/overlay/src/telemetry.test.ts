@@ -67,6 +67,24 @@ describe("overlay telemetry", () => {
     ).toBe("duplicate_id");
   });
 
+  it("maps tag_element failure reasons", async () => {
+    const { mapTagElementFailureReason } = await loadTelemetry();
+    expect(mapTagElementFailureReason("duplicate_id")).toBe("duplicate_id");
+    expect(mapTagElementFailureReason("node_not_found")).toBe("node_not_found");
+    expect(mapTagElementFailureReason("write_error")).toBe("write_error");
+    expect(mapTagElementFailureReason("mystery")).toBe("tag_error");
+  });
+
+  it("emits tag_element events without extra properties", async () => {
+    const { captureTagElementStarted, captureTagElementCompleted, __resetOverlayTelemetryForTests } =
+      await loadTelemetry();
+    __resetOverlayTelemetryForTests();
+    captureTagElementStarted();
+    captureTagElementCompleted();
+    expect(captureMock).toHaveBeenCalledWith("tag_element_started", undefined);
+    expect(captureMock).toHaveBeenCalledWith("tag_element_completed", undefined);
+  });
+
   it("emits only allowed properties on apply_failed", async () => {
     const { captureApplyFailed, __resetOverlayTelemetryForTests } =
       await loadTelemetry();

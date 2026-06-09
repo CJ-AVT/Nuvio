@@ -2,6 +2,29 @@
 
 Validated stacks for published **`@nuvio/*`** packages. Expand rows as Nuvio is tested on more environments.
 
+## v1.0.0 stable (open-source release)
+
+Target release: **`1.0.0`** (see [CHANGELOG](../CHANGELOG.md), [nuvio_v1.0.md](./nuvio_v1.0.md)).
+
+| Area | Supported | Notes |
+| ---- | --------- | ----- |
+| **Bundler (Vite)** | Vite **5.4+**, **6.x**, **8.x** | Primary public stack. |
+| **Bundler (Next)** | Experimental only | `@nuvio/next` **not** in 1.0.0 publish set. |
+| **Framework** | React **18.3+** or **19.x** | Simple Mode + click-to-tag. |
+| **Tailwind** | **3.x** and **4.x** | Class patches via whitelist + `tailwind-merge`. |
+| **Wire protocol** | **v8** | Adds `tagElement` RPC. |
+| **CLI** | `init`, `doctor`, `scan`, `stats` | Node **20+**. |
+| **Libraries** | shadcn, TailAdmin, DaisyUI (detection) | See [docs/libraries/](./libraries/). |
+
+### v1.0 capabilities
+
+- Click-to-tag (Make Editable) — no manual id for basic first edit
+- `cn()` / conditional `cn` / static `classnames()` on supported hosts
+- Offline project diagnostics (`doctor`, `scan`, `stats`)
+- Anonymous opt-out telemetry (CLI + overlay funnels)
+
+---
+
 ## v0.5.0 stable (Vibe-coder task router — Vite public)
 
 Target release: **`0.5.0`** (see [CHANGELOG](../CHANGELOG.md), [nuvio_v0.5.0.md](./nuvio_v0.5.0.md)).

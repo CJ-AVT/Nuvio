@@ -36,7 +36,7 @@ const tableData: Product[] = [
   },
   {
     id: 3,
-    name: "iPhone 15 Pro Max",
+    name: "iPhone 15 Pro Max pro +",
     variants: "2 Variants",
     category: "SmartPhone",
     price: "$1869.00",
@@ -82,9 +82,9 @@ export default function RecentOrders() {
           <button
             data-nuvio-id="orders.filter"
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium shadow-theme-xs text-red-500 xl:text-red-800 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium shadow-theme-xs text-red-500 xl:text-red-800 xl:p-2 xl:bg-zinc-400 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
           >
-            Filter Button
+            Filter Button Test
           </button>
           <button
             data-nuvio-id="orders.seeAll"

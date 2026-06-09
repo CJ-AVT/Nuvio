@@ -29,13 +29,44 @@ export type CliTelemetryProps = {
   result_tier?: "full" | "partial" | "failed";
 };
 
-export type CliInvokedCommand = "init" | "help" | "unknown" | "none";
+export type CliInvokedCommand =
+  | "init"
+  | "doctor"
+  | "scan"
+  | "stats"
+  | "help"
+  | "unknown"
+  | "none";
 
 export type CliTelemetryEvent =
   | "nuvio_cli_invoked"
   | "nuvio_init_started"
   | "nuvio_init_completed"
-  | "nuvio_init_failed";
+  | "nuvio_init_failed"
+  | "doctor_run"
+  | "scan_run"
+  | "stats_run";
+
+export type DoctorRunTelemetry = CliTelemetryProps & {
+  pass_count: number;
+  warn_count: number;
+  fail_count: number;
+  ready: boolean;
+};
+
+export type ScanRunTelemetry = CliTelemetryProps & {
+  host_count: number;
+  duplicate_count: number;
+  library_count: number;
+};
+
+export type StatsRunTelemetry = CliTelemetryProps & {
+  editable_hosts: number;
+  tagged_files: number;
+  duplicate_ids: number;
+  table_hosts: number;
+  library_count: number;
+};
 
 export type CliInvokedProps = {
   nuvio_version: string;
@@ -153,6 +184,9 @@ export function resolveCliInvokedCommand(
   if (help) return "help";
   if (!command) return "none";
   if (command === "init") return "init";
+  if (command === "doctor") return "doctor";
+  if (command === "scan") return "scan";
+  if (command === "stats") return "stats";
   return "unknown";
 }
 
@@ -210,7 +244,12 @@ export function captureCliInvoked(
 
 export function captureCliEvent(
   event: CliTelemetryEvent,
-  props?: CliTelemetryProps | CliInvokedProps,
+  props?:
+    | CliTelemetryProps
+    | CliInvokedProps
+    | DoctorRunTelemetry
+    | ScanRunTelemetry
+    | StatsRunTelemetry,
 ): void {
   try {
     if (!isTelemetryEnabled()) {

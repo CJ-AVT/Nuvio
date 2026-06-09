@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Bump when wire payloads change incompatibly. */
-export const PROTOCOL_VERSION = 7 as const;
+export const PROTOCOL_VERSION = 8 as const;
 
 export const riskLevelSchema = z.enum(["safe", "caution", "unsupported"]);
 
@@ -90,6 +90,22 @@ export type TableDataFieldBinding = z.infer<typeof tableDataFieldSchema>;
 
 export type HierarchyRole = z.infer<typeof hierarchyRoleSchema>;
 
+/** Per-host className patch strategy (index v5 / v0.7). */
+export const classNameModeSchema = z.enum([
+  "literal-only",
+  "cn-basic",
+  "cn-conditional",
+  "classnames-static",
+  "unsupported",
+]);
+
+export type WireClassNameMode = z.infer<typeof classNameModeSchema>;
+
+/** Detected UI library profile (v0.8). */
+export const libraryIdSchema = z.enum(["shadcn", "tailadmin", "daisyui"]);
+
+export type LibraryId = z.infer<typeof libraryIdSchema>;
+
 export const indexEntrySchema = z.object({
   id: z.string(),
   file: z.string(),
@@ -125,6 +141,10 @@ export const indexEntrySchema = z.object({
   tableMeta: tableMetaSchema.optional(),
   /** Index v4: when this host maps to a `tableData` field edit. */
   tableDataField: tableDataFieldSchema.optional(),
+  /** Index v5: detected className expression mode for patch routing. */
+  classNameMode: classNameModeSchema.optional(),
+  /** Index v6: shadcn / TailAdmin / DaisyUI hint for this host. */
+  libraryHint: libraryIdSchema.optional(),
 });
 
 export type IndexWireEntry = z.infer<typeof indexEntrySchema>;
@@ -134,6 +154,8 @@ export const runtimeDiagnosticsSchema = z.object({
   reactVersion: z.string().optional(),
   tailwindVersion: z.string().optional(),
   overlayCssMode: z.literal("self-contained").optional(),
+  /** Project-level library detection (v0.8). */
+  detectedLibraries: z.array(libraryIdSchema).optional(),
 });
 
 export type RuntimeDiagnostics = z.infer<typeof runtimeDiagnosticsSchema>;
@@ -246,11 +268,25 @@ export const clientPatchUndoSchema = z.object({
 
 export type ClientPatchUndo = z.infer<typeof clientPatchUndoSchema>;
 
+/** v0.6: insert data-nuvio-id at a dev-time source location (click-to-tag). */
+export const clientTagElementSchema = z.object({
+  type: z.literal("tagElement"),
+  protocolVersion: z.number().int(),
+  requestId: z.string().min(1),
+  file: z.string().min(1),
+  line: z.number().int().positive(),
+  column: z.number().int().nonnegative(),
+  nuvioId: z.string().min(1),
+});
+
+export type ClientTagElement = z.infer<typeof clientTagElementSchema>;
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   clientPingSchema,
   clientSelectSchema,
   clientPatchApplySchema,
   clientPatchUndoSchema,
+  clientTagElementSchema,
 ]);
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
@@ -339,6 +375,18 @@ export const serverPatchUndoAckSchema = z.object({
 
 export type ServerPatchUndoAck = z.infer<typeof serverPatchUndoAckSchema>;
 
+export const serverTagElementAckSchema = z.object({
+  type: z.literal("tagElementAck"),
+  protocolVersion: z.number().int(),
+  requestId: z.string(),
+  ok: z.boolean(),
+  id: z.string().optional(),
+  errorCode: z.string().optional(),
+  errorMessage: z.string().optional(),
+});
+
+export type ServerTagElementAck = z.infer<typeof serverTagElementAckSchema>;
+
 export const serverMessageSchema = z.discriminatedUnion("type", [
   serverPongSchema,
   serverErrorSchema,
@@ -346,6 +394,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   serverSelectAckSchema,
   serverPatchAckSchema,
   serverPatchUndoAckSchema,
+  serverTagElementAckSchema,
 ]);
 
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

@@ -4,7 +4,7 @@ import { parse } from "@babel/parser";
 import traverseImport, { type NodePath } from "@babel/traverse";
 import type { JSXOpeningElement } from "@babel/types";
 import fg from "fast-glob";
-import type { DuplicateIdError, IndexWireEntry } from "@nuvio/shared";
+import type { DuplicateIdError, IndexWireEntry, LibraryId } from "@nuvio/shared";
 import { analyzeHost, buildIndexEntry, type ClassNameMode } from "./source-index-metadata.js";
 import { enrichTableIndexFromSource } from "./source-index-table.js";
 import {
@@ -42,7 +42,7 @@ const WRAPPER_TAGS = new Set(["EditableText", "EditableContainer"]);
 export function extractIdsFromSource(
   fileAbs: string,
   code: string,
-  options?: { classNameMode?: ClassNameMode },
+  options?: { classNameMode?: ClassNameMode; detectedLibraries?: readonly LibraryId[] },
 ): SourceIndexEntry[] {
   const acc: SourceIndexEntry[] = [];
   let ast;
@@ -88,7 +88,12 @@ export function extractIdsFromSource(
             return;
           }
           acc.push(
-            buildIndexEntry({ id, file: path.resolve(fileAbs), line, column }, ctx, p),
+            buildIndexEntry(
+              { id, file: path.resolve(fileAbs), line, column },
+              ctx,
+              p,
+              options?.detectedLibraries ?? [],
+            ),
           );
         };
 
@@ -131,7 +136,7 @@ export function extractIdsFromSource(
 export function buildSourceIndex(
   rootAbs: string,
   globPatterns: string[],
-  options?: { classNameMode?: ClassNameMode },
+  options?: { classNameMode?: ClassNameMode; detectedLibraries?: readonly LibraryId[] },
 ): BuildSourceIndexResult {
   const root = path.resolve(rootAbs);
   const parseErrors: Array<{ file: string; message: string }> = [];
@@ -237,7 +242,7 @@ function isBetterIndex(candidate: BuildSourceIndexResult, current: BuildSourceIn
 export function pickBestSourceIndex(
   rootCandidates: string[],
   globPatterns: string[],
-  options?: { classNameMode?: ClassNameMode },
+  options?: { classNameMode?: ClassNameMode; detectedLibraries?: readonly LibraryId[] },
 ): BuildSourceIndexResult {
   const roots = [...new Set(rootCandidates.map((r) => path.resolve(r)).filter((r) => r.length > 0))];
   if (roots.length === 0) {

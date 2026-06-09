@@ -1,10 +1,39 @@
 # Changelog
 
-All notable changes to published `@nuvio/*` packages are documented here. This project follows [Semantic Versioning](https://semver.org/).
+All notable changes to `@nuvio/*` packages are documented here. This project follows [Semantic Versioning](https://semver.org/).
+
+**Release policy:** `@nuvio/*` **1.0.0** is the stable npm line (`latest`). Milestones v0.6–v0.9 were internal checkpoints ([v1.0.md](docs/v1.0.md)).
+
+## [1.0.0] — 2026-06-10
+
+First stable open-source release for React + Vite + Tailwind vibe coders. All five publish packages aligned at **1.0.0**.
+
+### Added
+
+- **Click To Tag** — click untagged elements, confirm **Make Editable**, nuvio inserts `data-nuvio-id` in source.
+- Dev-time `data-nuvio-loc` transform; WebSocket `tagElement` RPC (protocol **v8**); `insertDataNuvioIdAtLocation` in ast-engine.
+- **Better Tailwind** — `cn()` with `cond && "token"`, `classnames()` static maps, per-host `classNameMode`.
+- **Component libraries** — detect shadcn / TailAdmin / DaisyUI; `libraryHint`; library-aware routing and id suggestions.
+- **CLI diagnostics** — `nuvio doctor`, `nuvio scan`, `nuvio stats` (offline AST index, `--json`).
+- **Examples** — `examples/vite-basic`, `examples/shadcn-dashboard`, `examples/tailadmin-demo`.
+- **Library guides** — `docs/libraries/shadcn.md`, `tailadmin.md`, `daisyui.md`.
+- Telemetry: `nuvio_cli_invoked`, `tag_element_*`, `doctor_run`, `scan_run`, `stats_run`.
+
+### Changed
+
+- All public `@nuvio/*` packages bumped from 0.5.x / internal 0.6.0 alignment to **1.0.0**.
+- CLI templates (`AGENT.md`, `START_HERE.md`) document click-to-tag and `cn()` support.
+- `nuvio doctor` recognizes workspace-linked monorepo apps and layout-mounted shells.
+
+### Migration
+
+See [MIGRATION_0.5_to_1.0.md](docs/MIGRATION_0.5_to_1.0.md).
 
 ## [Unreleased]
 
-## [0.5.5] — 2026-06-09 (telemetry reliability)
+_No changes yet._
+
+## [0.5.5] — 2026-06-09 (telemetry reliability — internal milestone)
 
 ### Added
 
@@ -14,7 +43,8 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 ### Changed
 
 - Telemetry docs updated with separate CLI and overlay funnels; `nuvio_cli_invoked` documented as top-of-funnel, `apply_to_code` as main activation KPI.
-- All public `@nuvio/*` packages aligned at **0.5.5**.
+
+> **Note:** Rolled into `[Unreleased]` → **1.0.0** per ship-once policy. See [nuvio_v0.5.5.md](docs/nuvio_v0.5.5.md).
 
 ## [0.5.4] — 2026-06-05 (anonymous telemetry)
 

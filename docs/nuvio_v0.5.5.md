@@ -1,7 +1,7 @@
-# Nuvio v0.5.5 — Telemetry Reliability
+# Nuvio v0.5.5 — Telemetry Reliability (internal milestone)
 
-**Release:** 0.5.5 (patch — telemetry reliability only)  
-**Packages:** `@nuvio/shared`, `@nuvio/ast-engine`, `@nuvio/vite-plugin`, `@nuvio/overlay`, `@nuvio/cli`  
+**Status:** Implemented in repo — **not** a separate npm release (see [v1.0.md](v1.0.md) release policy)  
+**Ships in:** `@nuvio/*` **1.0.0** unless 0.5.5 was already on npm before this policy  
 **Spec:** [PostHog_telemetry.md](./PostHog_telemetry.md)
 
 ---
@@ -146,16 +146,13 @@ pnpm telemetry:smoke   # live PostHog (network)
 
 ---
 
-## Release checklist
+## Milestone checklist
 
-- [ ] `pnpm build` passes
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` passes
-- [ ] `pnpm telemetry:smoke` passes (maintainers, live PostHog)
-- [ ] Fresh temp project: `pnpm dlx @nuvio/cli@0.5.5 init --yes` in empty Vite app
-- [ ] npm versions bumped to **0.5.5** (all five packages)
-- [ ] `pnpm publish:stable --otp=XXXXXX`
-- [ ] Git tag `v0.5.5` + GitHub release
+- [x] `pnpm build` passes
+- [x] `pnpm typecheck` passes
+- [x] `pnpm test` passes
+- [x] `pnpm telemetry:smoke` passes (maintainers, live PostHog)
+- [ ] Included in v1.0.0 CHANGELOG + acceptance gate (no separate npm publish)
 
 ---
 

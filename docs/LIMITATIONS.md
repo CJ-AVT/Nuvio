@@ -2,12 +2,28 @@
 
 These boundaries exist so Nuvio can stay **source-correct** and **testable**. Unsupported patterns should **fail with a clear error**, not write silently.
 
-Applies to **`0.2.0-alpha`**, **`0.1.0`** (Full MVP / `latest`), and **`0.1.0-alpha.x`** unless noted.
+Applies through **`1.0.0`** unless noted.
+
+## Component libraries (`0.8.0`)
+
+- **Detected:** shadcn (`components/ui/`), TailAdmin (layout/ecommerce paths), DaisyUI (`daisyui` dependency).
+- Dev overlay shows `Libraries: …` under **Developer details** when detection succeeds.
+- **shadcn:** compound tags (`Card`, `Button`, `Table`, …) get library-aware ids and Simple Mode routing; Radix portals and opaque wrappers may still need manual tags.
+- **TailAdmin:** dogfood instrumentation patterns are supported; other TailAdmin layouts need click-to-tag or manual ids.
+- **DaisyUI:** detection only in Phase 1 — class-based `btn` / `card` hosts not fully validated without a DaisyUI example app.
+
+## Click-to-tag (`0.6.0`)
+
+- Untagged elements get dev-only **`data-nuvio-loc`** attributes via the Vite plugin transform. **Restart the dev server** after upgrading so all modules are stamped.
+- Tagging resolves source from `file:line:column` — the clicked DOM node must map to a **native JSX opening element** in source.
+- **Not supported yet:** opaque component wrappers that do not forward loc attributes to a DOM host; `.map()` loops without a stable per-item loc; fragments without a single host element.
+- **Workaround:** add `data-nuvio-id` manually on the JSX host, or refactor to a native element wrapper.
 
 ## `className` on the patched host
 
-- **`className` must be a string literal** on the JSX element that carries `data-nuvio-id` (e.g. `className="p-4 text-sm"`).
-- **Not supported yet:** `className={cn(...)}`, template literals, spreads, or variables. Support may land behind a flag in a later phase (`implPlan.md` Phase 5).
+- **Supported (v0.7):** string literals; `cn("a", "b")` / `clsx(...)` string lists; `cn("base", cond && "token")`; `classnames("base", { flag })` with static object keys.
+- **Not supported yet:** template literals, variable-only `className`, `cva()` / `tailwind-variants`, arbitrary values `text-[#fff]`.
+- The source index auto-detects a per-host `classNameMode`; unsupported shapes fail closed at preview/apply.
 
 ## Tailwind utilities
 
@@ -16,7 +32,7 @@ Applies to **`0.2.0-alpha`**, **`0.1.0`** (Full MVP / `latest`), and **`0.1.0-al
 
 ## Host contract
 
-- Editable regions must expose stable **`data-nuvio-id="..."`** attributes (or supported wrapper patterns documented in the PRD). Ids must be **unique** across the scanned project; duplicates surface at **index** time.
+- Editable regions must expose stable **`data-nuvio-id="..."`** attributes (add manually or via **Make Editable** click-to-tag in v0.6+). Ids must be **unique** across the scanned project; duplicates surface at **index** time.
 
 ## Layout and structure (`0.3.0` policy)
 
@@ -35,9 +51,9 @@ Applies to **`0.2.0-alpha`**, **`0.1.0`** (Full MVP / `latest`), and **`0.1.0-al
 
 ## Top unsupported patterns (with workarounds)
 
-1. **Dynamic `className` expressions** (`cn(...)`, template strings, vars)  
-   - Why blocked: safe merge cannot be guaranteed in `literal-only` mode.  
-   - Workaround: move editable utilities to a string-literal `className` on the instrumented host, or use a dedicated child host with literal classes.
+1. **Unsupported `className` shapes** (template literals, variable-only, `cva()` / `tailwind-variants`, arbitrary `text-[#fff]`)  
+   - Why blocked: safe merge cannot be guaranteed outside detected modes.  
+   - Workaround: use supported `cn("base", cond && "token")` or a string-literal `className` on the instrumented host.
 
 2. **Duplicate `data-nuvio-id` values**  
    - Why blocked: source index removes duplicates to avoid wrong-file/node writes.  

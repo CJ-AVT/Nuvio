@@ -11,6 +11,10 @@ Installed with @nuvio/cli@{{NUVIO_VERSION}}.
 3. Click the starter element (usually the page title — id `page.title`)
 4. **Preview Changes** → **Apply to Code**
 
-**More UI (cards, tables, nav):** ask your AI agent to read `nuvio/AGENT.md` and add `data-nuvio-id` attributes.
+**More UI without manual ids:** click any untagged element → **Make Editable** → confirm → edit → apply.
+
+**Dashboards (cards, tables, buttons):** ask your AI agent to read `nuvio/AGENT.md` for id patterns.
+
+**Diagnostics:** `nuvio doctor` · `nuvio scan` · `nuvio stats`
 
 **Manual setup:** https://github.com/ehah/Nuvio/blob/v{{NUVIO_VERSION}}/docs/nuvioUser.md

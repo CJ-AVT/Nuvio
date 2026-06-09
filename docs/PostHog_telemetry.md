@@ -1,7 +1,7 @@
-# PostHog telemetry — implementation plan (v0.5.5)
+# PostHog telemetry — implementation plan
 
-**Document status:** **Shipped** — all five public `@nuvio/*` packages at **0.5.5**  
-**Release:** **0.5.5** (patch — telemetry reliability) · prior: **0.5.4** (initial telemetry)  
+**Document status:** **Implemented in repo** — publishes with **`@nuvio/*` 1.0.0** (no intermediate npm releases)  
+**Milestones:** v0.5.4 (initial) · v0.5.5 (`nuvio_cli_invoked`) · v0.6 (`tag_element_*`) · v0.9 (`doctor_run` / `scan_run` / `stats_run`)  
 **Audience:** Implementers preparing anonymous, opt-out PostHog telemetry for `@nuvio/cli` and `@nuvio/overlay`  
 **Supersedes:** [`TELEMETRY.md`](TELEMETRY.md) v0.3 spec (opt-in, disabled by default). v0.5.4 uses **opt-out** and ships collection **on by default**.
 
@@ -169,6 +169,9 @@ type CliTelemetryProps = {
 | `nuvio_init_started` | Init funnel | Start of `runInit()` (not on `--dry-run`) |
 | `nuvio_init_completed` | Init funnel | Init exits `0` with `plan.tier` `full` or `partial` |
 | `nuvio_init_failed` | Init funnel | Any non-zero exit from `runInit`, or uncaught failure in `runCli` catch |
+| `doctor_run` | Diagnostics (v0.9) | End of `runDoctor()` — pass/warn/fail counts only |
+| `scan_run` | Diagnostics (v0.9) | End of `runScan()` — host count, duplicate count, library count |
+| `stats_run` | Diagnostics (v0.9) | End of `runStats()` — aggregate counts only |
 
 #### `nuvio_cli_invoked` (v0.5.5)
 
@@ -259,6 +262,9 @@ Use the same anonymous ID strategy as CLI where possible: PostHog's `localStorag
 | `preview_changes` | `patchAck` handler: `pending.kind === "preview"` && `msg.ok` (~line 701) | Every successful preview |
 | `apply_to_code` | `patchAck` handler: `pending.kind === "apply"` && `msg.ok` (~line 728) | Every successful apply (KPI) |
 | `apply_failed` | `patchAck` handler: `pending.kind === "apply"` && `!msg.ok` (~line 739) | Every failed apply |
+| `tag_element_started` | Make Editable confirm in [`NuvioDevShell.tsx`](../packages/overlay/src/NuvioDevShell.tsx) (v0.6) | Every tag attempt |
+| `tag_element_completed` | `tagElementAck` with `ok: true` (v0.6) | Every successful tag |
+| `tag_element_failed` | `tagElementAck` with `!ok` (v0.6) | Every failed tag |
 
 ### Safe `reason` for `apply_failed`
 
@@ -275,11 +281,24 @@ Implementation: `mapApplyFailureReason(errorCode: string | undefined): ApplyFail
 
 **Do not emit** `apply_failed` for preview failures (preview has its own UX; no `preview_failed` event in v0.5.4).
 
+### Safe `reason` for `tag_element_failed` (v0.6)
+
+Map server `errorCode` to a fixed enum — **never** send `errorMessage`, file paths, or suggested id values:
+
+| Telemetry `reason` | Source condition |
+| ------------------ | ---------------- |
+| `duplicate_id` | Id already exists in index |
+| `invalid_id` | User or suggested id fails validation |
+| `no_loc` | Click target has no `data-nuvio-loc` (transform missing / stale dev server) |
+| `parse_error` | AST parse failed |
+| `write_error` | File write failed |
+| `tag_error` | Other tag failure |
+
 ### Integration points
 
 | File | Change |
 | ---- | ------ |
-| [`packages/overlay/src/NuvioDevShell.tsx`](../packages/overlay/src/NuvioDevShell.tsx) | Import `captureOverlayEvent` / helpers; add calls at the five hook points above |
+| [`packages/overlay/src/NuvioDevShell.tsx`](../packages/overlay/src/NuvioDevShell.tsx) | Import `captureOverlayEvent` / helpers; calls at overlay + tag hook points |
 | [`packages/overlay/tsup.config.ts`](../packages/overlay/tsup.config.ts) | `define: { "import.meta.env.VITE_NUVIO_TELEMETRY": ... }` if needed; inline `NUVIO_POSTHOG_TOKEN` for publish builds |
 
 **Critical:** Do not pass `id`, `msg.file`, `shortDisplayPath(hit.file)`, ops, classNames, or `errorMessage` into telemetry.
@@ -341,6 +360,10 @@ patchAck (preview, ok) → preview_changes
 patchAck (apply, ok)  → apply_to_code   ← KPI
 
 patchAck (apply, !ok) → apply_failed { reason: <safe enum> }
+
+Make Editable confirm → tag_element_started
+tagElementAck (ok)    → tag_element_completed
+tagElementAck (!ok)   → tag_element_failed { reason: <safe enum> }
 ```
 
 ---
@@ -483,11 +506,17 @@ After implementation, each event payload must contain **only**:
 | `nuvio_init_started` | `nuvio_version`, `os`, `arch`, `node`, `package_manager`, `has_react`, `has_vite`, `has_tailwind` |
 | `nuvio_init_completed` | Same + optional `result_tier: "full" \| "partial"` |
 | `nuvio_init_failed` | Same + `error_code`, optional `result_tier` |
+| `doctor_run` | Same + `pass_count`, `warn_count`, `fail_count`, `ready` (boolean) |
+| `scan_run` | Same + `host_count`, `duplicate_count`, `library_count` |
+| `stats_run` | Same + `editable_hosts`, `tagged_files`, `duplicate_ids`, `table_hosts`, `library_count` |
 | `overlay_connected` | Event name only (or `nuvio_version` if build-inlined) |
 | `first_selection` | Event name only |
 | `preview_changes` | Event name only |
 | `apply_to_code` | Event name only |
 | `apply_failed` | `reason`: `duplicate_id` \| `no_patch_target` \| `unsupported_classname` \| `apply_error` |
+| `tag_element_started` | Event name only |
+| `tag_element_completed` | Event name only |
+| `tag_element_failed` | `reason`: `duplicate_id` \| `invalid_id` \| `no_loc` \| `parse_error` \| `write_error` \| `tag_error` |
 
 **Explicitly excluded from all events:**
 
@@ -502,4 +531,4 @@ After implementation, each event payload must contain **only**:
 
 ---
 
-**Summary:** v0.5.4 introduced opt-out PostHog telemetry; **v0.5.5** adds `nuvio_cli_invoked` (top-of-funnel CLI runs), hardened flush/shutdown, and separate CLI vs overlay funnel guidance. **`apply_to_code`** remains the main activation KPI. No editor or patch-engine behavior changes.
+**Summary:** v0.5.4 introduced opt-out PostHog telemetry; **v0.5.5** adds `nuvio_cli_invoked` (top-of-funnel CLI runs) and hardened flush/shutdown; **v0.6.0** adds `tag_element_*` events for click-to-tag adoption; **v0.9** adds `doctor_run`, `scan_run`, and `stats_run` (aggregate setup/diagnostic signals — no paths or host ids). CLI and overlay use separate anonymous IDs — do not combine funnels. **`apply_to_code`** remains the main activation KPI.

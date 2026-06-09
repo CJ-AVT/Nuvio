@@ -28,19 +28,46 @@ describe("source index v2 metadata", () => {
     const hits = extractIdsFromSource("/proj/Card.tsx", code);
     expect(hits[0]?.hasLiteralClassName).toBe(false);
     expect(hits[0]?.riskLevel).toBe("unsupported");
-    expect(hits[0]?.unsupportedReasons?.some((r) => r.includes("string literal"))).toBe(true);
+    expect(hits[0]?.unsupportedReasons?.some((r) => r.includes("dynamic pattern"))).toBe(true);
+    expect(hits[0]?.classNameMode).toBe("unsupported");
   });
 
-  it("cn-basic: treats simple cn() string lists as patchable", () => {
+  it("auto-detects cn-basic string lists as patchable", () => {
     const code = `
       import { cn } from "./u";
       function Card() {
         return <div data-nuvio-id="card.root" className={cn("p-4", "rounded-xl")}>x</div>;
       }
     `;
-    const hits = extractIdsFromSource("/proj/Card.tsx", code, { classNameMode: "cn-basic" });
+    const hits = extractIdsFromSource("/proj/Card.tsx", code);
     expect(hits[0]?.hasLiteralClassName).toBe(true);
     expect(hits[0]?.classNameValue).toContain("p-4");
+    expect(hits[0]?.classNameMode).toBe("cn-basic");
+    expect(hits[0]?.riskLevel).not.toBe("unsupported");
+  });
+
+  it("tags tailadmin hosts with libraryHint", () => {
+    const code = `
+      function Metrics() {
+        return <div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">x</div>;
+      }
+    `;
+    const hits = extractIdsFromSource("/proj/src/components/ecommerce/Metrics.tsx", code, {
+      detectedLibraries: ["tailadmin"],
+    });
+    expect(hits[0]?.libraryHint).toBe("tailadmin");
+  });
+
+  it("auto-detects cn-conditional as patchable", () => {
+    const code = `
+      import { cn } from "./u";
+      function Card({ active }: { active: boolean }) {
+        return <div data-nuvio-id="card.root" className={cn("p-4", active && "bg-blue-500")}>x</div>;
+      }
+    `;
+    const hits = extractIdsFromSource("/proj/Card.tsx", code);
+    expect(hits[0]?.classNameMode).toBe("cn-conditional");
+    expect(hits[0]?.hasLiteralClassName).toBe(true);
     expect(hits[0]?.riskLevel).not.toBe("unsupported");
   });
 

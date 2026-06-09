@@ -16,6 +16,7 @@
     "v05:acceptance": "pnpm v05:acceptance:beta && pnpm v05:acceptance:stable",
     "test:cli": "pnpm --filter @nuvio/cli test",
     "v051:acceptance": "node scripts/v051-cli-acceptance.mjs",
+    "v10:acceptance": "node scripts/v10-acceptance.mjs",
     "telemetry:smoke": "node scripts/telemetry-smoke.mjs",
     "posthog:verify": "node scripts/posthog-verify.mjs",
     "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",

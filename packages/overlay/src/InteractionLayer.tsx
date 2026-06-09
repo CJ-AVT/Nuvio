@@ -2,6 +2,11 @@ import type { TextWireTarget } from "@nuvio/shared";
 import type { RefObject } from "react";
 import { useEffect, useState, type ReactElement } from "react";
 import { isNuvioChromeComposedPath } from "./nuvio-chrome-hit.js";
+import {
+  pickUntaggedClickTarget,
+  readUntaggedLocTarget,
+  type UntaggedLocTarget,
+} from "./nuvio-loc-dom.js";
 import { resolveTextTargetElement } from "./text-target-dom.js";
 import {
   clearNuvioOutlines,
@@ -15,6 +20,8 @@ export type InteractionLayerProps = {
   knownIds: ReadonlySet<string>;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
+  untaggedTarget: UntaggedLocTarget | null;
+  onSelectUntagged: (target: UntaggedLocTarget | null) => void;
   /** Index v3: highlight alternate text targets under the selected host. */
   textTargetHostId?: string | null;
   textTargets?: readonly TextWireTarget[];
@@ -73,6 +80,8 @@ export function InteractionLayer({
   knownIds,
   selectedId,
   onSelectId,
+  untaggedTarget,
+  onSelectUntagged,
   textTargetHostId = null,
   textTargets = [],
   activeTextTargetKey = null,
@@ -80,21 +89,35 @@ export function InteractionLayer({
   suppressTextTargetHints = false,
 }: InteractionLayerProps): ReactElement | null {
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const [hoverUntagged, setHoverUntagged] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       setHoverId(null);
+      setHoverUntagged(null);
       return;
     }
 
     const onMove = (e: MouseEvent) => {
       if (isNuvioChromeComposedPath(e)) {
         setHoverId(null);
+        setHoverUntagged(null);
         return;
       }
       const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
-      const id = el?.getAttribute("data-nuvio-id") ?? null;
-      setHoverId(id);
+      if (el) {
+        setHoverId(el.getAttribute("data-nuvio-id"));
+        setHoverUntagged(null);
+        return;
+      }
+      const untagged = pickUntaggedClickTarget(
+        e.clientX,
+        e.clientY,
+        chromeRootRefs,
+        knownIds,
+      );
+      setHoverId(null);
+      setHoverUntagged(untagged);
     };
 
     const onClick = (e: MouseEvent) => {
@@ -102,15 +125,33 @@ export function InteractionLayer({
         return;
       }
       const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
-      if (!el) {
+      if (el) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = el.getAttribute("data-nuvio-id");
+        if (id) {
+          onSelectUntagged(null);
+          onSelectId(id);
+        }
+        return;
+      }
+      const untaggedEl = pickUntaggedClickTarget(
+        e.clientX,
+        e.clientY,
+        chromeRootRefs,
+        knownIds,
+      );
+      if (!untaggedEl) {
+        return;
+      }
+      const target = readUntaggedLocTarget(untaggedEl);
+      if (!target) {
         return;
       }
       e.preventDefault();
       e.stopPropagation();
-      const id = el.getAttribute("data-nuvio-id");
-      if (id) {
-        onSelectId(id);
-      }
+      onSelectId(null);
+      onSelectUntagged(target);
     };
 
     window.addEventListener("mousemove", onMove, true);
@@ -120,8 +161,9 @@ export function InteractionLayer({
       window.removeEventListener("mousemove", onMove, true);
       window.removeEventListener("click", onClick, true);
       setHoverId(null);
+      setHoverUntagged(null);
     };
-  }, [chromeRootRefs, enabled, knownIds, onSelectId]);
+  }, [chromeRootRefs, enabled, knownIds, onSelectId, onSelectUntagged]);
 
   useEffect(() => {
     clearNuvioOutlines();
@@ -131,6 +173,8 @@ export function InteractionLayer({
     const hoverPaint = hoverId && hoverId !== selectedId ? hoverId : null;
     if (hoverPaint) {
       paintNuvioOutline(hoverPaint, "hover");
+    } else if (hoverUntagged) {
+      paintNuvioOutlineElement(hoverUntagged, "hover");
     }
 
     const showTargetHints =
@@ -154,11 +198,20 @@ export function InteractionLayer({
       paintNuvioOutline(textTargetHostId, "selected");
     } else if (selectedId) {
       paintNuvioOutline(selectedId, "selected");
+    } else if (untaggedTarget) {
+      const el = document.querySelector(
+        `[data-nuvio-loc="${CSS.escape(`${untaggedTarget.file}:${untaggedTarget.line}:${untaggedTarget.column}`)}"]`,
+      );
+      if (el instanceof HTMLElement) {
+        paintNuvioOutlineElement(el, "selected");
+      }
     }
   }, [
     enabled,
     hoverId,
+    hoverUntagged,
     selectedId,
+    untaggedTarget,
     textTargetHostId,
     textTargets,
     activeTextTargetKey,

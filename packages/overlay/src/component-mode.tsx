@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import { detectShadcnComponentMode, type IndexWireEntry } from "@nuvio/shared";
 import { useMemo, type ReactElement } from "react";
 import { formatFriendlyId } from "./selection-summary.js";
 import { detectTableMode, TablePanel } from "./table-panel.js";
@@ -19,6 +19,12 @@ function detectComponentMode(entry: IndexWireEntry | undefined): ComponentModeKi
   }
   if (detectTableMode(entry)) {
     return "table";
+  }
+  if (entry.libraryHint === "shadcn") {
+    const shadcnMode = detectShadcnComponentMode(entry.tagName);
+    if (shadcnMode) {
+      return shadcnMode;
+    }
   }
   const role = entry.hierarchyRole;
   if (role === "card" || entry.id.endsWith(".card")) {

@@ -22,7 +22,7 @@ export default function DemographicCard() {
             className="text-lg font-semibold text-gray-800 sm:text-red-400 xl:text-lg xl:text-red-600 dark:text-white/90"
             data-nuvio-id="demo.title"
           >
-            Customers Demographic
+            Customers Demographic 101
           </h3>
           <p
             className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400"

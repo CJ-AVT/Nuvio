@@ -621,6 +621,33 @@ select.nuvio-control {
   filter: saturate(0.6);
 }
 
+.nuvio-make-editable {
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nuvio-make-editable-lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.nuvio-make-editable-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--nuvio-muted);
+  line-height: 1.4;
+}
+
+.nuvio-make-editable-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
 .nuvio-button-primary,
 .nuvio-btn--primary {
   background: linear-gradient(180deg, var(--nuvio-primary-bright), var(--nuvio-primary));
