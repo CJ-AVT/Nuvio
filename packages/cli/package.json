@@ -1,7 +1,7 @@
 {
   "name": "@nuvio/cli",
   "version": "1.0.0",
-  "description": "Nuvio CLI: Vite + React onboarding and project diagnostics (init, doctor, scan, stats).",
+  "description": "Nuvio CLI 1.0 — Vite + Tailwind onboarding and diagnostics (init, doctor, scan, stats).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -11,9 +11,12 @@
   "keywords": [
     "nuvio",
     "vite",
+    "tailwind",
+    "tailwindcss",
+    "react",
     "cli",
-    "onboarding",
-    "devtools"
+    "devtools",
+    "visual-editor"
   ],
   "publishConfig": {
     "access": "public"

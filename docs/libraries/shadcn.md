@@ -38,7 +38,7 @@ Developer details → **Libraries: shadcn**.
 ## Setup
 
 ```bash
-pnpm dlx @nuvio/cli@1.0.0 init --yes
+pnpm dlx @nuvio/cli init --yes
 pnpm dev
 ```
 

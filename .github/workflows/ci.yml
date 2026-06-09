@@ -32,3 +32,6 @@ jobs:
 
       - name: Build demo app
         run: pnpm --filter @nuvio/demo-app build
+
+      - name: v1.0 acceptance (doctor + stats on examples)
+        run: pnpm v10:acceptance

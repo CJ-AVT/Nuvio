@@ -23,6 +23,18 @@ Target release: **`1.0.0`** (see [CHANGELOG](../CHANGELOG.md), [nuvio_v1.0.md](.
 - Offline project diagnostics (`doctor`, `scan`, `stats`)
 - Anonymous opt-out telemetry (CLI + overlay funnels)
 
+### Tailwind `className` modes (v1.0)
+
+| Mode | Supported |
+| ---- | --------- |
+| String literal | Yes |
+| `cn("a", "b")` | Yes |
+| `cn("base", cond && "token")` | Yes |
+| `classnames("base", { flag: true })` static keys | Yes |
+| Template literals, `cva()`, arbitrary values | No (fail-closed) |
+
+Full matrix: [COVERAGE.md](./COVERAGE.md)
+
 ---
 
 ## v0.5.0 stable (Vibe-coder task router — Vite public)

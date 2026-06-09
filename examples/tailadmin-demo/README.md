@@ -32,7 +32,7 @@ Developer details should show `Libraries: tailadmin`.
 ## External TailAdmin users
 
 1. Use your existing TailAdmin Vite app.
-2. `pnpm dlx @nuvio/cli@1.0.0 init --yes`
+2. `pnpm dlx @nuvio/cli init --yes`
 3. Add ids to ecommerce/dashboard hosts (or use Make Editable).
 
 See [docs/libraries/tailadmin.md](../../docs/libraries/tailadmin.md).

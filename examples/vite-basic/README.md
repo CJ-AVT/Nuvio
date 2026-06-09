@@ -28,7 +28,7 @@ pnpm install
 pnpm add -D tailwindcss@3 postcss autoprefixer
 npx tailwindcss init -p
 # add @tailwind directives to src/index.css
-pnpm dlx @nuvio/cli@1.0.0 init --yes
+pnpm dlx @nuvio/cli init --yes
 pnpm dev
 ```
 

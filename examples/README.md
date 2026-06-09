@@ -1,26 +1,31 @@
-# Nuvio 1.0 examples
+# Nuvio 1.0 examples — Vite + Tailwind coverage
 
-Consumer-facing example projects for the v1.0 release gate. Each includes a README with a **≤5 minute** path to first **Apply to Code**.
+Validated example projects for the **v1.0.0** release. Each README has a **≤5 minute** path from clone → **Apply to Code**.
 
-| Example | Path | Stack |
-| ------- | ---- | ----- |
-| **vite-basic** | [`vite-basic/`](vite-basic/) | Vite + React + Tailwind — init + click-to-tag |
-| **shadcn-dashboard** | [`shadcn-dashboard/`](shadcn-dashboard/) | shadcn-style `components/ui/*` + Card/Button hosts |
-| **tailadmin-demo** | [`tailadmin-demo/`](tailadmin-demo/) | Pointer to full [`apps/tailadmin-dogfood`](../apps/tailadmin-dogfood) |
+These are what GitHub visitors should try to see maximum **Vite + Tailwind** support in action.
 
-## Maintainer quick start
+| Example | Path | Port | Proves |
+| ------- | ---- | ---- | ------ |
+| **vite-basic** | [`vite-basic/`](vite-basic/) | 5175 | `nuvio init` + click-to-tag on plain Vite |
+| **shadcn-dashboard** | [`shadcn-dashboard/`](shadcn-dashboard/) | 5176 | shadcn `components/ui/*` + `cn()` class patches |
+| **tailadmin-demo** | [`tailadmin-demo/`](tailadmin-demo/) | 5173 via dogfood | Full TailAdmin dashboard instrumentation |
+
+## Quick start (monorepo)
 
 ```bash
 pnpm install
-pnpm --filter @nuvio/example-vite-basic dev      # :5175
-pnpm --filter @nuvio/example-shadcn-dashboard dev  # :5176
-pnpm dev:tailadmin                                 # :5173
+pnpm --filter @nuvio/example-vite-basic dev
+pnpm --filter @nuvio/example-shadcn-dashboard dev
+pnpm dev:tailadmin
 ```
 
-## Gate script
+## Verify wiring
 
 ```bash
 pnpm v10:acceptance
+node packages/cli/dist/cli-entry.js doctor --skip-dev-server --cwd examples/vite-basic
 ```
 
-Runs `nuvio doctor` and `nuvio scan` on each wired example (plus TailAdmin dogfood).
+## Coverage reference
+
+Stack matrix and className modes: [docs/COVERAGE.md](../docs/COVERAGE.md)

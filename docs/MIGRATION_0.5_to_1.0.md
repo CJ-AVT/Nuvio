@@ -5,13 +5,13 @@
 ## npm users
 
 ```bash
-pnpm dlx @nuvio/cli@1.0.0 init --yes
+pnpm dlx @nuvio/cli init --yes
 ```
 
-Or bump devDependencies manually:
+Or bump devDependencies manually (npm `latest`):
 
 ```bash
-pnpm add -D @nuvio/vite-plugin@1.0.0 @nuvio/overlay@1.0.0
+pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
 
 Re-run init — it is idempotent and adds any missing wiring (overlay CSS, `optimizeDeps.exclude`, starter id).

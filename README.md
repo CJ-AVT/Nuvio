@@ -1,26 +1,19 @@
 # nuvio
 
-**Edit React apps visually and apply changes back to source code.**
+**v1.0.0 — visual editor for React + Vite + Tailwind.** Click UI in the browser, edit text and Tailwind classes, preview the diff, apply to source.
 
-Stop burning AI prompts on:
-
-- make this card wider
-- move this button left
-- change this padding
-- change this color
-
-nuvio lets you:
-
-- Click UI elements in the browser
-- Edit text and Tailwind styles visually
-- Preview the diff before anything hits disk
-- Apply changes directly to your source files
+Maximum validated coverage for the **Vite + Tailwind** stack: Vite 5/6/8, Tailwind 3/4, `cn()` + conditional classes, shadcn / TailAdmin / DaisyUI paths, click-to-tag, and CLI diagnostics.
 
 Dev-only. Nothing runs in production.
 
 [![npm @nuvio/cli](https://img.shields.io/npm/v/@nuvio/cli?label=%40nuvio%2Fcli)](https://www.npmjs.com/package/@nuvio/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
+[![Vite 5–8](https://img.shields.io/badge/Vite-5%20%7C%206%20%7C%208-646cff)](docs/COMPATIBILITY.md)
+[![Tailwind 3–4](https://img.shields.io/badge/Tailwind-3.x%20%7C%204.x-38bdf8)](docs/COMPATIBILITY.md)
+[![React 18–19](https://img.shields.io/badge/React-18%20%7C%2019-61dafb)](docs/COMPATIBILITY.md)
+
+Stop burning AI prompts on padding, colors, and layout tweaks — edit visually, keep real source files.
 
 ---
 
@@ -49,17 +42,44 @@ Asset path: [docs/assets/nuvio-22.gif](docs/assets/nuvio-22.gif) · More capture
 In your project folder (`package.json` + `vite.config`):
 
 ```bash
-pnpm dlx @nuvio/cli init
+pnpm dlx @nuvio/cli init --yes
 pnpm dev
 ```
 
-Open localhost → turn **Edit** on in the nuvio chip → click an element → **Preview Changes** → **Apply to Code**.
+Open localhost → **Edit on** → click an element (or **Make Editable** on untagged UI) → **Preview Changes** → **Apply to Code**.
 
 That's it. After init, see `nuvio/START_HERE.md` in your project.
 
 **Tip:** When `pnpm create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
 
-Full walkthrough: [docs/nuvioUser.md](docs/nuvioUser.md)
+Commands omit version pins — `pnpm dlx @nuvio/cli` always uses npm **latest**.
+
+Full walkthrough: [docs/nuvioUser.md](docs/nuvioUser.md) · Coverage matrix: [docs/COVERAGE.md](docs/COVERAGE.md)
+
+---
+
+## Vite + Tailwind coverage (v1.0)
+
+| Area | 1.0.0 support |
+| ---- | ------------- |
+| **Vite** | 5.4+, 6.x, 8.x (`create vite` react-ts) |
+| **Tailwind** | 3.x and 4.x utility patches |
+| **`className`** | literals, `cn()`, conditional `cn`, static `classnames()` |
+| **Libraries** | shadcn · TailAdmin · DaisyUI (detection + guides) |
+| **Onboarding** | `nuvio init` + click-to-tag (no manual id for first edit) |
+| **CLI** | `doctor` · `scan` · `stats` |
+
+Details: [docs/COVERAGE.md](docs/COVERAGE.md) · [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) · [docs/LIMITATIONS.md](docs/LIMITATIONS.md)
+
+### Example apps
+
+| Example | Run | What it proves |
+| ------- | --- | -------------- |
+| [vite-basic](examples/vite-basic/) | `pnpm --filter @nuvio/example-vite-basic dev` | init + click-to-tag |
+| [shadcn-dashboard](examples/shadcn-dashboard/) | `pnpm --filter @nuvio/example-shadcn-dashboard dev` | shadcn `cn()` + Card/Button |
+| [tailadmin-demo](examples/tailadmin-demo/) | `pnpm dev:tailadmin` | Full TailAdmin dashboard |
+
+See [examples/README.md](examples/README.md).
 
 ---
 
@@ -200,7 +220,7 @@ export default function App() {
 
 ### Instrument hosts
 
-Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit. Ids must be unique. Use a string-literal `className="..."` on the same element for Tailwind patches.
+Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit, or use **Make Editable** in the browser. Ids must be unique. Supported `className` shapes include string literals and common `cn()` patterns — see [LIMITATIONS.md](docs/LIMITATIONS.md).
 
 ### Troubleshooting
 
@@ -240,6 +260,10 @@ For nuvio contributors and release work — not needed to use nuvio in your app.
 | Doc | Purpose |
 | --- | ------- |
 | [docs/nuvioUser.md](docs/nuvioUser.md) | Public user guide |
+| [docs/COVERAGE.md](docs/COVERAGE.md) | **Vite + Tailwind maximum coverage** matrix |
+| [docs/nuvio_v1.0.md](docs/nuvio_v1.0.md) | **1.0.0** release notes + publish checklist |
+| [docs/MIGRATION_0.5_to_1.0.md](docs/MIGRATION_0.5_to_1.0.md) | Upgrade from 0.5.x |
+| [examples/README.md](examples/README.md) | Example apps (vite-basic, shadcn, TailAdmin) |
 | [docs/DOGFOOD.md](docs/DOGFOOD.md) | Dogfood / acceptance sign-off |
 | [docs/FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md) | Definition of done |
 | [docs/npmPublish.md](docs/npmPublish.md) | Publish `@nuvio/*` to npm |
@@ -279,6 +303,7 @@ TailAdmin dogfood: `pnpm dev:tailadmin`
 | `pnpm typecheck` | Typecheck packages and apps |
 | `pnpm test` | Run package tests |
 | `pnpm dogfood` | Build + typecheck + test + demo production build |
+| `pnpm v10:acceptance` | v1.0 gate: init + doctor + stats on examples |
 | `pnpm test:cli` | CLI test suite |
 | `pnpm telemetry:smoke` | Live PostHog CLI smoke (maintainers) |
 | `pnpm posthog:verify` | Send a verify event to PostHog |
@@ -304,3 +329,5 @@ AI accelerated implementation, while product direction, architecture, and final 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT
+
+**GitHub release template:** [.github/release-notes/v1.0.0.md](.github/release-notes/v1.0.0.md) (paste into Releases when publishing)

@@ -4,6 +4,36 @@ Run before tagging a new **`@nuvio/*`** release on npm.
 
 ---
 
+## v1.0.0 — Vite + Tailwind maximum coverage (stable)
+
+Engineering spec: [nuvio_v1.0.md](./nuvio_v1.0.md) · Coverage: [COVERAGE.md](./COVERAGE.md)
+
+### A. Automated gate
+
+```bash
+pnpm install
+pnpm build && pnpm typecheck && pnpm test
+pnpm dogfood
+pnpm v10:acceptance
+```
+
+### B. Manual sign-off (Tailwind + Vite paths)
+
+| # | Scenario | Pass? | Notes |
+| - | -------- | ----- | ----- |
+| V1-1 | **vite-basic** — init path, click-to-tag, apply | | `examples/vite-basic` or fresh `create vite` |
+| V1-2 | **shadcn** — Card/Button edit with `cn()` host | | `examples/shadcn-dashboard` |
+| V1-3 | **TailAdmin** — metric/chart apply on dogfood | | `pnpm dev:tailadmin` |
+| V1-4 | **Tailwind v4** — smoke on `apps/tailwind-v4-test` | | Optional TW v4 regression |
+| V1-5 | `nuvio doctor` passes on all examples | | Automated in `v10:acceptance` |
+| V1-6 | Consumer npm path (post-publish) | | `pnpm dlx @nuvio/cli init --yes` on clean Vite app (unpinned = latest) |
+
+**Post-publish** (consumer path): `pnpm dlx @nuvio/cli init --yes` then `pnpm dev`. See [nuvio_v1.0.md](./nuvio_v1.0.md).
+
+**Signed:** _pending maintainer sign-off_
+
+---
+
 ## v0.5.0-beta.0 (Cards + Tables — Simple Mode)
 
 Engineering spec: [nuvio_v0.5.0.md](./nuvio_v0.5.0.md) §14 A, §15, §18.1.
@@ -105,7 +135,7 @@ pnpm add -D /path/to/Nuvio/packages/vite-plugin /path/to/Nuvio/packages/overlay
 pnpm dev
 ```
 
-**Post-publish** (consumer path): `pnpm dlx @nuvio/cli@0.5.3 init --yes` then `pnpm dev` (init adds `main.tsx` style import + `optimizeDeps.exclude`; no `fs.allow` needed). See [`nuvio_v0.5.3.md`](nuvio_v0.5.3.md).
+**Post-publish** (consumer path): `pnpm dlx @nuvio/cli init --yes` then `pnpm dev` (init adds `main.tsx` style import + `optimizeDeps.exclude`; no `fs.allow` needed). See [`nuvio_v1.0.md`](nuvio_v1.0.md).
 
 | # | Check | Pass? | Notes |
 | - | ----- | ----- | ----- |

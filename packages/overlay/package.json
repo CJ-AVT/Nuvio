@@ -1,7 +1,7 @@
 {
   "name": "@nuvio/overlay",
   "version": "1.0.0",
-  "description": "Nuvio dev overlay: edit mode, selection, Editor panel, Validate/Apply/Undo against the Vite dev server.",
+  "description": "Nuvio overlay 1.0 — dev-only visual editor for React + Vite + Tailwind (Simple Mode, click-to-tag, apply/undo).",
   "license": "MIT",
   "repository": {
     "type": "git",

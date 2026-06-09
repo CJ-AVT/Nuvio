@@ -2,7 +2,9 @@
 
 **For vibe-coders:** edit your app in the browser while it runs locally. Click text, tweak styles, save back to your code.
 
-**On npm:** [`@nuvio/cli@1.0.0`](https://www.npmjs.com/package/@nuvio/cli) (installs matching `@nuvio/vite-plugin` + `@nuvio/overlay`).
+**On npm:** [`@nuvio/cli`](https://www.npmjs.com/package/@nuvio/cli) (installs matching `@nuvio/vite-plugin` + `@nuvio/overlay` at the current `latest`).
+
+Commands below **omit version pins** so `pnpm dlx` always resolves to the newest release.
 
 ---
 
@@ -11,7 +13,7 @@
 In your **Vite + React** project folder (`package.json` + `vite.config.ts`):
 
 ```bash
-pnpm dlx @nuvio/cli@1.0.0 init --yes
+pnpm dlx @nuvio/cli init --yes
 pnpm dev
 ```
 
@@ -22,7 +24,7 @@ Open the localhost URL → Nuvio chip → **Edit on** → click the page title (
 - Tailwind is recommended for class edits; init warns but still runs if Tailwind is missing.
 - More help in your project after init: `nuvio/START_HERE.md`.
 
-**What init does (you don’t do this by hand):** installs `@nuvio/vite-plugin` + `@nuvio/overlay` at **1.0.0**, wires `vite.config`, mounts `NuvioDevShell` in `App.tsx`, adds overlay CSS in `main.tsx`, sets `data-nuvio-id="page.title"` on the first heading, creates `nuvio/`. Safe to run again. Does **not** start `pnpm dev` for you.
+**What init does (you don’t do this by hand):** installs aligned `@nuvio/vite-plugin` + `@nuvio/overlay` from npm `latest`, wires `vite.config`, mounts `NuvioDevShell` in `App.tsx`, adds overlay CSS in `main.tsx`, sets `data-nuvio-id="page.title"` on the first heading, creates `nuvio/`. Safe to run again. Does **not** start `pnpm dev` for you.
 
 ---
 
@@ -80,7 +82,7 @@ Click any **untagged** native element → panel offers **Make Editable** → con
 ## Manual setup (no CLI)
 
 ```bash
-pnpm add -D @nuvio/vite-plugin@1.0.0 @nuvio/overlay@1.0.0
+pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
 
 **`vite.config.ts`** — add `nuvio()` and exclude overlay from prebundle:
@@ -129,7 +131,7 @@ Use `--cwd <path>` to point at another project root. Disable anonymous telemetry
 
 | Problem | Fix |
 | ------- | --- |
-| **No Nuvio chip** | `create vite` started dev before init → **Ctrl+C**, `pnpm dlx @nuvio/cli@1.0.0 init --yes`, `pnpm dev`. |
+| **No Nuvio chip** | `create vite` started dev before init → **Ctrl+C**, `pnpm dlx @nuvio/cli init --yes`, `pnpm dev`. |
 | **Edit dead / no styles** | `nuvio doctor`, then `rm -rf node_modules/.vite`, `pnpm dev`. |
 | **0 ids / nothing clickable** | Use **Make Editable**, or add `data-nuvio-id`, save, restart dev. |
 | **Apply greyed out** | Edit on → click an id’d element; fix duplicate ids (`nuvio scan`). |
@@ -142,7 +144,7 @@ Use `--cwd <path>` to point at another project root. Disable anonymous telemetry
 
 | I want to… | Do this |
 | ---------- | ------- |
-| Wire a project | `pnpm dlx @nuvio/cli@1.0.0 init --yes` then `pnpm dev` |
+| Wire a project | `pnpm dlx @nuvio/cli init --yes` then `pnpm dev` |
 | First edit | Edit on → click title or Make Editable → Preview → Apply |
 | Check wiring | `nuvio doctor` |
 | More editable UI | Make Editable in browser, or `nuvio/AGENT.md` for dashboards |
@@ -166,6 +168,7 @@ In the browser overlay: `localStorage.setItem("nuvio.telemetry", "0")` (then ref
 
 ## Optional links
 
+- **Vite + Tailwind coverage (1.0):** [COVERAGE.md](./COVERAGE.md)
 - **1.0 release notes:** [nuvio_v1.0.md](./nuvio_v1.0.md)
 - **Upgrade from 0.5.x:** [MIGRATION_0.5_to_1.0.md](./MIGRATION_0.5_to_1.0.md)
 - **Examples:** [examples/README.md](../examples/README.md)

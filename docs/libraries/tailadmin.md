@@ -32,7 +32,7 @@ Full app: [`apps/tailadmin-dogfood`](../../apps/tailadmin-dogfood). Walkthrough:
 
 ## External TailAdmin users
 
-1. `pnpm dlx @nuvio/cli@1.0.0 init --yes` in your TailAdmin Vite app root
+1. `pnpm dlx @nuvio/cli init --yes` in your TailAdmin Vite app root
 2. Mount `NuvioDevShell` in your layout if not in `App.tsx` (init patches `App.tsx` by default)
 3. Add ids to dashboard hosts or use **Make Editable**
 

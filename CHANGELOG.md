@@ -17,6 +17,7 @@ First stable open-source release for React + Vite + Tailwind vibe coders. All fi
 - **CLI diagnostics** — `nuvio doctor`, `nuvio scan`, `nuvio stats` (offline AST index, `--json`).
 - **Examples** — `examples/vite-basic`, `examples/shadcn-dashboard`, `examples/tailadmin-demo`.
 - **Library guides** — `docs/libraries/shadcn.md`, `tailadmin.md`, `daisyui.md`.
+- **Coverage matrix** — [docs/COVERAGE.md](docs/COVERAGE.md) (Vite + Tailwind maximum support for 1.0).
 - Telemetry: `nuvio_cli_invoked`, `tag_element_*`, `doctor_run`, `scan_run`, `stats_run`.
 
 ### Changed

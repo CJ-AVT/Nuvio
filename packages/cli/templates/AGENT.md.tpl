@@ -25,6 +25,6 @@ When the user asks to make UI editable or wire nuvio:
 
 **After instrumentation:** user runs `{{PM_RUN}}`, Edit on, Preview Changes, Apply to Code.
 
-If Vite or shell wiring is missing, see `nuvio/SETUP_TODO.md` or run `pnpm dlx @nuvio/cli@{{NUVIO_VERSION}} init`.
+If Vite or shell wiring is missing, see `nuvio/SETUP_TODO.md` or run `pnpm dlx @nuvio/cli init`.
 
 Human quick path: `nuvio/START_HERE.md`.

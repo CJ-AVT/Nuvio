@@ -8,7 +8,9 @@
 
 ## Goal
 
-Production-ready release for React + Vite + Tailwind vibe coders: init → click-to-tag → apply, with library support and CLI diagnostics.
+**v1.0.0 is the stable line for maximum React + Vite + Tailwind coverage** — the definitive public release for visual editing that writes back to source. User install: `pnpm dlx @nuvio/cli init` (npm `latest`, no pin). Full stack matrix: [COVERAGE.md](COVERAGE.md).
+
+Production-ready path: init → click-to-tag → apply, with library support and CLI diagnostics.
 
 ## What shipped
 
@@ -20,7 +22,9 @@ Production-ready release for React + Vite + Tailwind vibe coders: init → click
 | **CLI** | `doctor`, `scan`, `stats` |
 | **Examples** | `examples/vite-basic`, `shadcn-dashboard`, `tailadmin-demo` |
 | **Docs** | `nuvioUser.md`, `MIGRATION_0.5_to_1.0.md`, library guides |
-| **Gate** | `pnpm v10:acceptance` |
+| **Coverage doc** | [COVERAGE.md](COVERAGE.md) — Vite 5–8, Tailwind 3–4, className modes, libraries |
+| **Gate** | `pnpm v10:acceptance` (also runs in GitHub CI) |
+| **GitHub release** | [.github/release-notes/v1.0.0.md](../.github/release-notes/v1.0.0.md) |
 
 ## Verify (maintainers)
 
@@ -31,7 +35,7 @@ pnpm dogfood
 pnpm v10:acceptance
 ```
 
-Manual: `pnpm dev:tailadmin` → edit → apply. Fresh machine: `pnpm dlx @nuvio/cli@1.0.0 init --yes` on clean Vite app.
+Manual: `pnpm dev:tailadmin` → edit → apply. Fresh machine: `pnpm dlx @nuvio/cli init --yes` on clean Vite app.
 
 ## Publish (human steps)
 

@@ -128,7 +128,7 @@ git push origin main
 
 ### Step 3 — Confirm versions
 
-All five must match (e.g. **`0.5.2`**):
+All five must match (e.g. **`1.0.0`**):
 
 - `packages/shared/package.json`
 - `packages/ast-engine/package.json`
