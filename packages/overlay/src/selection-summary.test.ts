@@ -112,10 +112,10 @@ describe("mapUnsupportedReasonToSimple", () => {
 describe("getSimpleBlockedEditFallback", () => {
   it("uses text copy for label and cell ids", () => {
     expect(getSimpleBlockedEditFallback("orders.row.1.nameText", null)).toBe(
-      "Nuvio can't safely edit this text yet.",
+      "nuvio can't safely edit this text yet.",
     );
     expect(getSimpleBlockedEditFallback("metric.orders.label", null)).toBe(
-      "Nuvio can't safely edit this text yet.",
+      "nuvio can't safely edit this text yet.",
     );
   });
 
@@ -128,7 +128,7 @@ describe("getSimpleBlockedEditFallback", () => {
         column: 1,
         textEditable: false,
       }),
-    ).toBe("Nuvio can't safely edit this element.");
+    ).toBe("nuvio can't safely edit this element.");
   });
 });
 

@@ -679,14 +679,14 @@ export function PropertyPanelShell({
       return {
         error: developerDetails
           ? "Text cannot be patched for this target — add a data-nuvio-id on the text element."
-          : "Nuvio can't safely edit this text yet.",
+          : "nuvio can't safely edit this text yet.",
       };
     }
     if (hasStyle && !patchStyleId) {
       return {
         error: developerDetails
           ? "Styles cannot be patched for this target."
-          : "Nuvio can't safely edit this area yet.",
+          : "nuvio can't safely edit this area yet.",
       };
     }
     if (hasText && patchTextId) {
@@ -818,7 +818,7 @@ export function PropertyPanelShell({
   const showWelcome = shouldShowWelcome({ developerDetails, dismissed: dismissedGuides });
   const patchBlockedReason =
     indexIdCount === 0
-      ? "Source index has 0 ids — the dev server cannot map data-nuvio-id to files. Run pnpm dev from the repo root (builds packages), then hard-refresh. Check the terminal for [Nuvio] index warnings."
+      ? "Source index has 0 ids — the dev server cannot map data-nuvio-id to files. Run pnpm dev from the repo root (builds packages), then hard-refresh. Check the terminal for [nuvio] index warnings."
       : selectedId && !selectionResolved
         ? selectError ??
           "Server did not confirm this id (no source file). Patches stay disabled until selection succeeds."
@@ -1526,7 +1526,7 @@ export function PropertyPanelShell({
               <p className="nuvio-banner nuvio-banner--error nuvio-text-2xs">
                 {developerDetails
                   ? patchTargetError
-                  : patchTargetError.startsWith("Nuvio can't") ||
+                  : patchTargetError.startsWith("nuvio can't") ||
                       patchTargetError.startsWith("Nothing") ||
                       patchTargetError.startsWith("No changes") ||
                       patchTargetError.startsWith("Text and styles") ||

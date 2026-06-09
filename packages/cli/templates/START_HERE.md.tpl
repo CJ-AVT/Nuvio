@@ -1,5 +1,5 @@
 <!-- nuvio-cli-template: 1 -->
-# Start here — Nuvio in this project
+# Start here — nuvio in this project
 
 Installed with @nuvio/cli@{{NUVIO_VERSION}}.
 
@@ -7,7 +7,7 @@ Installed with @nuvio/cli@{{NUVIO_VERSION}}.
 
 **Then:**
 1. Open the localhost URL from the terminal
-2. Turn **Edit** on (Nuvio chip)
+2. Turn **Edit** on (nuvio chip)
 3. Click the starter element (usually the page title — id `page.title`)
 4. **Preview Changes** → **Apply to Code**
 

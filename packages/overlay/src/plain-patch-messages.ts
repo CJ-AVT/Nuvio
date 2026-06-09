@@ -110,7 +110,7 @@ const REASON_MAP: ReadonlyArray<{
   {
     match: (r) => r.includes("host_not_found") || r.includes("No JSX host"),
     message: {
-      sentence: "Nuvio couldn't find this element in source — click it again or refresh the page.",
+      sentence: "nuvio couldn't find this element in source — click it again or refresh the page.",
       suggestedAction: "addId",
     },
   },
@@ -132,10 +132,10 @@ const REASON_MAP: ReadonlyArray<{
     match: (r) => r.includes("Unknown or disallowed Tailwind"),
     message: {
       sentence:
-        "This class uses utilities Nuvio can't edit yet — simplify the styles on this element or edit in your code editor.",
+        "This class uses utilities nuvio can't edit yet — simplify the styles on this element or edit in your code editor.",
       suggestedAction: "useHandoff",
       handoffStep:
-        "Remove or simplify responsive/dark Tailwind classes on this element so Nuvio can edit padding, radius, and shadow.",
+        "Remove or simplify responsive/dark Tailwind classes on this element so nuvio can edit padding, radius, and shadow.",
     },
   },
 ];
@@ -158,7 +158,7 @@ export function mapReasonToPlainMessage(reason: string): PlainPatchMessage {
 
 export function getPlainPatchHandoffStep(message: string | null | undefined): string {
   if (!message) {
-    return "Review this element in source and fix the styles or Nuvio ids.";
+    return "Review this element in source and fix the styles or nuvio ids.";
   }
   const stripped = message.replace(/^Error:\s*/i, "").trim();
   const mapped = mapReasonToPlainMessage(stripped);

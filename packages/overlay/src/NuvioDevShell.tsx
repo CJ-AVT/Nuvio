@@ -433,7 +433,7 @@ export function NuvioDevShellInner(): ReactElement {
         }
         patchPendingMapRef.current.delete(requestId);
         setPreviewBusy(false);
-        setPreviewError("No validation response from the dev server (timed out). Check the terminal for [Nuvio] errors.");
+        setPreviewError("No validation response from the dev server (timed out). Check the terminal for [nuvio] errors.");
       }, 15_000);
     }
     ws.send(
@@ -934,14 +934,14 @@ export function NuvioDevShellInner(): ReactElement {
             className={`nuvio-chip-header ${chipDragging ? "nuvio-chip-header--grabbing" : ""}`}
             onPointerDown={onChipHeaderPointerDown}
           >
-            <span className="nuvio-chip-title">Nuvio</span>
+            <span className="nuvio-chip-title">nuvio</span>
             <span className="nuvio-chip-spacer" aria-hidden="true" />
             <button
               type="button"
               className="nuvio-button-icon"
               title={chromeLayout.chip.collapsed ? "Expand chip" : "Collapse chip"}
               aria-label={
-                chromeLayout.chip.collapsed ? "Expand Nuvio chip" : "Collapse Nuvio chip"
+                chromeLayout.chip.collapsed ? "Expand nuvio chip" : "Collapse nuvio chip"
               }
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => onChipCollapsedChange(!chromeLayout.chip.collapsed)}

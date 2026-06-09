@@ -1,9 +1,9 @@
 <!-- nuvio-cli-template: 1 -->
-# Nuvio agent instructions
+# nuvio agent instructions
 
-This project uses [Nuvio](https://www.npmjs.com/org/nuvio) (dev-only visual editor).
+This project uses [nuvio](https://www.npmjs.com/org/nuvio) (dev-only visual editor).
 
-When the user asks to make UI editable or wire Nuvio:
+When the user asks to make UI editable or wire nuvio:
 
 1. Do **not** change unrelated files.
 2. Add **string literal** `data-nuvio-id="region.name"` on JSX elements they should click in the browser.

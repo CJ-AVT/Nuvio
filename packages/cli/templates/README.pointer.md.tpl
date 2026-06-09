@@ -1,5 +1,5 @@
 <!-- nuvio-cli-template: 1 -->
-# Nuvio
+# nuvio
 
 **Start here:** [START_HERE.md](./START_HERE.md)
 

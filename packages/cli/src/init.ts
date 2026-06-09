@@ -86,14 +86,14 @@ function printSuccess(
 ): void {
   if (checks.install) {
     console.log(
-      `✅ Nuvio packages targeted (@nuvio/vite-plugin@${NUVIO_VERSION}, @nuvio/overlay@${NUVIO_VERSION})`,
+      `✅ nuvio packages targeted (@nuvio/vite-plugin@${NUVIO_VERSION}, @nuvio/overlay@${NUVIO_VERSION})`,
     );
   }
   if (checks.vite) console.log("✅ Vite plugin added");
   else if (plan.failedSteps.some((s) => s.includes("vite"))) {
     console.log("⚠ Vite plugin — see nuvio/SETUP_TODO.md");
   }
-  if (checks.app) console.log("✅ Nuvio editor mounted");
+  if (checks.app) console.log("✅ nuvio editor mounted");
   else console.log("⚠ App shell — see nuvio/SETUP_TODO.md");
   if (checks.starter) {
     console.log(
@@ -110,7 +110,7 @@ function printSuccess(
     console.log(`\n${MSG.partialHelp}`);
   } else if (plan.tier === "partial") {
     console.log(
-      "\nNuvio helped you as far as it safely could. See warnings above.",
+      "\nnuvio helped you as far as it safely could. See warnings above.",
     );
   }
   console.log(`\n${MSG.telemetryNotice}`);
@@ -221,7 +221,7 @@ export async function runInit(opts: InitOptions): Promise<number> {
         return 1;
       }
     } else {
-      console.log("✅ Nuvio packages already installed");
+      console.log("✅ nuvio packages already installed");
     }
   } else {
     console.log("(skipped install — --no-install)");

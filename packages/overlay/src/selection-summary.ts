@@ -105,13 +105,13 @@ export function getSimpleBlockedEditFallback(
       /\.(label|value|nameText|name|price|category|status|title|subtitle)$/.test(selectedId)) ||
     (selectedId != null && selectedId.includes(".header."));
   if (textContext) {
-    return "Nuvio can't safely edit this text yet.";
+    return "nuvio can't safely edit this text yet.";
   }
-  return "Nuvio can't safely edit this element.";
+  return "nuvio can't safely edit this element.";
 }
 
 export function getSimpleIndexEmptyMessage(): string {
-  return "Nothing is set up to edit yet. Add Nuvio ids to elements in your project, then restart the dev server.";
+  return "Nothing is set up to edit yet. Add nuvio ids to elements in your project, then restart the dev server.";
 }
 
 export function getSimplePatchBlockedMessage(

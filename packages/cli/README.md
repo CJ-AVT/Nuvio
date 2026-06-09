@@ -1,17 +1,17 @@
 # @nuvio/cli
 
-One-command onboarding for Nuvio in Vite + React + Tailwind projects.
+One-command onboarding for nuvio in Vite + React + Tailwind projects.
 
 ```bash
 pnpm dlx @nuvio/cli init
 pnpm dev
 ```
 
-See [Nuvio docs](https://github.com/ehah/Nuvio/blob/main/docs/nuvioUser.md).
+See [nuvio docs](https://github.com/ehah/Nuvio/blob/main/docs/nuvioUser.md).
 
 ## Telemetry
 
-Nuvio collects anonymous usage metrics to improve onboarding and reliability. No source code, file contents, file paths, project names, emails, or personal data are sent.
+nuvio collects anonymous usage metrics to improve onboarding and reliability. No source code, file contents, file paths, project names, emails, or personal data are sent.
 
 Disable anytime with:
 

@@ -30,7 +30,7 @@ export function HandoffActionBar({
   file,
   line,
   componentName,
-  userIntent = "edit selection in Nuvio",
+  userIntent = "edit selection in nuvio",
   tableContext = false,
   simpleMode = false,
   onSwitchTarget,

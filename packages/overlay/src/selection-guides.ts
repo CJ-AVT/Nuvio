@@ -9,7 +9,7 @@ export type GuideContent = {
 
 export const GUIDE_CONTENT: Record<OnboardingGuideId, GuideContent> = {
   welcome: {
-    title: "Welcome to Nuvio",
+    title: "Welcome to nuvio",
     body: "Click something on the page → choose what to change → Preview Changes → Apply to Code. Changes save to your source files. Undo anytime. If an area isn't editable, use Copy Fix Prompt.",
   },
   "first-selection": {

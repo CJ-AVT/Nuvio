@@ -16,7 +16,7 @@ export function buildFixHandoffClipboard(ctx: FixHandoffContext): string {
   const component = ctx.componentName ?? ctx.hostId;
 
   return [
-    "Nuvio could not apply this edit safely.",
+    "nuvio could not apply this edit safely.",
     "",
     `Component: ${component} (${ctx.hostId})`,
     `File: ${fileLine}`,
@@ -30,7 +30,7 @@ export function buildFixHandoffClipboard(ctx: FixHandoffContext): string {
   ].join("\n");
 }
 
-export const MAKE_TABLE_EDITABLE_SNIPPET = `Add Nuvio table ids (v0.4 contract):
+export const MAKE_TABLE_EDITABLE_SNIPPET = `Add nuvio table ids (v0.4 contract):
 - Section wrapper: data-nuvio-id="{host}.section"
 - Title h3: data-nuvio-id="{host}.title"
 - Table scroll area: data-nuvio-id="{host}.table"

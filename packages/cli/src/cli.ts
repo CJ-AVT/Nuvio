@@ -9,7 +9,7 @@ import {
 import { detectPackageManager } from "./detect-pm.js";
 
 function printHelp(): void {
-  console.log(`nuvio — Nuvio CLI
+  console.log(`nuvio — CLI for React + Vite
 
 Usage:
   nuvio init [options]

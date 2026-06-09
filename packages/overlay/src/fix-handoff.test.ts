@@ -8,7 +8,7 @@ describe("buildFixHandoffClipboard", () => {
       file: "ecommerce/EcommerceMetrics.tsx",
       line: 45,
       componentName: "EcommerceMetrics",
-      userIntent: "edit selection in Nuvio",
+      userIntent: "edit selection in nuvio",
       reason: "Validation failed",
       suggestedNextStep: "Simplify responsive classes on this element.",
     });

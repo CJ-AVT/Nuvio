@@ -1,5 +1,5 @@
 <!-- nuvio-cli-template: 1 -->
-# Nuvio setup — manual steps
+# nuvio setup — manual steps
 
 @nuvio/cli could not safely patch: {{FAILED_STEPS}}
 
