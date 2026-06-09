@@ -1,7 +1,7 @@
-# PostHog telemetry — implementation plan (v0.5.4)
+# PostHog telemetry — implementation plan (v0.5.5)
 
-**Document status:** **Shipped** — all five public `@nuvio/*` packages at **0.5.4**  
-**Release:** **0.5.4** (patch — telemetry only)  
+**Document status:** **Shipped** — all five public `@nuvio/*` packages at **0.5.5**  
+**Release:** **0.5.5** (patch — telemetry reliability) · prior: **0.5.4** (initial telemetry)  
 **Audience:** Implementers preparing anonymous, opt-out PostHog telemetry for `@nuvio/cli` and `@nuvio/overlay`  
 **Supersedes:** [`TELEMETRY.md`](TELEMETRY.md) v0.3 spec (opt-in, disabled by default). v0.5.4 uses **opt-out** and ships collection **on by default**.
 
@@ -34,11 +34,13 @@ nuvio init → pnpm dev → Edit on → select element → Preview Changes → A
 
 **Goal:** Add lightweight, **anonymous**, **opt-out** telemetry via PostHog to measure funnel completion — especially **`apply_to_code`** (the core value moment).
 
-### In scope (v0.5.4)
+**v0.5.5 addition:** Measure real CLI runs with **`nuvio_cli_invoked`** (top-of-funnel). npm download counts are **not** the same as CLI executions.
+
+### In scope (v0.5.4 + v0.5.5)
 
 | Area | Change |
 | ---- | ------ |
-| `@nuvio/cli` | New `telemetry.ts`; events on `nuvio init` |
+| `@nuvio/cli` | `telemetry.ts`; `nuvio_cli_invoked` on every CLI start + init funnel events |
 | `@nuvio/overlay` | New `telemetry.ts`; events on connect / select / preview / apply |
 | Tests | CLI + overlay unit tests for opt-out, ID reuse, error swallowing, property safety |
 | Docs | Privacy notice in init output, README, `nuvioUser.md`, CHANGELOG |
@@ -82,7 +84,7 @@ Treat these as case-sensitive string checks on the raw env/localStorage value (`
 
 ### Failure isolation
 
-Telemetry must **never** break Nuvio. All PostHog calls are wrapped; errors are swallowed. CLI must `flush`/`shutdown` in a `finally` block without throwing.
+Telemetry must **never** break Nuvio. All PostHog calls are wrapped; errors are swallowed. CLI must `flush`/`shutdown` on **all** exit paths (success, failure, help, unknown command) and on **SIGINT/SIGTERM**, with a bounded timeout so the CLI does not hang.
 
 ---
 
@@ -161,13 +163,38 @@ type CliTelemetryProps = {
 
 ### CLI events
 
-| Event | When |
-| ----- | ---- |
-| `nuvio_init_started` | First line of `runInit()` after options are known, **before** `detectProject` (or immediately after — see §7) |
-| `nuvio_init_completed` | Init exits `0` with `plan.tier` `full` or `partial` |
-| `nuvio_init_failed` | Any non-zero exit from `runInit`, or uncaught failure in `runCli` catch |
+| Event | Role | When |
+| ----- | ---- | ---- |
+| `nuvio_cli_invoked` | **Top-of-funnel** | First line of `runCli()`, **before** init validation, prompts, project checks, or file writes |
+| `nuvio_init_started` | Init funnel | Start of `runInit()` (not on `--dry-run`) |
+| `nuvio_init_completed` | Init funnel | Init exits `0` with `plan.tier` `full` or `partial` |
+| `nuvio_init_failed` | Init funnel | Any non-zero exit from `runInit`, or uncaught failure in `runCli` catch |
 
-Do **not** emit `nuvio_init_completed` on `--dry-run` (optional: emit `nuvio_init_started` with `{ dry_run: true }` only if useful — default: skip all telemetry on dry-run).
+#### `nuvio_cli_invoked` (v0.5.5)
+
+Fires for every CLI invocation:
+
+- `nuvio init` / `nuvio init --yes`
+- `nuvio --help` / `nuvio init --help`
+- bare `nuvio` (no command)
+- unknown commands (`nuvio deploy`, etc.)
+
+**Allowed properties only:**
+
+```ts
+type CliInvokedProps = {
+  nuvio_version: string;
+  os: NodeJS.Platform;
+  arch: string;
+  node: string;
+  command: "init" | "help" | "unknown" | "none";
+  package_manager?: "pnpm" | "npm" | "yarn" | "bun"; // only when --pm is passed
+};
+```
+
+Do **not** read lockfiles or project paths for this event. Do **not** send argv, cwd, or project metadata.
+
+Do **not** emit `nuvio_init_started` / `nuvio_init_completed` on `--dry-run`.
 
 ### Safe `error_code` values for `nuvio_init_failed`
 
@@ -191,7 +218,7 @@ Map internal failures to short codes — never forward `Error.message`:
 | File | Change |
 | ---- | ------ |
 | [`packages/cli/src/init.ts`](../packages/cli/src/init.ts) | Call telemetry at start, success, and each early `return` failure path |
-| [`packages/cli/src/cli.ts`](../packages/cli/src/cli.ts) | On `runInit` catch: `nuvio_init_failed` + `unexpected_error`; `finally`: `shutdownTelemetry()` |
+| [`packages/cli/src/cli.ts`](../packages/cli/src/cli.ts) | `nuvio_cli_invoked` at start; on `runInit` catch: `nuvio_init_failed` + `unexpected_error`; `finally`: `shutdownTelemetry()` on all paths; `registerTelemetrySignalHandlers()` for SIGINT/SIGTERM |
 | [`packages/cli/src/messages.ts`](../packages/cli/src/messages.ts) | Add `telemetryNotice` constant for privacy text |
 | [`packages/cli/src/init.ts`](../packages/cli/src/init.ts) `printSuccess` | Print telemetry notice after success lines |
 
@@ -266,24 +293,38 @@ Implementation: `mapApplyFailureReason(errorCode: string | undefined): ApplyFail
 
 ## 7. Event emission map
 
-### CLI (`nuvio init`)
+### CLI (all invocations)
 
 ```
-runCli("init")
-  └─ runInit(opts)
-       ├─ [START]  nuvio_init_started
-       │            props: nuvio_version, os, arch, node, package_manager
-       │            (add has_* after detectProject succeeds)
+runCli(argv)
+  ├─ [FIRST] nuvio_cli_invoked { command: init|help|unknown|none }
+  ├─ help / no command / unknown → return (still shutdownTelemetry in finally)
+  └─ init → runInit(opts)
+       ├─ nuvio_init_started (skip on --dry-run)
        ├─ detectProject throws → nuvio_init_failed (preflight_*)
        ├─ strict tailwind fail → nuvio_init_failed (strict_tailwind)
        ├─ user cancel confirm → nuvio_init_failed (user_cancelled)
        ├─ install fail → nuvio_init_failed (install_failed)
        ├─ tier failed → nuvio_init_failed (init_tier_failed)
        ├─ exit 0 full/partial → nuvio_init_completed
-       └─ finally → shutdownTelemetry()
+       └─ finally → shutdownTelemetry() (+ SIGINT/SIGTERM handlers)
 
 runCli catch → nuvio_init_failed (unexpected_error)
 ```
+
+### Recommended PostHog funnels (v0.5.5)
+
+CLI and overlay use **different anonymous IDs** — do **not** combine into one funnel until identity linking is implemented.
+
+| Funnel | Steps | Purpose |
+| ------ | ----- | ------- |
+| **CLI** | `nuvio_cli_invoked` → `nuvio_init_started` → `nuvio_init_completed` | Real CLI runs and init completion |
+| **Overlay activation** | `overlay_connected` → `first_selection` → `preview_changes` → `apply_to_code` | Product value moment |
+
+**Main activation KPI:** `apply_to_code`  
+**Top-of-funnel KPI:** `nuvio_cli_invoked`
+
+**Note:** npm download counts measure package resolution/installs, not CLI executions. Use `nuvio_cli_invoked` for top-of-funnel CLI activity.
 
 ### Overlay (browser session)
 
@@ -340,7 +381,9 @@ Use vitest; mock `posthog-node` or inject a test double.
 
 | Test | Assertion |
 | ---- | --------- |
-| Disabled when `NUVIO_TELEMETRY=0` | `captureCliEvent` no-ops; no PostHog client created |
+| Disabled when `NUVIO_TELEMETRY=0` | `captureCliEvent` / `captureCliInvoked` no-ops; no PostHog client created |
+| `nuvio_cli_invoked` fires for help | `runCli(["--help"])` captures with `command: help` |
+| Shutdown on all paths | `runCli --help` calls `flush` + `shutdown` |
 | Disabled when `NUVIO_TELEMETRY=false` | Same |
 | Failures do not throw | Mock PostHog `capture` to throw; caller resolves without error |
 | Anonymous ID reused | First call writes `~/.nuvio/telemetry.json`; second call reads same `anonymousId` (use temp homedir via `HOME` override in test) |
@@ -371,7 +414,7 @@ pnpm --filter @nuvio/overlay test
 
 ## 10. Version & publish
 
-Bump **all five** published packages to **0.5.4**:
+Bump **all five** published packages to **0.5.5** (aligned versions):
 
 - `@nuvio/shared`
 - `@nuvio/ast-engine`
@@ -384,10 +427,10 @@ Even if only CLI and overlay have code changes, aligned versions keep `nuvio ini
 ```bash
 # After implementation + tests green
 pnpm publish:stable --otp=XXXXXX
-git tag v0.5.4
+git tag v0.5.5
 ```
 
-Update [`docs/nuvio_v0.5.3.md`](nuvio_v0.5.3.md) companion table to reference this doc for 0.5.4.
+Release notes: [`docs/nuvio_v0.5.5.md`](nuvio_v0.5.5.md).
 
 ---
 
@@ -402,7 +445,8 @@ Update [`docs/nuvio_v0.5.3.md`](nuvio_v0.5.3.md) companion table to reference th
 - [x] `packages/overlay/src/telemetry.ts`
 - [x] Wire `NuvioDevShell.tsx` patchAck / connect / onSelectId
 - [x] `tsup` define for overlay token / env flags
-- [x] Version **0.5.4** in all five `package.json` files
+- [x] Version **0.5.5** in all five `package.json` files
+- [x] `nuvio_cli_invoked` + flush/SIGINT hardening (v0.5.5)
 
 ### Tests
 
@@ -420,7 +464,7 @@ Update [`docs/nuvio_v0.5.3.md`](nuvio_v0.5.3.md) companion table to reference th
 
 ### Pre-publish verification
 
-- [ ] **CLI smoke:** `pnpm telemetry:smoke` → PostHog **Activity** shows `nuvio_init_started` + `nuvio_init_completed`
+- [ ] **CLI smoke:** `pnpm telemetry:smoke` → PostHog **Activity** shows `nuvio_cli_invoked` + `nuvio_init_started` + `nuvio_init_completed`
 - [ ] **Overlay smoke:** `pnpm build && pnpm dev` (dogfood) → Edit → select → Preview → Apply → Activity shows `overlay_connected` … `apply_to_code`
 - [ ] Opt-out: `NUVIO_TELEMETRY=0 nuvio init` sends nothing
 - [ ] Confirm no events contain `/`, `\`, `.tsx`, project folder names
@@ -435,6 +479,7 @@ After implementation, each event payload must contain **only**:
 
 | Event | Allowed payload |
 | ----- | ---------------- |
+| `nuvio_cli_invoked` | `nuvio_version`, `os`, `arch`, `node`, `command`, optional `package_manager` (only `--pm` override) |
 | `nuvio_init_started` | `nuvio_version`, `os`, `arch`, `node`, `package_manager`, `has_react`, `has_vite`, `has_tailwind` |
 | `nuvio_init_completed` | Same + optional `result_tier: "full" \| "partial"` |
 | `nuvio_init_failed` | Same + `error_code`, optional `result_tier` |
@@ -457,4 +502,4 @@ After implementation, each event payload must contain **only**:
 
 ---
 
-**Summary:** v0.5.4 adds opt-out PostHog telemetry to measure init completion and the **Preview → Apply** funnel, with `apply_to_code` as the primary KPI. Implementation is confined to new `telemetry.ts` modules plus minimal hook points in `init.ts` / `NuvioDevShell.tsx`, with tests and a short privacy notice. No editor or patch-engine behavior changes.
+**Summary:** v0.5.4 introduced opt-out PostHog telemetry; **v0.5.5** adds `nuvio_cli_invoked` (top-of-funnel CLI runs), hardened flush/shutdown, and separate CLI vs overlay funnel guidance. **`apply_to_code`** remains the main activation KPI. No editor or patch-engine behavior changes.

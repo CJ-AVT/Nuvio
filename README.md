@@ -88,7 +88,7 @@ nuvio collects **anonymous usage events** to improve onboarding and reliability.
 
 - CLI / overlay version
 - OS and Node version (CLI)
-- Event names (e.g. `nuvio_init_completed`, `apply_to_code`)
+- Event names (e.g. `nuvio_cli_invoked`, `nuvio_init_completed`, `apply_to_code`)
 - Coarse install outcome (success / partial / failed)
 
 **Not collected**

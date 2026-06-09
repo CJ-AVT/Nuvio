@@ -4,11 +4,13 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const captureMock = vi.fn();
+const flushMock = vi.fn().mockResolvedValue(undefined);
 const shutdownMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("posthog-node", () => ({
   PostHog: vi.fn().mockImplementation(() => ({
     capture: captureMock,
+    flush: flushMock,
     shutdown: shutdownMock,
   })),
 }));
@@ -22,6 +24,7 @@ describe("cli telemetry", () => {
   beforeEach(() => {
     vi.resetModules();
     captureMock.mockClear();
+    flushMock.mockClear();
     shutdownMock.mockClear();
     tempHome = mkdtempSync(join(tmpdir(), "nuvio-telemetry-"));
     prevHome = process.env.HOME;
@@ -121,6 +124,45 @@ describe("cli telemetry", () => {
       (call) => (call[0] as { distinctId: string }).distinctId,
     );
     expect(distinctIds.every((id) => id === firstId)).toBe(true);
+  });
+
+  it("captures nuvio_cli_invoked with command enum only", async () => {
+    delete process.env.NUVIO_TELEMETRY;
+    const { captureCliInvoked, __resetTelemetryForTests } = await loadTelemetry();
+    __resetTelemetryForTests();
+    captureCliInvoked("help");
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "nuvio_cli_invoked",
+        properties: expect.objectContaining({
+          command: "help",
+          nuvio_version: expect.any(String),
+        }),
+      }),
+    );
+    const props = (captureMock.mock.calls[0]?.[0] as { properties?: Record<string, unknown> })
+      .properties;
+    expect(props?.command).toBe("help");
+    expect(Object.keys(props ?? {})).not.toContain("cwd");
+  });
+
+  it("opt-out disables nuvio_cli_invoked", async () => {
+    process.env.NUVIO_TELEMETRY = "0";
+    const { captureCliInvoked, __resetTelemetryForTests } = await loadTelemetry();
+    __resetTelemetryForTests();
+    captureCliInvoked("init");
+    expect(captureMock).not.toHaveBeenCalled();
+  });
+
+  it("shutdown flushes and shuts down the client", async () => {
+    delete process.env.NUVIO_TELEMETRY;
+    const { captureCliInvoked, shutdownTelemetry, __resetTelemetryForTests } =
+      await loadTelemetry();
+    __resetTelemetryForTests();
+    captureCliInvoked("none");
+    await shutdownTelemetry();
+    expect(flushMock).toHaveBeenCalled();
+    expect(shutdownMock).toHaveBeenCalled();
   });
 
   it("does not include file paths or forbidden keys in properties", async () => {

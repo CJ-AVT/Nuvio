@@ -4,6 +4,9 @@ import type { PackageManager } from "./detect-pm.js";
 import {
   buildCliTelemetryProps,
   captureCliEvent,
+  captureCliInvoked,
+  registerTelemetrySignalHandlers,
+  resolveCliInvokedCommand,
   shutdownTelemetry,
 } from "./telemetry.js";
 import { detectPackageManager } from "./detect-pm.js";
@@ -73,24 +76,26 @@ function parseArgs(argv: string[]): {
 }
 
 export async function runCli(argv: string[]): Promise<number> {
+  registerTelemetrySignalHandlers();
   const { command, opts, help } = parseArgs(argv);
-
-  if (help) {
-    printHelp();
-    return 0;
-  }
-  if (!command) {
-    printHelp();
-    return 1;
-  }
-
-  if (command !== "init") {
-    console.error(`Unknown command: ${command}`);
-    printHelp();
-    return 1;
-  }
+  captureCliInvoked(resolveCliInvokedCommand(help, command), opts.pm);
 
   try {
+    if (help) {
+      printHelp();
+      return 0;
+    }
+    if (!command) {
+      printHelp();
+      return 1;
+    }
+
+    if (command !== "init") {
+      console.error(`Unknown command: ${command}`);
+      printHelp();
+      return 1;
+    }
+
     return await runInit(opts);
   } catch (e) {
     const pm = detectPackageManager(opts.cwd, opts.pm);

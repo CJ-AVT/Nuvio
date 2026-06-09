@@ -29,10 +29,22 @@ export type CliTelemetryProps = {
   result_tier?: "full" | "partial" | "failed";
 };
 
+export type CliInvokedCommand = "init" | "help" | "unknown" | "none";
+
 export type CliTelemetryEvent =
+  | "nuvio_cli_invoked"
   | "nuvio_init_started"
   | "nuvio_init_completed"
   | "nuvio_init_failed";
+
+export type CliInvokedProps = {
+  nuvio_version: string;
+  os: NodeJS.Platform;
+  arch: string;
+  node: string;
+  command: CliInvokedCommand;
+  package_manager?: PackageManager;
+};
 
 const FORBIDDEN_PROP_KEYS = new Set([
   "cwd",
@@ -44,8 +56,12 @@ const FORBIDDEN_PROP_KEYS = new Set([
   "stack",
 ]);
 
+const SHUTDOWN_TIMEOUT_MS = 3_000;
+
 let client: PostHog | null = null;
 let sessionAnonymousId: string | null = null;
+let shutdownDone = false;
+let signalHandlersRegistered = false;
 
 function telemetryDebug(message: string, detail?: unknown): void {
   if (process.env.NUVIO_TELEMETRY_DEBUG !== "1") return;
@@ -130,6 +146,31 @@ function sanitizeProps(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+export function resolveCliInvokedCommand(
+  help: boolean,
+  command: string | null,
+): CliInvokedCommand {
+  if (help) return "help";
+  if (!command) return "none";
+  if (command === "init") return "init";
+  return "unknown";
+}
+
+export function buildCliInvokedProps(
+  command: CliInvokedCommand,
+  pmOverride?: PackageManager,
+): CliInvokedProps {
+  const props: CliInvokedProps = {
+    nuvio_version: NUVIO_VERSION,
+    os: process.platform,
+    arch: os.arch(),
+    node: process.version,
+    command,
+  };
+  if (pmOverride) props.package_manager = pmOverride;
+  return props;
+}
+
 export function buildCliTelemetryProps(
   pm?: PackageManager,
   project?: ProjectContext,
@@ -160,9 +201,16 @@ export function preflightErrorCode(message: string): string {
   return "preflight_unknown";
 }
 
+export function captureCliInvoked(
+  command: CliInvokedCommand,
+  pmOverride?: PackageManager,
+): void {
+  captureCliEvent("nuvio_cli_invoked", buildCliInvokedProps(command, pmOverride));
+}
+
 export function captureCliEvent(
   event: CliTelemetryEvent,
-  props?: CliTelemetryProps,
+  props?: CliTelemetryProps | CliInvokedProps,
 ): void {
   try {
     if (!isTelemetryEnabled()) {
@@ -186,21 +234,55 @@ export function captureCliEvent(
   }
 }
 
+async function flushAndShutdownClient(): Promise<void> {
+  if (!client) return;
+  const active = client;
+  client = null;
+  await Promise.race([
+    (async () => {
+      await active.flush();
+      await active.shutdown();
+    })(),
+    new Promise<void>((_, reject) => {
+      setTimeout(
+        () => reject(new Error("telemetry shutdown timed out")),
+        SHUTDOWN_TIMEOUT_MS,
+      );
+    }),
+  ]);
+}
+
 export async function shutdownTelemetry(): Promise<void> {
+  if (shutdownDone) return;
+  shutdownDone = true;
   try {
-    if (client) {
-      await client.flush();
-      await client.shutdown();
-      client = null;
-      telemetryDebug("flush + shutdown complete");
-    }
+    await flushAndShutdownClient();
+    telemetryDebug("flush + shutdown complete");
   } catch (error) {
     telemetryDebug("shutdown failed", error);
   }
+}
+
+export function registerTelemetrySignalHandlers(): void {
+  if (signalHandlersRegistered) return;
+  signalHandlersRegistered = true;
+
+  const onSignal = (signal: NodeJS.Signals) => {
+    void (async () => {
+      await shutdownTelemetry();
+      const code = signal === "SIGINT" ? 130 : 143;
+      process.exit(code);
+    })();
+  };
+
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
 }
 
 /** Test-only reset of module state. */
 export function __resetTelemetryForTests(): void {
   client = null;
   sessionAnonymousId = null;
+  shutdownDone = false;
+  signalHandlersRegistered = false;
 }

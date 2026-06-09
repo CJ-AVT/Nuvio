@@ -5,7 +5,8 @@
  *   pnpm telemetry:smoke
  *
  * Then open PostHog → Activity and look for:
- *   nuvio_init_started, nuvio_init_completed (distinct_id from ~/.nuvio/telemetry.json)
+ *   nuvio_cli_invoked, nuvio_init_started, nuvio_init_completed
+ *   (distinct_id from ~/.nuvio/telemetry.json)
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -28,5 +29,7 @@ if (result.status !== 0) {
 }
 
 console.log("\n✓ CLI smoke events flushed.");
-console.log("  PostHog → Activity → filter: nuvio_init_started | nuvio_init_completed");
+console.log(
+  "  PostHog → Activity → filter: nuvio_cli_invoked | nuvio_init_started | nuvio_init_completed",
+);
 console.log("  Anonymous id: ~/.nuvio/telemetry.json");

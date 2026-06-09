@@ -4,6 +4,18 @@ All notable changes to published `@nuvio/*` packages are documented here. This p
 
 ## [Unreleased]
 
+## [0.5.5] — 2026-06-09 (telemetry reliability)
+
+### Added
+
+- CLI top-of-funnel event `nuvio_cli_invoked` — fires on every CLI start (`init`, `--help`, bare `nuvio`, unknown commands) before init validation or file writes.
+- Improved CLI telemetry flush/shutdown on all exit paths, including `SIGINT` / `SIGTERM`, with a bounded timeout so PostHog events are less likely to be lost on quick exits.
+
+### Changed
+
+- Telemetry docs updated with separate CLI and overlay funnels; `nuvio_cli_invoked` documented as top-of-funnel, `apply_to_code` as main activation KPI.
+- All public `@nuvio/*` packages aligned at **0.5.5**.
+
 ## [0.5.4] — 2026-06-05 (anonymous telemetry)
 
 ### Added
