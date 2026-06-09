@@ -1,37 +1,161 @@
-# Nuvio
+# nuvio
 
-Visual editing layer for React + Vite + Tailwind: localhost overlay, source-backed patches (see `docs/PRD.md` and `docs/implPlan.md`).
+**Edit React apps visually and apply changes back to source code.**
 
-`0.3.0-alpha.0` focus: hierarchy-first targeting, deeper Tailwind controls, and breakpoint-aware class patches for real dashboard workflows.
+Stop burning AI prompts on:
 
-**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT · **Release:** `0.3.0-alpha.0` (Phase B) · **Stable:** [v0.1.0](https://github.com/ehah/Nuvio/releases/tag/v0.1.0) (`latest`)
+- make this card wider
+- move this button left
+- change this padding
+- change this color
 
-## Install in your project (~2 minutes)
+nuvio lets you:
+
+- Click UI elements in the browser
+- Edit text and Tailwind styles visually
+- Preview the diff before anything hits disk
+- Apply changes directly to your source files
+
+Dev-only. Nothing runs in production.
+
+[![npm @nuvio/cli](https://img.shields.io/npm/v/@nuvio/cli?label=%40nuvio%2Fcli)](https://www.npmjs.com/package/@nuvio/cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
+
+---
+
+## Demo
+
+**Edit on → click an element → Preview Changes → Apply to Code** (about 1 minute).
+
+<video src="docs/assets/nuvio.mp4" width="100%" controls playsinline>
+  <a href="docs/assets/nuvio.mp4">Watch the nuvio demo video</a>
+</video>
+
+Try it yourself after [Quick Start](#quick-start), or run the maintainer demo app:
+
+```bash
+pnpm build && pnpm --filter @nuvio/demo-app dev
+```
+
+Open `http://localhost:5174` → nuvio chip → **Edit on**.
+
+Asset path: [docs/assets/nuvio.mp4](docs/assets/nuvio.mp4) · More captures: [docs/screenshots/v0.5/README.md](docs/screenshots/v0.5/README.md)
+
+---
+
+## Quick Start
+
+**You need:** React · Vite · Tailwind · Node 20+
+
+In your project folder (`package.json` + `vite.config`):
 
 ```bash
 pnpm dlx @nuvio/cli init
 pnpm dev
 ```
 
-Then turn **Edit** on in the Nuvio chip and click the starter element (`page.title`). See `nuvio/START_HERE.md` in your project after init.
+Open localhost → turn **Edit** on in the nuvio chip → click an element → **Preview Changes** → **Apply to Code**.
 
-You need **Node 20+**, a **Vite 5/6 + React** app, and **Tailwind CSS 3.x or 4.x** on the host app.
+That's it. After init, see `nuvio/START_HERE.md` in your project.
 
-**v0.2+:** overlay UI is **self-contained** — you do **not** add `@nuvio/overlay` to Tailwind `content`. Full guide: [nuvioUser.md](docs/nuvioUser.md).
+**Tip:** When `pnpm create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
 
-**Telemetry (v0.5.4+):** anonymous, opt-out usage metrics — disable with `NUVIO_TELEMETRY=0`. See [PostHog_telemetry.md](docs/PostHog_telemetry.md).
+Full walkthrough: [docs/nuvioUser.md](docs/nuvioUser.md)
 
-### Manual install (without CLI)
+---
+
+## What nuvio does
+
+After `nuvio init`, nuvio:
+
+1. Installs `@nuvio/vite-plugin` and `@nuvio/overlay`
+2. Registers the Vite plugin (dev server only)
+3. Mounts the nuvio overlay in your app shell
+4. Adds a starter editable region (`page.title` on your first heading)
+5. Lets you click instrumented elements and edit in the browser
+6. Generates source-backed patches and writes them to your files
+
+**Preview before apply.** **Undo** after apply. **No production bundle** — the overlay renders nothing when `import.meta.env.DEV` is false.
+
+Want more of the UI editable? Add `data-nuvio-id="unique.name"` to JSX hosts. See `nuvio/AGENT.md` after init.
+
+---
+
+## Telemetry
+
+nuvio collects **anonymous usage events** to improve onboarding and reliability. Telemetry is **on by default** and **opt-out**.
+
+**Collected**
+
+- CLI / overlay version
+- OS and Node version (CLI)
+- Event names (e.g. `nuvio_init_completed`, `apply_to_code`)
+- Coarse install outcome (success / partial / failed)
+
+**Not collected**
+
+- Source code
+- File contents
+- File paths
+- Project names
+- Emails
+- Usernames
+- Personal information
+
+**Disable anytime**
+
+```bash
+NUVIO_TELEMETRY=0
+```
+
+In the browser overlay: `localStorage.setItem("nuvio.telemetry", "0")` then refresh.
+
+Details: [docs/PostHog_telemetry.md](docs/PostHog_telemetry.md)
+
+---
+
+## Current Limitations
+
+**Works today**
+
+- React 18 / 19
+- Vite 5, 6, and 8
+- Tailwind CSS 3.x and 4.x
+- Local dev only (`pnpm dev` / `vite dev`)
+
+**Editing constraints**
+
+- `className` on edited elements should be a **string literal** (not `cn(...)` or dynamic expressions) for style patches
+- Each `data-nuvio-id` must be **unique** in your project
+- Full dashboard UIs need explicit ids — the CLI adds a starter title; use `nuvio/AGENT.md` for more
+
+**On the roadmap**
+
+- Next.js `nuvio init` (experimental `@nuvio/next` exists in the monorepo today)
+- `nuvio doctor` for setup checks
+- Click-to-tag in the overlay
+
+**Not planned near-term**
+
+- Vue, Angular, or non-React frameworks
+- Production / hosted editing
+
+Honest list: [docs/LIMITATIONS.md](docs/LIMITATIONS.md) · [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
+
+---
+
+## Advanced Setup
+
+Use this if you skip the CLI or need to wire nuvio by hand.
+
+### Manual install
 
 ```bash
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
 
-### 1. Install packages
-
-Use the npm command above (or pin a version, e.g. `@nuvio/vite-plugin@0.1.0`).
-
-### 2. Register the Vite plugin
+### Register the Vite plugin
 
 ```ts
 // vite.config.ts
@@ -47,12 +171,19 @@ export default defineConfig({
 });
 ```
 
-Optional: `nuvio({ scanGlobs: ["src/**/*.{tsx,jsx}"], verbose: process.env.NUVIO_VERBOSE === "1" })`.
+Optional plugin options:
 
-### 3. Mount the dev shell once
+```ts
+nuvio({
+  scanGlobs: ["src/**/*.{tsx,jsx}"],
+  verbose: process.env.NUVIO_VERBOSE === "1",
+});
+```
+
+### Mount the dev shell
 
 ```tsx
-// e.g. App.tsx (root layout)
+// e.g. App.tsx
 import { NuvioDevShell } from "@nuvio/overlay";
 
 export default function App() {
@@ -65,24 +196,59 @@ export default function App() {
 }
 ```
 
-`NuvioDevShell` renders **nothing in production** (`import.meta.env.DEV`). The Vite plugin runs **only on `vite dev`**. Install both packages as **devDependencies** — see [DEV_ONLY.md](docs/DEV_ONLY.md).
+`NuvioDevShell` returns `null` in production builds. The Vite plugin runs only on `vite dev`. See [docs/DEV_ONLY.md](docs/DEV_ONLY.md).
 
-### 4. Instrument hosts
+### Instrument hosts
 
-Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit. Ids must be **unique** in the scanned project. Use **string literal** `className="..."` on that same element for Tailwind patches (see [limitations](docs/LIMITATIONS.md)).
+Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit. Ids must be unique. Use a string-literal `className="..."` on the same element for Tailwind patches.
 
-Run **`pnpm dev`**, open localhost, turn **Edit on**, select a region, **Validate** then **Apply**. See [compatibility](docs/COMPATIBILITY.md), [limitations](docs/LIMITATIONS.md), and [CHANGELOG](CHANGELOG.md).
+### Troubleshooting
 
-**Maintainers:** [npmPublish.md](docs/npmPublish.md), [DOGFOOD.md](docs/DOGFOOD.md), [FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md).
+**`0 ids` in the chip** — no TSX/JSX matched under the scan root. Restart dev after changes; try `nuvio({ verbose: true })` and check the terminal for `[nuvio]` logs.
+
+**No nuvio chip after `create vite`** — run `nuvio init` before `pnpm dev`, or restart dev after init.
+
+**Edit button dead / no overlay styles** — re-run `pnpm dlx @nuvio/cli init --yes`, then `rm -rf node_modules/.vite` and `pnpm dev`.
+
+**Apply greyed out** — turn Edit on, select an id’d element, run **Preview Changes** first; fix duplicate ids if reported.
+
+More: [docs/nuvioUser.md](docs/nuvioUser.md) · [CHANGELOG.md](CHANGELOG.md)
+
+### Requirements (monorepo contributors)
+
+- **Node.js** >= 20
+- **pnpm** 9 (`corepack enable` recommended)
+
+### Compatibility notes
+
+| Stack | Supported |
+| ----- | --------- |
+| Vite | 5.4+, 6.x, 8.x |
+| React | 18.3+, 19.x |
+| Tailwind | 3.x, 4.x |
+
+Overlay CSS is self-contained — you do **not** add `@nuvio/overlay` to Tailwind `content`.
+
+Full matrix: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 
 ---
 
-## Requirements
+## Maintainer Documentation
 
-- **Node.js** >= 20 (see `package.json` `engines`)
-- **pnpm** 9 (`packageManager` field pins a version; use [corepack](https://nodejs.org/api/corepack.html) or install pnpm manually)
+For nuvio contributors and release work — not needed to use nuvio in your app.
 
-## Setup
+| Doc | Purpose |
+| --- | ------- |
+| [docs/nuvioUser.md](docs/nuvioUser.md) | Public user guide |
+| [docs/DOGFOOD.md](docs/DOGFOOD.md) | Dogfood / acceptance sign-off |
+| [docs/FULL_MVP_DOD.md](docs/FULL_MVP_DOD.md) | Definition of done |
+| [docs/npmPublish.md](docs/npmPublish.md) | Publish `@nuvio/*` to npm |
+| [docs/PostHog_telemetry.md](docs/PostHog_telemetry.md) | Telemetry spec |
+| [docs/PRD.md](docs/PRD.md) | Product requirements |
+| [docs/implPlan.md](docs/implPlan.md) | Implementation plan |
+| [docs/nuvio_v0.5.3.md](docs/nuvio_v0.5.3.md) | Current npm release notes |
+
+### Monorepo setup
 
 ```bash
 corepack enable
@@ -90,72 +256,51 @@ pnpm install
 pnpm build
 ```
 
-## Demo app
+### Demo app (from repo root)
 
 ```bash
 pnpm --filter @nuvio/demo-app dev
+# or
+pnpm dev   # builds packages, then starts demo-app
 ```
 
-Open the printed localhost URL. Turn **Edit on** in the Nuvio chip:
+Open the printed localhost URL. Turn **Edit on** in the chip to try selection, Preview, Apply, and Undo.
 
-- **Hover / click** indexed elements (`data-nuvio-id`)
-- **Editor** panel: computed styles, source file:line, text + Tailwind edits
-- **Validate → Apply → Undo last** (style edits require Validate first)
-- **Full MVP:** layout/effect controls (gap, width, opacity, shadow, …), **Move up/down** on flex/grid siblings, **Hide / Show / Duplicate**, **Indexed elements** list
-- **Drag / collapse** the Editor panel and Nuvio chip (layout saved in `localStorage`)
+**Quick test:** select a card under **Haider Ali** → **Move down** → **Undo last** if needed.
 
-**Wire protocol v5** (v0.2 monorepo): index v2 metadata + diagnostics. **v4** on npm `0.1.0`: `moveSibling`, `setHidden`, `duplicateHost`. Rebuild packages (`pnpm build`) after upgrading.
+TailAdmin dogfood: `pnpm dev:tailadmin`
 
-### Full MVP quick test (demo app)
+### Scripts
 
-1. Select a card under **Haider Ali**
-2. **Move down** — cards swap in the row (auto-applies to `App.tsx`)
-3. **Undo last** on the Nuvio chip if needed
+| Script | Description |
+| ------ | ----------- |
+| `pnpm build` | Build all `packages/*` |
+| `pnpm typecheck` | Typecheck packages and apps |
+| `pnpm test` | Run package tests |
+| `pnpm dogfood` | Build + typecheck + test + demo production build |
+| `pnpm test:cli` | CLI test suite |
+| `pnpm telemetry:smoke` | Live PostHog CLI smoke (maintainers) |
+| `pnpm posthog:verify` | Send a verify event to PostHog |
+| `pnpm publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
 
-**v0.2+:** overlay ships bundled CSS + Shadow DOM — `apps/demo-app` no longer lists `@nuvio/overlay` in Tailwind `content`. **0.1.x on npm:** still requires that `content` line (see [COMPATIBILITY.md](docs/COMPATIBILITY.md)).
+---
 
-### `nuvio()` plugin options (optional)
+## Built With AI
 
-```ts
-// vite.config.ts
-nuvio({
-  scanGlobs: ["src/**/*.{tsx,jsx}"],
-  verbose: process.env.NUVIO_VERBOSE === "1",
-});
-```
+nuvio was developed using modern AI-assisted engineering workflows.
 
-From repo root you can also run:
+Tools used during development include:
 
-```bash
-pnpm dev
-```
+- Cursor Agent
+- Claude
+- ChatGPT
 
-(which builds packages, then starts the demo).
+AI accelerated implementation, while product direction, architecture, and final decisions remained human-led.
 
-### Troubleshooting: `0 ids` in the index
-
-If the Nuvio chip shows **`Index vN 0 ids`**, the source scanner did not find any TSX/JSX under the resolved app root (often a wrong root when cwd differs from the app folder). Restart dev after `pnpm build`; check the terminal for **`[Nuvio] No TSX/JSX files matched`** or enable **`nuvio({ verbose: true })`** to print `index root=… matchedFiles=…`.
-
-### Troubleshooting: TypeScript “Cannot find module 'react'” / JSX errors in `App.tsx`
-
-The editor type-checks against **`node_modules`**. Run **`pnpm install` from the monorepo root** (the folder that contains `pnpm-workspace.yaml`). If install was interrupted or `node_modules` was deleted, you will see missing `react`, missing `@nuvio/overlay`, and cascading JSX errors until dependencies are restored. After install, reload the VS Code / Cursor window if diagnostics stay stale.
-
-This repo uses **`.npmrc`** with **`public-hoist-pattern`** for `react`, `react-dom`, and their `@types` so a copy also appears under the **root** `node_modules`. That helps the TypeScript language service when it resolves modules from the repo root. If you still see **Cannot find module 'react'**, run **`pnpm install`** again from the root after pulling changes.
-
-The demo app’s `tsconfig.json` maps **`@nuvio/overlay`** and **`@nuvio/vite-plugin`** to package **source** so types resolve even before `packages/*/dist` is built; runtime still comes from the workspace packages as usual.
-
-## Scripts
-
-| Script        | Description                                      |
-| ------------- | ------------------------------------------------ |
-| `pnpm build`  | Build all `packages/*` (tsup → `dist`)           |
-| `pnpm typecheck` | Typecheck every package and app               |
-| `pnpm test`   | Run Vitest in packages that define tests         |
-| `pnpm dogfood` | Build + typecheck + test + demo production build (release gate) |
-| `pnpm dev:tailadmin` | Build packages + TailAdmin dogfood app (`apps/tailadmin-dogfood`) |
-| `pnpm publish:stable` | Publish `@nuvio/*` to npm **`latest`** (maintainers) |
-| `pnpm publish:alpha` | Publish with **`alpha`** dist-tag (maintainers) |
+---
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT
