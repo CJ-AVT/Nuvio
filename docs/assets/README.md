@@ -2,6 +2,7 @@
 
 | File | Use |
 | ---- | --- |
-| `nuvio.mp4` | ~1 min demo — embedded in root [README.md](../../README.md) |
+| `nuvio.gif` | ~1 min demo — embedded in root [README.md](../../README.md) |
+| `nuvio.mp4` | Full-quality source (optional; not embedded in README) |
 
-Recommended export: MP4 (H.264), 1280×720 or 1920×1080, under ~15 MB for fast GitHub README loads.
+Recommended GIF export: under ~5 MB for fast GitHub README loads.

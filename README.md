@@ -28,9 +28,7 @@ Dev-only. Nothing runs in production.
 
 **Edit on → click an element → Preview Changes → Apply to Code** (about 1 minute).
 
-<video src="docs/assets/nuvio.mp4" width="100%" controls playsinline>
-  <a href="docs/assets/nuvio.mp4">Watch the nuvio demo video</a>
-</video>
+<img src="docs/assets/nuvio.gif" width="100%" alt="nuvio demo: Edit on → click an element → Preview Changes → Apply to Code" />
 
 Try it yourself after [Quick Start](#quick-start), or run the maintainer demo app:
 
@@ -40,7 +38,7 @@ pnpm build && pnpm --filter @nuvio/demo-app dev
 
 Open `http://localhost:5174` → nuvio chip → **Edit on**.
 
-Asset path: [docs/assets/nuvio.mp4](docs/assets/nuvio.mp4) · More captures: [docs/screenshots/v0.5/README.md](docs/screenshots/v0.5/README.md)
+Asset path: [docs/assets/nuvio.gif](docs/assets/nuvio.gif) · More captures: [docs/screenshots/v0.5/README.md](docs/screenshots/v0.5/README.md)
 
 ---
 
