@@ -290,7 +290,6 @@ nuvio was developed using modern AI-assisted engineering workflows.
 Tools used during development include:
 
 - Cursor Agent
-- Claude
 - ChatGPT
 
 AI accelerated implementation, while product direction, architecture, and final decisions remained human-led.
