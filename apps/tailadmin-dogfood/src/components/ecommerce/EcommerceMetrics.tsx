@@ -11,7 +11,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.customers.card"
-        className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 xl:text-red-700 dark:border-gray-800 dark:bg-white/[0.03]"
+        className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 xl:text-red-700 xl:bg-red-300 dark:border-gray-800 dark:bg-white/[0.03]"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
@@ -23,7 +23,7 @@ export default function EcommerceMetrics() {
               data-nuvio-id="metric.customers.label"
               className="text-sm text-gray-500 xl:bg-white xl:text-lg dark:text-gray-400"
             >
-              Customers
+              Customers Purchases
             </span>
             <h4
               data-nuvio-id="metric.customers.value"
@@ -43,7 +43,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.orders.card"
-        className="rounded-2xl border border-gray-200 bg-white p-5 xl:rounded-xl xl:p-2 xl:bg-red-200 dark:border-gray-800 dark:bg-white/[0.03]"
+        className="rounded-2xl border border-gray-200 bg-white p-5 xl:rounded-xl xl:p-2 xl:bg-zinc-400 dark:border-gray-800 dark:bg-white/[0.03]"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
@@ -60,7 +60,7 @@ export default function EcommerceMetrics() {
               data-nuvio-id="metric.orders.value"
               className="mt-2 font-bold text-title-sm xl:text-green-600 dark:text-white/90"
             >
-              5,35911 00
+              5,35911
             </h4>
           </div>
 
