@@ -31,11 +31,14 @@ Production-ready path: init → click-to-tag → apply, with library support and
 ```bash
 pnpm install
 pnpm build && pnpm typecheck && pnpm test
-pnpm dogfood
-pnpm v10:acceptance
+pnpm dogfood          # ✓ verified
+pnpm v10:acceptance   # ✓ verified
+pnpm telemetry:smoke  # ✓ verified
 ```
 
-Manual: `pnpm dev:tailadmin` → edit → apply. Fresh machine: `pnpm dlx @nuvio/cli init --yes` on clean Vite app.
+Manual: `pnpm dev:tailadmin` → edit → apply. Fresh machine: `pnpm dlx @nuvio/cli init --yes` on clean Vite app (post-publish).
+
+**Telemetry smoke:** `pnpm telemetry:smoke` ✓ (CLI events reach PostHog).
 
 ## Publish (human steps)
 
