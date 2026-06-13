@@ -1,0 +1,16 @@
+node_modules
+dist
+.turbo
+.pnpm-store
+*.log
+.DS_Store
+coverage
+.env
+.env.*
+apps/demo-app/dist
+
+# npm 2FA recovery codes
+npm_recovery_codes.txt
+
+# Local documentation (not published to GitHub)
+docs/mds/

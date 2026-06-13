@@ -11,6 +11,8 @@ import {
   type RefObject,
 } from "react";
 import type {
+  BrandApplyAction,
+  BrandConfig,
   Breakpoint,
   DuplicateIdError,
   IndexWireEntry,
@@ -18,6 +20,7 @@ import type {
   RuntimeDiagnostics,
   TextWireTarget,
 } from "@nuvio/shared";
+import { resolveBrandCategoryForEntry } from "@nuvio/shared";
 import type { Point } from "./overlay-chrome-storage.js";
 import { useChromeDrag } from "./useChromeDrag.js";
 import { usePrevious } from "./use-previous.js";
@@ -75,7 +78,15 @@ import { detectTableMode } from "./table-panel.js";
 import { LAYOUT_HELPERS } from "./layout-helpers.js";
 import { presetsForContext, applyStylePresetToPicks, QUICK_TEXT_STYLE_PRESETS } from "./style-presets.js";
 import { HandoffActionBar } from "./handoff-actions.js";
-import { SimpleModeActionBar } from "./simple-mode-actions.js";
+import {
+  NUVO_PREVIEW_ON_PAGE_LABEL,
+  SimpleModeActionBar,
+  type PreviewOrigin,
+} from "./simple-mode-actions.js";
+import type { BrandBulkAppliedByAction, BrandBulkProgress } from "./brand-bulk-session.js";
+import { BrandKitPanel } from "./brand-kit-panel.js";
+import { EditorPanelTabs, type EditorPanelTab } from "./editor-panel-tabs.js";
+import { captureBrandKitOpened } from "./brand-kit-telemetry.js";
 import { OnboardingGuide } from "./OnboardingGuide.js";
 import { buildHumanPreviewLines, formatHumanPreviewBlock } from "./human-preview.js";
 import { mapSelectOptionsForSimpleMode, type SimpleOptionCategory } from "./simple-option-labels.js";
@@ -98,10 +109,24 @@ import { BACKGROUND_COLOR_OPTIONS, TEXT_COLOR_OPTIONS } from "./tailwind-color-o
 import { classNameHasResponsiveUtilities } from "./tailwind-token-read.js";
 
 /** Shared action labels — same in Simple Mode and Developer details. */
-export const NUVO_PREVIEW_CHANGES_LABEL = "Preview Changes";
+/** @deprecated Use {@link NUVO_VALIDATE_CHANGES_LABEL}. Kept for downstream importers. */
+export const NUVO_PREVIEW_CHANGES_LABEL = "Validate Changes";
+
+export const NUVO_VALIDATE_CHANGES_LABEL = "Validate Changes";
+
+const BRAND_CATEGORY_STRIP_LABELS: Record<BrandApplyAction, string> = {
+  button: "Button",
+  card: "Card",
+  heading: "Heading",
+  text: "Text",
+  table: "Table",
+  form: "Form",
+  badge: "Badge",
+};
 export const NUVO_APPLY_TO_CODE_LABEL = "Apply to Code";
 
 export type PropertyPanelShellProps = {
+  editMode: boolean;
   devicePreset: "desktop" | "tablet" | "mobile";
   onDevicePresetChange: (preset: "desktop" | "tablet" | "mobile") => void;
   activeBreakpoint: Breakpoint;
@@ -127,10 +152,29 @@ export type PropertyPanelShellProps = {
   undoStackDepth: number;
   previewBusy: boolean;
   onStagedPatchFingerprint: (fingerprint: string) => void;
-  onRequestPreview: (ops: PatchOp[], patchHostId: string) => void;
+  onRequestPreview: (ops: PatchOp[], patchHostId: string, origin?: PreviewOrigin) => void;
+  onRequestBrandBulkPreview: (
+    action: BrandApplyAction,
+    brandConfig: BrandConfig,
+    targets: Array<{ hostId: string; ops: PatchOp[] }>,
+    summaryLabel: string,
+  ) => void;
+  onRequestBrandBulkApply: () => void;
+  onBrandSaved: () => void;
+  onBrandDraftChange: (draft: BrandConfig) => void;
   onRequestApply: (ops: PatchOp[], patchHostId: string) => void;
   onRequestUndo: () => void;
   onCancelPreview: () => void;
+  previewOrigin: PreviewOrigin;
+  brandPreviewSummary: string | null;
+  brandBulkProgress: BrandBulkProgress | null;
+  brandBulkApplyReady: boolean;
+  brandBulkValidatedAction: BrandApplyAction | null;
+  brandBulkValidatedConfig: BrandConfig | null;
+  brandBulkAppliedByAction: BrandBulkAppliedByAction;
+  brandPagePreviewActive: boolean;
+  onRequestBrandPagePreview: () => void;
+  onRevertBrandPagePreview: () => void;
   shellRef: RefObject<HTMLElement | null>;
   panelCollapsed: boolean;
   panelPosition: Point | null;
@@ -300,6 +344,7 @@ function DeviceBreakpointPanel({
 }
 
 export function PropertyPanelShell({
+  editMode,
   devicePreset,
   onDevicePresetChange,
   activeBreakpoint,
@@ -323,9 +368,23 @@ export function PropertyPanelShell({
   previewBusy,
   onStagedPatchFingerprint,
   onRequestPreview,
+  onRequestBrandBulkPreview,
+  onRequestBrandBulkApply,
+  onBrandSaved,
+  onBrandDraftChange,
   onRequestApply,
   onRequestUndo,
   onCancelPreview,
+  previewOrigin,
+  brandPreviewSummary,
+  brandBulkProgress,
+  brandBulkApplyReady,
+  brandBulkValidatedAction,
+  brandBulkValidatedConfig,
+  brandBulkAppliedByAction,
+  brandPagePreviewActive,
+  onRequestBrandPagePreview,
+  onRevertBrandPagePreview,
   shellRef,
   panelCollapsed,
   panelPosition,
@@ -349,6 +408,9 @@ export function PropertyPanelShell({
   const selectedIdRef = useRef<string | null>(null);
   const autoValidateTimerRef = useRef<number | null>(null);
   const lastAutoValidatedFpRef = useRef<string | null>(null);
+  const prevStagedFpForBrandRef = useRef<string | null>(null);
+  const [brandPreviewClearedNotice, setBrandPreviewClearedNotice] = useState<string | null>(null);
+  const [editorTab, setEditorTab] = useState<EditorPanelTab>("brand");
   const [missing, setMissing] = useState(false);
   const [patchTargetError, setPatchTargetError] = useState<string | null>(null);
   const [styleTargetMode, setStyleTargetMode] = useState<StyleTargetMode>("container");
@@ -366,6 +428,13 @@ export function PropertyPanelShell({
   const dismissOnboardingGuide = useCallback((id: OnboardingGuideId) => {
     setDismissedGuides(dismissGuide(id));
   }, []);
+
+  const prevEditMode = usePrevious(editMode);
+  useEffect(() => {
+    if (editMode && !prevEditMode) {
+      setEditorTab("brand");
+    }
+  }, [editMode, prevEditMode]);
 
   const setShellElement = useCallback(
     (el: HTMLElement | null) => {
@@ -434,13 +503,20 @@ export function PropertyPanelShell({
     );
   }, [baselinePicks, baselineText, developerDetails, draftText, picks]);
 
-  const previewButtonLabel = NUVO_PREVIEW_CHANGES_LABEL;
+  const previewButtonLabel = NUVO_VALIDATE_CHANGES_LABEL;
   const applyButtonLabel = NUVO_APPLY_TO_CODE_LABEL;
   const simpleMode = !developerDetails;
   const selectionTitle =
     selectedId && selectedEntry
       ? formatSelectionTitle(selectedId, selectedEntry, indexEntries)
       : null;
+
+  const selectionBrandCategory = useMemo(() => {
+    if (!selectedEntry) {
+      return null;
+    }
+    return resolveBrandCategoryForEntry(selectedEntry);
+  }, [selectedEntry]);
   const showEditSection =
     selectedId &&
     !missing &&
@@ -704,8 +780,8 @@ export function PropertyPanelShell({
     if (hasText && hasStyle && patchTextId !== patchStyleId) {
       return {
         error: developerDetails
-          ? "Text and styles target different elements. Preview and apply text first, then edit styles (or pick a single element in Edit target)."
-          : "Text and styles apply to different parts. Preview text first, then change styles.",
+          ? "Text and styles target different elements. Validate and apply text first, then edit styles (or pick a single element in Edit target)."
+          : "Text and styles apply to different parts. Validate text first, then change styles.",
       };
     }
     const id = hasText ? patchTextId! : patchStyleId!;
@@ -857,7 +933,13 @@ export function PropertyPanelShell({
       autoValidateTimerRef.current = null;
     }
     // Debounce style-only validate for slider/color/select changes.
-    if (!selectedId || stagedOps.length === 0 || hasTextChange || patchActionsDisabled) {
+    if (
+      !selectedId ||
+      stagedOps.length === 0 ||
+      hasTextChange ||
+      patchActionsDisabled ||
+      previewOrigin === "brand"
+    ) {
       return;
     }
     if (lastAutoValidatedFpRef.current === stagedOpsFingerprint) {
@@ -880,7 +962,29 @@ export function PropertyPanelShell({
     selectedId,
     stagedOps,
     stagedOpsFingerprint,
+    previewOrigin,
   ]);
+  useEffect(() => {
+    if (previewOrigin !== "brand") {
+      prevStagedFpForBrandRef.current = stagedOpsFingerprint;
+      return;
+    }
+    if (
+      prevStagedFpForBrandRef.current != null &&
+      prevStagedFpForBrandRef.current !== stagedOpsFingerprint
+    ) {
+      onCancelPreview();
+      setBrandPreviewClearedNotice("Manual edits changed — validate brand style again if needed.");
+    }
+    prevStagedFpForBrandRef.current = stagedOpsFingerprint;
+  }, [onCancelPreview, previewOrigin, stagedOpsFingerprint]);
+
+  useEffect(() => {
+    if (previewOrigin === "brand") {
+      setBrandPreviewClearedNotice(null);
+    }
+  }, [previewOrigin, previewValidatedFingerprint]);
+
   /** Structural ops (move/hide/duplicate) do not require style/text staging. */
   const structuralActionsDisabled =
     !channelReady ||
@@ -897,7 +1001,13 @@ export function PropertyPanelShell({
     previewValidatedFingerprint != null &&
     !previewError &&
     !previewBusy;
-  const applyDisabled = !applyReady;
+  const applyDisabled = !applyReady && !brandBulkApplyReady;
+  const brandApplyReady =
+    brandBulkApplyReady ||
+    (previewOrigin === "brand" &&
+      applyReady &&
+      previewValidatedOps != null &&
+      previewValidatedOps.length > 0);
   const previewReady =
     hasStagedOps &&
     previewValidatedFingerprint === stagedOpsFingerprint &&
@@ -1227,46 +1337,88 @@ export function PropertyPanelShell({
           </button>
         </header>
         {developerDetails ? <EditorStackVersions diagnostics={runtimeDiagnostics} /> : null}
+        <EditorPanelTabs
+          active={editorTab}
+          onChange={(tab) => {
+            if (editorTab === "brand" && tab !== "brand") {
+              onRevertBrandPagePreview();
+            }
+            setEditorTab(tab);
+            if (tab === "brand") {
+              captureBrandKitOpened();
+            }
+          }}
+        />
         <div className="nuvio-panel-body">
-          {showWelcome ? (
+          {showWelcome && editorTab === "edit" ? (
             <OnboardingGuide
               guideId="welcome"
               variant="welcome"
               onDismiss={() => dismissOnboardingGuide("welcome")}
             />
           ) : null}
-          <div className="nuvio-selection-strip">
-            {selectedId ? (
-              developerDetails ? (
-                <>
-                  <span className="nuvio-selection-strip-id">{selectedId}</span>
-                  {resolvedFile ? (
-                    <span className="nuvio-selection-strip-path">
-                      {resolvedFile}
-                      {resolvedLine != null ? `:${resolvedLine}` : ""}
+          {editorTab !== "brand" || (selectedId && !missing) ? (
+            <div className="nuvio-selection-strip">
+              {editorTab === "brand" ? (
+                developerDetails ? (
+                  <>
+                    <span className="nuvio-brand-selection-label">
+                      {selectionBrandCategory
+                        ? `${BRAND_CATEGORY_STRIP_LABELS[selectionBrandCategory]} ·`
+                        : "Inspecting"}
                     </span>
-                  ) : null}
-                </>
+                    <span className="nuvio-selection-strip-id">{selectedId}</span>
+                    {resolvedFile ? (
+                      <span className="nuvio-selection-strip-path">
+                        {resolvedFile}
+                        {resolvedLine != null ? `:${resolvedLine}` : ""}
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <span className="nuvio-brand-selection-label">
+                      {selectionBrandCategory
+                        ? `${BRAND_CATEGORY_STRIP_LABELS[selectionBrandCategory]} ·`
+                        : "Inspecting"}
+                    </span>
+                    <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
+                      {selectionTitle}
+                    </span>
+                  </>
+                )
+              ) : selectedId ? (
+                developerDetails ? (
+                  <>
+                    <span className="nuvio-selection-strip-id">{selectedId}</span>
+                    {resolvedFile ? (
+                      <span className="nuvio-selection-strip-path">
+                        {resolvedFile}
+                        {resolvedLine != null ? `:${resolvedLine}` : ""}
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
+                      {selectionTitle}
+                    </span>
+                    {taskRouter.backNav ? (
+                      <button
+                        type="button"
+                        className="nuvio-back-link"
+                        onClick={taskRouter.backNav.onBack}
+                      >
+                        {taskRouter.backNav.label}
+                      </button>
+                    ) : null}
+                  </>
+                )
               ) : (
-              <>
-                <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
-                  {selectionTitle}
-                </span>
-                {taskRouter.backNav ? (
-                  <button
-                    type="button"
-                    className="nuvio-back-link"
-                    onClick={taskRouter.backNav.onBack}
-                  >
-                    {taskRouter.backNav.label}
-                  </button>
-                ) : null}
-              </>
-            )
-            ) : (
-              <span className="nuvio-text-muted">Click something on the page to edit it.</span>
-            )}
-          </div>
+                <span className="nuvio-text-muted">Click something on the page to edit it.</span>
+              )}
+            </div>
+          ) : null}
         {indexIdCount === 0 ? (
           <p className="nuvio-text-xs nuvio-text-warn">
             {developerDetails ? "Index empty — restart dev server." : getSimpleIndexEmptyMessage()}
@@ -1279,6 +1431,63 @@ export function PropertyPanelShell({
           <p className="nuvio-text-xs nuvio-text-error">{getSimpleSelectErrorMessage(selectError)}</p>
         ) : null}
 
+        {editorTab === "brand" ? (
+          <>
+            <BrandKitPanel
+              channelReady={channelReady}
+              selectedId={selectedId}
+              selectedEntry={selectedEntry}
+              selectionMissing={Boolean(selectedId && missing)}
+              styleHostId={patchStyleId ?? selectedId}
+              developerDetails={developerDetails}
+              embeddedInTab
+              activeBreakpoint={activeBreakpoint}
+              styleResyncVersion={stagedVersion}
+              indexEntries={indexEntries}
+              knownIds={knownIds}
+              duplicateErrors={duplicateErrors}
+              brandBulkProgress={brandBulkProgress}
+              brandBulkAppliedByAction={brandBulkAppliedByAction}
+              brandBulkApplyReady={brandBulkApplyReady}
+              brandBulkValidatedAction={brandBulkValidatedAction}
+              brandBulkValidatedConfig={brandBulkValidatedConfig}
+              onRequestBrandBulkPreview={onRequestBrandBulkPreview}
+              onBrandSaved={onBrandSaved}
+              onBrandDraftChange={onBrandDraftChange}
+            />
+            {brandPreviewClearedNotice ? (
+              <p className="nuvio-text-2xs nuvio-text-warn">{brandPreviewClearedNotice}</p>
+            ) : null}
+            {developerDetails && brandBulkApplyReady ? (
+              <div className="nuvio-row-wrap nuvio-pt-2">
+                <button
+                  type="button"
+                  disabled={applyDisabled}
+                  className="nuvio-button nuvio-button-primary"
+                  onClick={() => onRequestBrandBulkApply()}
+                >
+                  {applyButtonLabel}
+                </button>
+                <button
+                  type="button"
+                  disabled={!channelReady || undoStackDepth <= 0}
+                  className="nuvio-button nuvio-button-ghost"
+                  onClick={() => onRequestUndo()}
+                >
+                  Undo
+                </button>
+                <button
+                  type="button"
+                  className="nuvio-button nuvio-button-ghost"
+                  onClick={() => onCancelPreview()}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
         {selectedEntry ? (
           developerDetails ? (
             <SelectionMetadata entry={selectedEntry} />
@@ -1489,7 +1698,7 @@ export function PropertyPanelShell({
               <p className="nuvio-banner nuvio-banner--info nuvio-text-2xs">
                 {developerDetails
                   ? "Validating patch with the dev server…"
-                  : "Checking your changes…"}
+                  : "Validating your changes…"}
               </p>
             ) : null}
             {lastPatchError ? (
@@ -1513,13 +1722,13 @@ export function PropertyPanelShell({
               </p>
             ) : null}
             {hasStagedOps && !displayPatchBlockedReason && previewApplyMismatch && simpleMode ? (
-              <p className="nuvio-text-2xs nuvio-text-muted">Preview your changes before applying.</p>
+              <p className="nuvio-text-2xs nuvio-text-muted">Validate your changes before applying.</p>
             ) : null}
             {patchTargetConflict ? (
               <p className="nuvio-banner nuvio-banner--warn nuvio-text-2xs nuvio-leading-snug">
                 {developerDetails
-                  ? "Text and styles apply to different elements. Preview text first, then change styles — or pick one target in Edit target."
-                  : "Text and styles apply to different parts. Preview text first, then change styles."}
+                  ? "Text and styles apply to different elements. Validate text first, then change styles — or pick one target in Edit target."
+                  : "Text and styles apply to different parts. Validate text first, then change styles."}
               </p>
             ) : null}
             {patchTargetError ? (
@@ -1939,75 +2148,6 @@ export function PropertyPanelShell({
           </section>
         ) : null}
 
-        {simpleMode &&
-        selectedId &&
-        (displayPreviewError ||
-          displayPatchBlockedReason ||
-          (selectedEntry?.riskLevel === "unsupported" && selectedEntry?.textEditable !== true)) ? (
-          <HandoffActionBar
-            reason={
-              displayPreviewError ??
-              displayPatchBlockedReason ??
-              getSimpleBlockedEditFallback(selectedId, selectedEntry)
-            }
-            simpleMode
-            suggestedAction={getPlainPatchAction(
-              displayPreviewError ?? displayPatchBlockedReason ?? "unsupported",
-            )}
-            hostId={selectedId ?? ""}
-            file={resolvedFile}
-            line={resolvedLine}
-            componentName={selectedEntry?.componentName}
-            tableContext={detectTableMode(selectedEntry)}
-            onSwitchTarget={() => {
-              const target = textTargets.find((t) => t.textEditable && t.nuvioId);
-              if (target?.nuvioId) {
-                onSelectIndexedId(target.nuvioId);
-              }
-            }}
-            onAddIdHint={() => {
-              void copyTextToClipboard(MAKE_TABLE_EDITABLE_SNIPPET);
-            }}
-            onChangeBreakpoint={() => onActiveBreakpointChange("base")}
-          />
-        ) : null}
-
-        {simpleMode && selectedId && !missing ? (
-          <SimpleModeActionBar
-            previewLabel={previewButtonLabel}
-            applyLabel={applyButtonLabel}
-            previewBusy={previewBusy && !structuralPreviewActive}
-            previewDisabled={patchActionsDisabled}
-            applyDisabled={applyDisabled}
-            undoDisabled={!channelReady || undoStackDepth <= 0}
-            hasStagedOps={hasStagedOps}
-            previewReady={previewReady}
-            humanPreviewBlock={humanPreviewBlock}
-            structuralPreviewActive={structuralPreviewActive}
-            onPreview={() => {
-              const resolved = resolvePatchApplyId();
-              if ("error" in resolved) {
-                setPatchTargetError(resolved.error);
-                return;
-              }
-              setPatchTargetError(null);
-              onRequestPreview(stagedOps, resolved.id);
-            }}
-            onApply={() => {
-              if (previewValidatedOps?.length) {
-                const resolved = resolvePatchApplyId();
-                if ("error" in resolved) {
-                  setPatchTargetError(resolved.error);
-                  return;
-                }
-                setPatchTargetError(null);
-                onRequestApply([...previewValidatedOps], resolved.id);
-              }
-            }}
-            onUndo={() => onRequestUndo()}
-          />
-        ) : null}
-
         {simpleMode && selectedId ? (
           <details className="nuvio-card nuvio-advanced-panel">
             <summary className="nuvio-section-title nuvio-advanced-summary">Advanced</summary>
@@ -2111,6 +2251,89 @@ export function PropertyPanelShell({
           </section>
         ) : null}
           </>
+        ) : null}
+          </>
+        )}
+
+        {simpleMode &&
+        selectedId &&
+        (displayPreviewError ||
+          displayPatchBlockedReason ||
+          (selectedEntry?.riskLevel === "unsupported" && selectedEntry?.textEditable !== true)) ? (
+          <HandoffActionBar
+            reason={
+              displayPreviewError ??
+              displayPatchBlockedReason ??
+              getSimpleBlockedEditFallback(selectedId, selectedEntry)
+            }
+            simpleMode
+            suggestedAction={getPlainPatchAction(
+              displayPreviewError ?? displayPatchBlockedReason ?? "unsupported",
+            )}
+            hostId={selectedId ?? ""}
+            file={resolvedFile}
+            line={resolvedLine}
+            componentName={selectedEntry?.componentName}
+            tableContext={detectTableMode(selectedEntry)}
+            onSwitchTarget={() => {
+              const target = textTargets.find((t) => t.textEditable && t.nuvioId);
+              if (target?.nuvioId) {
+                onSelectIndexedId(target.nuvioId);
+              }
+            }}
+            onAddIdHint={() => {
+              void copyTextToClipboard(MAKE_TABLE_EDITABLE_SNIPPET);
+            }}
+            onChangeBreakpoint={() => onActiveBreakpointChange("base")}
+          />
+        ) : null}
+
+        {simpleMode &&
+        ((editorTab === "brand" && brandBulkApplyReady) ||
+          (editorTab !== "brand" && selectedId && !missing)) ? (
+          <SimpleModeActionBar
+            previewLabel={previewButtonLabel}
+            applyLabel={applyButtonLabel}
+            previewBusy={previewBusy && !structuralPreviewActive}
+            previewDisabled={patchActionsDisabled}
+            applyDisabled={applyDisabled}
+            undoDisabled={!channelReady || undoStackDepth <= 0}
+            hasStagedOps={hasStagedOps}
+            previewReady={previewReady}
+            humanPreviewBlock={humanPreviewBlock}
+            structuralPreviewActive={structuralPreviewActive}
+            brandPreviewSummary={brandPreviewSummary}
+            brandApplyReady={brandApplyReady}
+            brandBulkApplyReady={brandBulkApplyReady}
+            brandBulkFlowActive={editorTab === "brand" && brandBulkApplyReady}
+            brandPagePreviewActive={brandPagePreviewActive}
+            onBrandPagePreview={() => onRequestBrandPagePreview()}
+            onPreview={() => {
+              const resolved = resolvePatchApplyId();
+              if ("error" in resolved) {
+                setPatchTargetError(resolved.error);
+                return;
+              }
+              setPatchTargetError(null);
+              onRequestPreview(stagedOps, resolved.id);
+            }}
+            onApply={() => {
+              if (brandBulkApplyReady) {
+                onRequestBrandBulkApply();
+                return;
+              }
+              if (previewValidatedOps?.length) {
+                const resolved = resolvePatchApplyId();
+                if ("error" in resolved) {
+                  setPatchTargetError(resolved.error);
+                  return;
+                }
+                setPatchTargetError(null);
+                onRequestApply([...previewValidatedOps], resolved.id);
+              }
+            }}
+            onUndo={() => onRequestUndo()}
+          />
         ) : null}
         </div>
       </div>

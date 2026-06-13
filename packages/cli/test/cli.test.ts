@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { runBrandApply } from "../src/brand-apply.js";
+import { runBrandScan } from "../src/brand-scan.js";
+import { runCoverageVerify } from "../src/coverage-verify.js";
 import { detectPackageManager } from "../src/detect-pm.js";
 import { detectProject } from "../src/detect-project.js";
 import { patchAppRootFile, resolveAppFile } from "../src/patch-app-root.js";
@@ -150,6 +153,8 @@ describe("runInit", () => {
     expect(projectHasPageTitleId(root)).toBe(true);
     expect(existsSync(join(root, "nuvio/START_HERE.md"))).toBe(true);
     expect(existsSync(join(root, "nuvio/AGENT.md"))).toBe(true);
+    expect(existsSync(join(root, "nuvio/brand.json"))).toBe(true);
+    expect(readFileSync(join(root, "nuvio/brand.json"), "utf8")).toContain('"accent": "blue"');
     const main = readFileSync(join(root, "src/main.tsx"), "utf8");
     const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
     expect(main).toContain("@nuvio/overlay/style.css");
@@ -191,5 +196,57 @@ describe("detectProject", () => {
     const ctx = detectProject(root);
     expect(ctx.viteConfigName).toBe("vite.config.ts");
     expect(ctx.tailwindOk).toBe(true);
+  });
+});
+
+describe("coverage verify", () => {
+  it("passes tailadmin dashboard PCC manifest", () => {
+    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+    const code = runCoverageVerify({
+      cwd: dogfoodRoot,
+      page: "dashboard",
+    });
+    expect(code).toBe(0);
+  });
+
+  it("passes all tailadmin PCC manifests", () => {
+    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+    const code = runCoverageVerify({
+      cwd: dogfoodRoot,
+      all: true,
+    });
+    expect(code).toBe(0);
+  });
+});
+
+describe("brand scan", () => {
+  it("passes tailadmin dashboard after brand apply", () => {
+    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+    const code = runBrandScan({
+      cwd: dogfoodRoot,
+      page: "dashboard",
+    });
+    expect(code).toBe(0);
+  });
+
+  it("passes all tailadmin PCC manifests after brand apply", () => {
+    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+    const code = runBrandScan({
+      cwd: dogfoodRoot,
+      all: true,
+    });
+    expect(code).toBe(0);
+  });
+});
+
+describe("brand apply", () => {
+  it("dry-run applies all tailadmin PCC brandable hosts", async () => {
+    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+    const code = await runBrandApply({
+      cwd: dogfoodRoot,
+      all: true,
+      dryRun: true,
+    });
+    expect(code).toBe(0);
   });
 });

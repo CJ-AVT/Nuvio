@@ -38,6 +38,40 @@ export function classNameHasResponsiveUtilities(className: string): boolean {
   return BREAKPOINT_ORDER.some((bp) => bp !== "base" && buckets[bp].length > 0);
 }
 
+/** Breakpoint implied by the live viewport (Tailwind default min-width scale). */
+export function viewportBreakpoint(): Breakpoint {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "base";
+  }
+  if (window.matchMedia("(min-width: 1280px)").matches) {
+    return "xl";
+  }
+  if (window.matchMedia("(min-width: 1024px)").matches) {
+    return "lg";
+  }
+  if (window.matchMedia("(min-width: 768px)").matches) {
+    return "md";
+  }
+  if (window.matchMedia("(min-width: 640px)").matches) {
+    return "sm";
+  }
+  return "base";
+}
+
+/**
+ * Cards often ship responsive border stacks (e.g. base accent + `xl:border-0`).
+ * Read at the viewport breakpoint so Brand Kit chips match what Tailwind paints.
+ */
+export function readBreakpointForCardInference(
+  className: string,
+  activeBreakpoint: Breakpoint,
+): Breakpoint {
+  if (!classNameHasResponsiveUtilities(className)) {
+    return activeBreakpoint;
+  }
+  return viewportBreakpoint();
+}
+
 /** Pseudo/state prefixes ignored when reading the visible style at rest (not hover/focus). */
 const INTERACTIVE_VARIANT_RE =
   /^(?:hover|focus|focus-within|active|disabled|group-hover|peer-hover|first|last|odd|even):/;

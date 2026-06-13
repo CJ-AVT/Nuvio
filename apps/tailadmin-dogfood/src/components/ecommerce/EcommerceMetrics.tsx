@@ -11,7 +11,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.customers.card"
-        className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 xl:text-red-700 xl:bg-red-300 dark:border-gray-800 dark:bg-white/[0.03]"
+        className="bg-white border border-rose-300 rounded-md p-6 md:p-6 xl:text-red-700 xl:shadow-sm xl:border-gray-200 xl:bg-white xl:border-0 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
@@ -21,13 +21,13 @@ export default function EcommerceMetrics() {
           <div>
             <span
               data-nuvio-id="metric.customers.label"
-              className="text-sm text-gray-500 xl:bg-white xl:text-lg dark:text-gray-400"
+              className="text-sm font-normal text-gray-600 xl:bg-white xl:text-sm xl:font-normal xl:text-purple-600 dark:text-gray-400"
             >
               Customers Purchases
             </span>
             <h4
               data-nuvio-id="metric.customers.value"
-              className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90"
+              className="mt-2 text-sm font-normal text-gray-600 xl:text-sm xl:font-normal xl:text-purple-600 dark:text-white/90"
             >
               3,782 00
             </h4>
@@ -43,7 +43,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.orders.card"
-        className="rounded-2xl border border-gray-200 bg-white p-5 md:p-4 md:gap-2 xl:rounded-xl xl:p-2 xl:px-4 xl:py-2 xl:shadow-md xl:bg-lime-200 dark:border-gray-800 dark:bg-white/[0.03]"
+        className="bg-white border border-rose-300 rounded-md p-6 md:p-4 md:gap-2 xl:shadow-sm xl:border-gray-200 xl:bg-white xl:border-0 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
@@ -52,13 +52,13 @@ export default function EcommerceMetrics() {
           <div>
             <span
               data-nuvio-id="metric.orders.label"
-              className="text-sm text-lime-500 dark:text-gray-400"
+              className="text-sm font-normal text-gray-600 xl:text-sm xl:font-normal xl:text-purple-600 dark:text-gray-400"
             >
               Orders
             </span>
             <h4
               data-nuvio-id="metric.orders.value"
-              className="mt-2 font-bold text-title-sm xl:text-green-600 dark:text-white/90"
+              className="mt-2 text-sm font-normal text-gray-600 xl:text-sm xl:font-normal xl:text-purple-600 dark:text-white/90"
             >
               5,35911
             </h4>

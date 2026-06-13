@@ -1,0 +1,24 @@
+page: form-elements
+route: /form-elements
+description: TailAdmin form elements demo page
+categories:
+  card:
+    required: true
+    hosts:
+      - forms.default.card
+      - forms.checkbox.card
+  heading:
+    required: true
+    hosts:
+      - form.page.title
+      - forms.default.title
+      - forms.checkbox.title
+  form:
+    required: true
+    hosts:
+      - form.email.label
+      - form.email.input
+  nav:
+    required: false
+    hosts:
+      - nav.form-elements

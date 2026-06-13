@@ -46,6 +46,10 @@ const OPACITY = /^opacity-(0|5|10|15|20|25|30|40|50|60|70|75|80|90|95|100)$/;
 /** Box shadow presets. */
 const SHADOW = /^shadow$|^shadow-(sm|md|lg|xl|2xl|inner|none)$/;
 
+/** Brand Kit v1.8 — curated hover utilities for accent steps only. */
+const HOVER_COLOR_SCALE =
+  /^hover:(bg|border)-(slate|gray|blue|green|purple|rose)-(50|100|200|300|400|500|600|700|800)$/;
+
 /** Width utilities (common scale + key fractions). */
 const W_WIDTH =
   /^w-(auto|full|screen|min|max|fit|px|0|0\.5|1|1\.5|2|2\.5|3|3\.5|4|5|6|7|8|9|10|11|12|14|16|20|24|28|32|36|40|44|48|52|56|60|64|72|80|96|1\/2|1\/3|2\/3|1\/4|3\/4)$/;
@@ -97,6 +101,7 @@ export function validateTailwindFragment(fragment: string): void {
       TRACKING.test(t) ||
       OPACITY.test(t) ||
       SHADOW.test(t) ||
+      HOVER_COLOR_SCALE.test(t) ||
       W_WIDTH.test(t) ||
       H_HEIGHT.test(t) ||
       MAX_W.test(t) ||

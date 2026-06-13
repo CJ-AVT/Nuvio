@@ -11,7 +11,16 @@ export type OverlayTelemetryEvent =
   | "apply_failed"
   | "tag_element_started"
   | "tag_element_completed"
-  | "tag_element_failed";
+  | "tag_element_failed"
+  | "brand_kit_opened"
+  | "brand_preset_changed"
+  | "brand_saved"
+  | "brand_style_previewed"
+  | "brand_style_applied"
+  | "brand_bulk_validated"
+  | "brand_bulk_applied"
+  | "brand_page_previewed"
+  | "brand_style_failed";
 
 export type TagElementFailureReason =
   | "duplicate_id"
@@ -29,6 +38,10 @@ export type ApplyFailureReason =
 
 type OverlayEventProps = {
   reason?: ApplyFailureReason | TagElementFailureReason;
+  action?: string;
+  unsavedDraft?: boolean;
+  errorCode?: string;
+  category?: string;
 };
 
 let initialized = false;
@@ -118,9 +131,21 @@ export function captureOverlayEvent(
 ): void {
   try {
     if (!ensureInitialized()) return;
-    const payload: Record<string, string> = {};
+    const payload: Record<string, string | boolean> = {};
     if (props?.reason) {
       payload.reason = props.reason;
+    }
+    if (props?.action) {
+      payload.action = props.action;
+    }
+    if (props?.unsavedDraft !== undefined) {
+      payload.unsavedDraft = props.unsavedDraft;
+    }
+    if (props?.errorCode) {
+      payload.errorCode = props.errorCode;
+    }
+    if (props?.category) {
+      payload.category = props.category;
     }
     posthog.capture(event, Object.keys(payload).length > 0 ? payload : undefined);
   } catch {

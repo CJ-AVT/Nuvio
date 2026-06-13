@@ -1,8 +1,5 @@
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
-
 export default function BasicTables() {
   return (
     <>
@@ -10,11 +7,31 @@ export default function BasicTables() {
         title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
         description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <PageBreadcrumb pageTitle="Basic Tables" />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2
+          data-nuvio-id="tables.page.title"
+          className="text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-green-600 dark:text-white/90"
+        >
+          Basic Tables
+        </h2>
+      </div>
       <div className="space-y-6">
-        <ComponentCard title="Basic Table 1">
-          <BasicTableOne />
-        </ComponentCard>
+        <div
+          data-nuvio-id="tables.basic.card"
+          className="bg-white border border-rose-300 rounded-md p-6 dark:border-gray-800 dark:bg-white/[0.03]"
+        >
+          <div className="px-6 py-5">
+            <h3
+              data-nuvio-id="tables.basic.title"
+              className="text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-green-600 dark:text-white/90"
+            >
+              Basic Table 1
+            </h3>
+          </div>
+          <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+            <BasicTableOne />
+          </div>
+        </div>
       </div>
     </>
   );

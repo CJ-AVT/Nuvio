@@ -79,4 +79,34 @@ describe("Simple Mode visibility audit (Rule 0)", () => {
     const router = readOverlayFile("task-router.tsx");
     expect(router).toContain("if (simpleMode && activeTask !== \"menu\")");
   });
+
+  it("brand kit panel copy has no engine leaks in user-facing strings", () => {
+    const panel = readOverlayFile("brand-kit-panel.tsx");
+    const jsxText = [...panel.matchAll(/>([^<>{}\n]+)</g)]
+      .map((match) => match[1]!.trim())
+      .filter(Boolean)
+      .join("\n");
+    for (const pattern of FORBIDDEN_SIMPLE_PATTERNS) {
+      expect(pattern.test(jsxText), `brand-kit-panel matched ${pattern}`).toBe(false);
+    }
+    expect(panel).toContain("Save Brand");
+  });
+
+  it("PropertyPanelShell defaults to Brand Kit when edit mode turns on", () => {
+    const shell = readOverlayFile("PropertyPanelShell.tsx");
+    expect(shell).toContain('useState<EditorPanelTab>("brand")');
+    expect(shell).toContain("if (editMode && !prevEditMode)");
+    expect(shell).toContain('setEditorTab("brand")');
+  });
+
+  it("brand kit first-run checklist uses plain-language steps", () => {
+    const checklist = readOverlayFile("brand-kit-first-run.tsx");
+    const jsxText = [...checklist.matchAll(/>([^<>{}\n]+)</g)]
+      .map((match) => match[1]!.trim())
+      .filter(Boolean)
+      .join("\n");
+    expect(jsxText).toContain("Validate all");
+    expect(jsxText).toContain("Apply to Code");
+    expect(jsxText).not.toMatch(/dryRun|mergeTailwind/);
+  });
 });

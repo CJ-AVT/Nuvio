@@ -9,7 +9,7 @@ type BadgeColor =
   | "light"
   | "dark";
 
-interface BadgeProps {
+interface BadgeProps extends React.ComponentPropsWithoutRef<"span"> {
   variant?: BadgeVariant; // Light or solid variant
   size?: BadgeSize; // Badge size
   color?: BadgeColor; // Badge color
@@ -25,6 +25,8 @@ const Badge: React.FC<BadgeProps> = ({
   startIcon,
   endIcon,
   children,
+  className,
+  ...rest
 }) => {
   const baseStyles =
     "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium";
@@ -66,7 +68,7 @@ const Badge: React.FC<BadgeProps> = ({
   const colorStyles = variants[variant][color];
 
   return (
-    <span className={`${baseStyles} ${sizeClass} ${colorStyles}`}>
+    <span className={`${baseStyles} ${sizeClass} ${colorStyles}${className ? ` ${className}` : ""}`} {...rest}>
       {startIcon && <span className="mr-1">{startIcon}</span>}
       {children}
       {endIcon && <span className="ml-1">{endIcon}</span>}

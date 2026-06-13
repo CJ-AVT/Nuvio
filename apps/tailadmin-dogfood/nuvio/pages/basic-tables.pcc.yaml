@@ -1,0 +1,21 @@
+page: basic-tables
+route: /basic-tables
+description: TailAdmin basic tables demo page
+categories:
+  card:
+    required: true
+    hosts:
+      - tables.basic.card
+  heading:
+    required: true
+    hosts:
+      - tables.page.title
+      - tables.basic.title
+  table:
+    required: true
+    hosts:
+      - tables.basic.table
+  nav:
+    required: false
+    hosts:
+      - nav.basic-tables

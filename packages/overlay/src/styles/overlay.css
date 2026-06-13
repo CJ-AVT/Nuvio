@@ -328,6 +328,557 @@
   flex: 1;
 }
 
+.nuvio-editor-tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 3px;
+  margin: 0 0 12px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nuvio-editor-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--nuvio-dim);
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.nuvio-editor-tab-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.nuvio-editor-tab-hint {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.72;
+  line-height: 1.2;
+}
+
+.nuvio-editor-tab:hover {
+  color: var(--nuvio-text-soft);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nuvio-editor-tab--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--nuvio-text);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.nuvio-editor-tab--active .nuvio-editor-tab-hint {
+  color: var(--nuvio-accent);
+  opacity: 1;
+}
+
+.nuvio-brand-kit-hint,
+.nuvio-brand-selection-label {
+  display: block;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nuvio-brand-kit-hint {
+  color: var(--nuvio-muted);
+}
+
+.nuvio-brand-selection-label {
+  margin-bottom: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-kit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nuvio-brand-kit-lead {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--nuvio-muted);
+}
+
+.nuvio-brand-first-run {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.nuvio-brand-first-run-steps {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nuvio-brand-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nuvio-brand-empty-state {
+  padding: 16px 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.nuvio-brand-empty-title {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--nuvio-text);
+}
+
+.nuvio-brand-empty-body {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-non-brandable {
+  margin: 0;
+}
+
+.nuvio-brand-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nuvio-brand-category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nuvio-brand-category-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nuvio-dim);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.nuvio-brand-category-chip:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--nuvio-text);
+}
+
+.nuvio-brand-category-chip--active {
+  border-color: rgba(96, 165, 250, 0.55);
+  background: rgba(37, 99, 235, 0.18);
+  color: #dbeafe;
+}
+
+.nuvio-brand-category-chip:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.nuvio-brand-fixed-recipe-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-presets-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nuvio-brand-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nuvio-brand-field-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nuvio-brand-chip {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--nuvio-text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.nuvio-brand-chip:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nuvio-brand-chip--active {
+  border-color: rgba(59, 130, 246, 0.55);
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(37, 99, 235, 0.28));
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.nuvio-brand-color-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.nuvio-brand-color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 4px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.nuvio-brand-color-swatch:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nuvio-brand-color-swatch--active {
+  border-color: rgba(125, 211, 252, 0.65);
+  background: rgba(59, 130, 246, 0.16);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+.nuvio-brand-color-swatch-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.nuvio-brand-color-swatch-dot--none {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.12) 4px,
+    rgba(255, 255, 255, 0.04) 4px,
+    rgba(255, 255, 255, 0.04) 8px
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.nuvio-brand-color-swatch-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--nuvio-muted);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.nuvio-brand-color-swatch--active .nuvio-brand-color-swatch-label {
+  color: var(--nuvio-text);
+}
+
+.nuvio-brand-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nuvio-brand-preview-lead {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-on-page-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--nuvio-muted);
+}
+
+.nuvio-brand-preview-canvas {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.08), transparent 36%),
+    rgba(0, 0, 0, 0.34);
+}
+
+.nuvio-brand-preview-samples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nuvio-brand-preview-button {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.nuvio-brand-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nuvio-brand-preview-heading {
+  line-height: 1.3;
+}
+
+.nuvio-brand-preview-body {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
+
+.nuvio-brand-sample-text {
+  max-width: 18rem;
+}
+
+.nuvio-brand-sample-table {
+  overflow: hidden;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.nuvio-brand-sample-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: #374151;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.nuvio-brand-sample-table-row:first-child {
+  border-top: none;
+}
+
+.nuvio-brand-sample-table-row--head {
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.nuvio-brand-sample-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.nuvio-brand-sample-form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.nuvio-brand-sample-form-input {
+  display: block;
+  width: 100%;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.nuvio-brand-sample-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.nuvio-brand-save-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.nuvio-brand-save-btn {
+  width: 100%;
+}
+
+.nuvio-brand-save-status {
+  font-size: 11px;
+  color: var(--nuvio-dim);
+  text-align: center;
+}
+
+.nuvio-brand-save-status--warn {
+  color: var(--nuvio-warning);
+}
+
+.nuvio-brand-apply {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nuvio-brand-apply-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--nuvio-warning);
+}
+
+.nuvio-brand-apply-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.nuvio-brand-apply-btn {
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--nuvio-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.nuvio-brand-apply-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--nuvio-text);
+}
+
+.nuvio-brand-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nuvio-brand-bulk-lead {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--nuvio-dim);
+}
+
+.nuvio-brand-bulk-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nuvio-brand-bulk-btn {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--nuvio-text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.nuvio-brand-bulk-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(125, 211, 252, 0.35);
+  color: var(--nuvio-text);
+}
+
+.nuvio-brand-bulk-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nuvio-brand-bulk-primary {
+  width: 100%;
+}
+
 .nuvio-toggle-details {
   flex-shrink: 0;
   max-width: 9.5rem;

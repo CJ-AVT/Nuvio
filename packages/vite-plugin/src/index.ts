@@ -11,6 +11,8 @@ import { detectProjectLibraries } from "./detect-libraries.js";
 import { handleTagElementMessage } from "./handle-tag-element.js";
 import { injectJsxLocAttributes } from "./jsx-loc-transform.js";
 import {
+  NUVIO_BRAND_PATH,
+  NUVIO_PCC_PATH,
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
   type DuplicateIdError,
@@ -22,6 +24,8 @@ import {
 import { readRuntimeVersions } from "./read-dep-version.js";
 import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
+import { handleBrandConfigHttp, brandConfigPath } from "./handle-brand-config.js";
+import { handlePccConfigHttp } from "./handle-pcc-config.js";
 import {
   buildSourceIndex,
   extractIdsFromSource,
@@ -142,6 +146,18 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
   return {
     name: "nuvio",
     apply: "serve",
+    config() {
+      if (!enabled) {
+        return {};
+      }
+      return {
+        server: {
+          watch: {
+            ignored: ["**/nuvio/brand.json"],
+          },
+        },
+      };
+    },
     transform(code, id) {
       if (!enabled) {
         return null;
@@ -594,6 +610,37 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           });
         },
       );
+
+      const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+      const brandFile = path.resolve(brandConfigPath(projectRoot));
+      if (fs.existsSync(brandFile)) {
+        server.watcher.unwatch(brandFile);
+      }
+      server.watcher.on("add", (file) => {
+        if (path.resolve(file) === brandFile) {
+          server.watcher.unwatch(file);
+        }
+      });
+
+      server.middlewares.use((req, res, next) => {
+        const url = req.url ?? "";
+        const pathname = url.split("?")[0] ?? "";
+        if (pathname === NUVIO_PCC_PATH) {
+          void handlePccConfigHttp(req, res, {
+            projectRoot,
+            writeGuardRoot,
+          });
+          return;
+        }
+        if (pathname !== NUVIO_BRAND_PATH) {
+          next();
+          return;
+        }
+        void handleBrandConfigHttp(req, res, {
+          projectRoot,
+          writeGuardRoot,
+        });
+      });
 
       rebuildIndex();
     },

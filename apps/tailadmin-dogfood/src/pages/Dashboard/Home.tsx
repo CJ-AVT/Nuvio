@@ -14,7 +14,7 @@ export default function Home() {
       />
       <h1
         data-nuvio-id="dashboard.title"
-        className="mb-4 text-2xl font-semibold text-gray-800 dark:text-white/90"
+        className="mb-4 text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-rose-600 dark:text-white/90"
       >
         Ecommerce Dashboard 1024356
       </h1>

@@ -1,4 +1,7 @@
 import { resolve } from "node:path";
+import { runBrandApply } from "./brand-apply.js";
+import { runBrandScan } from "./brand-scan.js";
+import { runCoverageVerify } from "./coverage-verify.js";
 import { runDoctor } from "./doctor.js";
 import { runInit, type InitOptions } from "./init.js";
 import { runScan } from "./scan-cmd.js";
@@ -32,6 +35,9 @@ Usage:
   nuvio doctor [options]
   nuvio scan [options]
   nuvio stats [options]
+  nuvio coverage verify [options]
+  nuvio brand scan [options]
+  nuvio brand apply [options]
 
 Common options:
   --cwd <path>          Project root (default: current directory)
@@ -51,11 +57,32 @@ Init options:
 Doctor options:
   --skip-dev-server     Skip localhost dev-server health check
 
+Coverage verify options:
+  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --manifest <path>     Explicit PCC manifest path (overrides --page)
+  --all                 Verify every manifest in nuvio/pages/
+
+Brand scan options:
+  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --manifest <path>     Explicit PCC manifest path (overrides --page)
+  --all                 Scan every manifest in nuvio/pages/
+
+Brand apply options:
+  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --manifest <path>     Explicit PCC manifest path (overrides --page)
+  --all                 Apply to every manifest in nuvio/pages/
+  --dry-run             Report targets without writing source files
+
 Examples:
   pnpm dlx @nuvio/cli init --yes
   pnpm dlx @nuvio/cli doctor
   pnpm dlx @nuvio/cli scan --json
   pnpm dlx @nuvio/cli stats
+  pnpm dlx @nuvio/cli coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+  pnpm dlx @nuvio/cli coverage verify --all --cwd apps/tailadmin-dogfood
+  pnpm dlx @nuvio/cli brand scan --page dashboard --cwd apps/tailadmin-dogfood
+  pnpm dlx @nuvio/cli brand scan --all --cwd apps/tailadmin-dogfood
+  pnpm dlx @nuvio/cli brand apply --all --cwd apps/tailadmin-dogfood
 `);
 }
 
@@ -141,19 +168,146 @@ function parseProjectCommandArgs(
   return { command, common, doctor, help };
 }
 
+function parseCoverageVerifyArgs(argv: string[]): {
+  command: string;
+  subcommand: string;
+  common: CommonCliOptions;
+  page?: string;
+  manifest?: string;
+  all?: boolean;
+  help: boolean;
+} {
+  const args = argv.slice(2);
+  const common: CommonCliOptions = { cwd: process.cwd() };
+  let help = false;
+  let page: string | undefined;
+  let manifest: string | undefined;
+  let all = false;
+  let i = 0;
+
+  if (args[0] === "coverage") {
+    i = 1;
+  }
+  const subcommand = args[i] === "verify" ? "verify" : "";
+  if (subcommand) {
+    i += 1;
+  }
+
+  for (; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "-h" || arg === "--help") {
+      help = true;
+      continue;
+    }
+    if (arg === "--json") {
+      common.json = true;
+    } else if (arg === "--verbose") {
+      common.verbose = true;
+    } else if (arg === "--cwd") {
+      common.cwd = resolve(args[++i] ?? ".");
+    } else if (arg === "--page") {
+      page = args[++i];
+    } else if (arg === "--manifest") {
+      manifest = resolve(args[++i] ?? "");
+    } else if (arg === "--all") {
+      all = true;
+    } else if (arg.startsWith("-")) {
+      console.error(`Unknown option: ${arg}`);
+      help = true;
+    }
+  }
+
+  return { command: "coverage", subcommand, common, page, manifest, all, help };
+}
+
+function parseBrandArgs(argv: string[]): {
+  command: string;
+  subcommand: "scan" | "apply" | "";
+  common: CommonCliOptions;
+  page?: string;
+  manifest?: string;
+  all?: boolean;
+  dryRun?: boolean;
+  help: boolean;
+} {
+  const args = argv.slice(2);
+  const common: CommonCliOptions = { cwd: process.cwd() };
+  let help = false;
+  let page: string | undefined;
+  let manifest: string | undefined;
+  let all = false;
+  let dryRun = false;
+  let i = 0;
+
+  if (args[0] === "brand") {
+    i = 1;
+  }
+  const subArg = args[i];
+  const subcommand = subArg === "scan" || subArg === "apply" ? subArg : "";
+  if (subcommand) {
+    i += 1;
+  }
+
+  for (; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "-h" || arg === "--help") {
+      help = true;
+      continue;
+    }
+    if (arg === "--json") {
+      common.json = true;
+    } else if (arg === "--verbose") {
+      common.verbose = true;
+    } else if (arg === "--cwd") {
+      common.cwd = resolve(args[++i] ?? ".");
+    } else if (arg === "--page") {
+      page = args[++i];
+    } else if (arg === "--manifest") {
+      manifest = resolve(args[++i] ?? "");
+    } else if (arg === "--all") {
+      all = true;
+    } else if (arg === "--dry-run") {
+      dryRun = true;
+    } else if (arg.startsWith("-")) {
+      console.error(`Unknown option: ${arg}`);
+      help = true;
+    }
+  }
+
+  return { command: "brand", subcommand, common, page, manifest, all, dryRun, help };
+}
+
 export async function runCli(argv: string[]): Promise<number> {
   registerTelemetrySignalHandlers();
   const rawCommand = argv[2] ?? null;
+  const isCoverageCmd = rawCommand === "coverage";
+  const isBrandCmd = rawCommand === "brand";
   const isProjectCmd =
-    rawCommand === "doctor" || rawCommand === "scan" || rawCommand === "stats";
+    rawCommand === "doctor" ||
+    rawCommand === "scan" ||
+    rawCommand === "stats" ||
+    isCoverageCmd ||
+    isBrandCmd;
 
   let help = false;
   let command: string | null = rawCommand;
   let initOpts: InitOptions = { cwd: process.cwd() };
   let commonOpts: CommonCliOptions = { cwd: process.cwd() };
   let doctorOpts: DoctorCliOptions = { cwd: process.cwd() };
+  let coverageOpts: ReturnType<typeof parseCoverageVerifyArgs> | null = null;
+  let brandOpts: ReturnType<typeof parseBrandArgs> | null = null;
 
-  if (isProjectCmd) {
+  if (isBrandCmd) {
+    brandOpts = parseBrandArgs(argv);
+    help = brandOpts.help;
+    command = brandOpts.command;
+    commonOpts = brandOpts.common;
+  } else if (isCoverageCmd) {
+    coverageOpts = parseCoverageVerifyArgs(argv);
+    help = coverageOpts.help;
+    command = coverageOpts.command;
+    commonOpts = coverageOpts.common;
+  } else if (isProjectCmd) {
     const parsed = parseProjectCommandArgs(argv, rawCommand!);
     help = parsed.help;
     command = parsed.command;
@@ -196,6 +350,52 @@ export async function runCli(argv: string[]): Promise<number> {
         return runScan({ cwd: commonOpts.cwd, json: commonOpts.json });
       case "stats":
         return runStats({ cwd: commonOpts.cwd, json: commonOpts.json });
+      case "coverage": {
+        if (!coverageOpts || coverageOpts.subcommand !== "verify") {
+          console.error("Usage: nuvio coverage verify --page <slug>");
+          printHelp();
+          return 1;
+        }
+        if (!coverageOpts.page && !coverageOpts.manifest && !coverageOpts.all) {
+          console.error("Either --page, --manifest, or --all is required");
+          return 2;
+        }
+        return runCoverageVerify({
+          cwd: coverageOpts.common.cwd,
+          page: coverageOpts.page,
+          manifest: coverageOpts.manifest,
+          all: coverageOpts.all,
+          json: coverageOpts.common.json,
+        });
+      }
+      case "brand": {
+        if (!brandOpts || (brandOpts.subcommand !== "scan" && brandOpts.subcommand !== "apply")) {
+          console.error("Usage: nuvio brand scan|apply --page <slug>");
+          printHelp();
+          return 1;
+        }
+        if (!brandOpts.page && !brandOpts.manifest && !brandOpts.all) {
+          console.error("Either --page, --manifest, or --all is required");
+          return 2;
+        }
+        if (brandOpts.subcommand === "scan") {
+          return runBrandScan({
+            cwd: brandOpts.common.cwd,
+            page: brandOpts.page,
+            manifest: brandOpts.manifest,
+            all: brandOpts.all,
+            json: brandOpts.common.json,
+          });
+        }
+        return runBrandApply({
+          cwd: brandOpts.common.cwd,
+          page: brandOpts.page,
+          manifest: brandOpts.manifest,
+          all: brandOpts.all,
+          dryRun: brandOpts.dryRun,
+          json: brandOpts.common.json,
+        });
+      }
       default:
         console.error(`Unknown command: ${command}`);
         printHelp();

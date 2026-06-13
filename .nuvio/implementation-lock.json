@@ -45,7 +45,7 @@
     }
   ],
   "exemptFromLock": [
-    "docs/IMPLEMENTATION_LOCK.md",
+    "docs/mds/IMPLEMENTATION_LOCK.md",
     ".nuvio/implementation-lock.json",
     ".cursor/rules/implementation-lock.mdc"
   ]

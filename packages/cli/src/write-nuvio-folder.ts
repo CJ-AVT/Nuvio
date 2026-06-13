@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { DEFAULT_BRAND_CONFIG, serializeBrandConfig } from "@nuvio/shared";
 
 /** Package root (works from `src/` in dev and `dist/` when published). */
 const CLI_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -66,6 +67,12 @@ export function writeNuvioFolder(opts: WriteFolderOptions): string[] {
       "utf8",
     );
     created.push("nuvio/SETUP_TODO.md");
+  }
+
+  const brand = join(dir, "brand.json");
+  if (!existsSync(brand)) {
+    writeFileSync(brand, `${JSON.stringify(serializeBrandConfig(DEFAULT_BRAND_CONFIG), null, 2)}\n`, "utf8");
+    created.push("nuvio/brand.json");
   }
 
   return created;

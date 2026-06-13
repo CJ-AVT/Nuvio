@@ -32,7 +32,7 @@ export function OnboardingGuide({
         <ol className="nuvio-onboarding-steps nuvio-text-2xs nuvio-text-muted">
           <li>Click an element on the page</li>
           <li>Choose what to change</li>
-          <li>Preview Changes, then Apply to Code</li>
+          <li>Validate Changes, then Apply to Code</li>
         </ol>
         <button type="button" className="nuvio-button nuvio-button-primary" onClick={onDismiss}>
           Got it

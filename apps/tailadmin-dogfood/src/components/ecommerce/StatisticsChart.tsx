@@ -148,19 +148,19 @@ export default function StatisticsChart() {
   return (
     <div
       data-nuvio-id="chart.sales"
-      className="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6"
+      className="bg-white border border-rose-300 rounded-md p-6 sm:px-6 sm:pt-6 xl:shadow-sm xl:border-gray-200 xl:bg-white xl:border-0 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
     >
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">
           <h3
             data-nuvio-id="chart.sales.title"
-            className="text-lg font-semibold text-gray-800 dark:text-white/90"
+            className="text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-rose-600 dark:text-white/90"
           >
             Statistics
           </h3>
           <p
             data-nuvio-id="chart.sales.subtitle"
-            className="mt-1 text-theme-sm xl:bg-gray-500 xl:text-sm xl:font-semibold xl:text-red-100 dark:text-gray-400"
+            className="mt-1 text-sm font-normal text-gray-600 xl:bg-slate-50 xl:text-sm xl:font-normal xl:text-purple-600 dark:text-gray-400"
           >
             Target you've set for each month 1001
           </p>

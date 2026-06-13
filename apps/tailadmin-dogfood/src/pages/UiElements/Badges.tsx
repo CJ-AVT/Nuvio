@@ -3,7 +3,6 @@ import Badge from "../../components/ui/badge/Badge";
 import { PlusIcon } from "../../icons";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-
 export default function Badges() {
   return (
     <div>
@@ -12,33 +11,54 @@ export default function Badges() {
         description="This is React.js Badges Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Badges" />
+      <h1
+        data-nuvio-id="badges.page.title"
+        className="sr-only text-lg font-semibold text-rose-600"
+      >
+        Badges
+      </h1>
       <div className="space-y-5 sm:space-y-6">
-        <ComponentCard title="With Light Background">
-          <div className="flex flex-wrap gap-4 sm:items-center sm:justify-center">
-            {/* Light Variant */}
-            <Badge variant="light" color="primary">
-              Primary
-            </Badge>
-            <Badge variant="light" color="success">
-              Success
-            </Badge>{" "}
-            <Badge variant="light" color="error">
-              Error
-            </Badge>{" "}
-            <Badge variant="light" color="warning">
-              Warning
-            </Badge>{" "}
-            <Badge variant="light" color="info">
-              Info
-            </Badge>
-            <Badge variant="light" color="light">
-              Light
-            </Badge>
-            <Badge variant="light" color="dark">
-              Dark
-            </Badge>
+        <div
+          data-nuvio-id="badges.light.card"
+          className="bg-white border border-rose-300 rounded-md p-6"
+        >
+          <div className="px-6 py-5">
+            <h3 className="text-base font-medium text-gray-800">
+              With Light Background
+            </h3>
           </div>
-        </ComponentCard>
+          <div className="border-t border-gray-100 p-4 sm:p-6">
+            <div className="flex flex-wrap gap-4 sm:items-center sm:justify-center">
+              <span
+                data-nuvio-id="badges.demo.primary"
+                className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-rose-100 text-rose-700"
+              >
+                Primary
+              </span>
+              <span
+                data-nuvio-id="badges.demo.success"
+                className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-rose-100 text-rose-700"
+              >
+                Success
+              </span>
+              <Badge variant="light" color="error">
+                Error
+              </Badge>{" "}
+              <Badge variant="light" color="warning">
+                Warning
+              </Badge>{" "}
+              <Badge variant="light" color="info">
+                Info
+              </Badge>
+              <Badge variant="light" color="light">
+                Light
+              </Badge>
+              <Badge variant="light" color="dark">
+                Dark
+              </Badge>
+            </div>
+          </div>
+        </div>
         <ComponentCard title="With Solid Background">
           <div className="flex flex-wrap gap-4 sm:items-center sm:justify-center">
             {/* Light Variant */}

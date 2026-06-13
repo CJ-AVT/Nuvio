@@ -5,9 +5,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
-
 import Badge from "../../ui/badge/Badge";
-
 interface Order {
   id: number;
   user: {
@@ -108,11 +106,13 @@ const tableData: Order[] = [
     status: "Active",
   },
 ];
-
 export default function BasicTableOne() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="max-w-full overflow-x-auto">
+      <div
+        data-nuvio-id="tables.basic.table"
+        className="overflow-x-auto max-w-full border border-rose-300 rounded-md xl:max-w-full xl:border-0 xl:rounded-md"
+      >
         <Table>
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -202,8 +202,8 @@ export default function BasicTableOne() {
                       order.status === "Active"
                         ? "success"
                         : order.status === "Pending"
-                        ? "warning"
-                        : "error"
+                          ? "warning"
+                          : "error"
                     }
                   >
                     {order.status}

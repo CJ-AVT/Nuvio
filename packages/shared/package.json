@@ -24,19 +24,24 @@
     "./secure-path": {
       "types": "./dist/secure-path.d.ts",
       "import": "./dist/secure-path.js"
+    },
+    "./load-pcc-manifest": {
+      "types": "./dist/load-pcc-manifest.d.ts",
+      "import": "./dist/load-pcc-manifest.js"
     }
   },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/index.ts src/secure-path.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/secure-path.ts src/load-pcc-manifest.ts --format esm --dts --clean",
     "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "yaml": "^2.8.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

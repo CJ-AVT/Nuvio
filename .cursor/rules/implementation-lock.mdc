@@ -6,7 +6,7 @@ alwaysApply: true
 # Implementation lock (read before any edit)
 
 Nuvio uses a **file lock manifest**: [`.nuvio/implementation-lock.json`](../../.nuvio/implementation-lock.json).  
-Human summary: [`docs/IMPLEMENTATION_LOCK.md`](../../docs/IMPLEMENTATION_LOCK.md).
+Human summary: [`docs/mds/IMPLEMENTATION_LOCK.md`](../../docs/mds/IMPLEMENTATION_LOCK.md).
 
 ## Default: locked paths are read-only
 

@@ -318,7 +318,7 @@ async function main() {
     } else {
       pass("B7-pending", "pending change after edit");
     }
-    await shadowClickByText(page, "Preview Changes");
+    await shadowClickByText(page, "Validate Changes");
     await page.waitForTimeout(4000);
     text = await panelText(page);
     assertRule0(text, "SS8");

@@ -12,6 +12,8 @@ import {
 import { createPortal } from "react-dom";
 import type {
   Breakpoint,
+  BrandApplyAction,
+  BrandConfig,
   DuplicateIdError,
   IndexWireEntry,
   PatchOp,
@@ -20,6 +22,7 @@ import type {
 import {
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
+  brandConfigsEqual,
   parseServerMessage,
 } from "@nuvio/shared";
 import { InteractionLayer } from "./InteractionLayer.js";
@@ -64,10 +67,30 @@ import {
   captureTagElementFailed,
   captureTagElementStarted,
 } from "./telemetry.js";
+import { captureBrandStyleApplied, captureBrandBulkApplied, captureBrandBulkValidated, captureBrandPagePreviewed } from "./brand-kit-telemetry.js";
+import {
+  revertBrandDomStaging,
+  stageBrandHostsOnPage,
+} from "./brand-dom-staging.js";
+import {
+  bulkProgressFromSession,
+  createBrandBulkSession,
+  groupedBulkValidateSummary,
+  type BrandBulkAppliedByAction,
+  type BrandBulkSession,
+} from "./brand-bulk-session.js";
+import type { PreviewOrigin } from "./simple-mode-actions.js";
+import type { BrandBulkProgress } from "./brand-bulk-session.js";
 
 type ChannelState = "idle" | "connecting" | "ready" | "error";
 
-type PendingPatch = { kind: "preview" | "apply"; opsFingerprint: string; ops: PatchOp[] };
+type PendingPatch = {
+  kind: "preview" | "apply";
+  opsFingerprint: string;
+  ops: PatchOp[];
+  patchHostId: string;
+  bulkSessionId?: string;
+};
 type DevicePreset = "desktop" | "tablet" | "mobile";
 
 function shortDisplayPath(absPath: string): string {
@@ -366,6 +389,24 @@ export function NuvioDevShellInner(): ReactElement {
   const lastStagedOpsFpRef = useRef<string | null>(null);
   const autoApplyStructuralRef = useRef(false);
   const [structuralPreviewActive, setStructuralPreviewActive] = useState(false);
+  const [previewOrigin, setPreviewOrigin] = useState<PreviewOrigin>(null);
+  const [brandPreviewSummary, setBrandPreviewSummary] = useState<string | null>(null);
+  const [brandBulkProgress, setBrandBulkProgress] = useState<BrandBulkProgress | null>(null);
+  const [brandBulkApplyReady, setBrandBulkApplyReady] = useState(false);
+  const [brandBulkValidatedAction, setBrandBulkValidatedAction] = useState<BrandApplyAction | null>(
+    null,
+  );
+  const [brandBulkValidatedConfig, setBrandBulkValidatedConfig] = useState<BrandConfig | null>(null);
+  const [brandBulkAppliedByAction, setBrandBulkAppliedByAction] = useState<BrandBulkAppliedByAction>({});
+  const [brandPagePreviewActive, setBrandPagePreviewActive] = useState(false);
+  const brandBulkSessionRef = useRef<BrandBulkSession | null>(null);
+  const runNextBulkPreviewRef = useRef<() => void>(() => {});
+  const runNextBulkApplyRef = useRef<() => void>(() => {});
+  const previewOriginRef = useRef<PreviewOrigin>(null);
+
+  useEffect(() => {
+    previewOriginRef.current = previewOrigin;
+  }, [previewOrigin]);
 
   useEffect(() => {
     resolvedFileRef.current = resolvedFile;
@@ -397,6 +438,8 @@ export function NuvioDevShellInner(): ReactElement {
   const toggleEditMode = useCallback(() => {
     setEditMode((prev) => {
       if (prev) {
+        revertBrandDomStaging();
+        setBrandPagePreviewActive(false);
         clearNuvioOutlines();
         setSelectedId(null);
         setUntaggedTarget(null);
@@ -408,7 +451,13 @@ export function NuvioDevShellInner(): ReactElement {
   }, []);
 
   const sendPatchMessage = useCallback(
-    (ops: PatchOp[], dryRun: boolean, patchHostId: string, bp: Breakpoint) => {
+    (
+      ops: PatchOp[],
+      dryRun: boolean,
+      patchHostId: string,
+      bp: Breakpoint,
+      bulkSessionId?: string,
+    ) => {
     const ws = wsRef.current;
     const id = patchHostId.trim() || selectedIdRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN || !id) {
@@ -416,7 +465,7 @@ export function NuvioDevShellInner(): ReactElement {
         setPreviewBusy(false);
         setPreviewError(
           !ws || ws.readyState !== WebSocket.OPEN
-            ? "Dev channel is not connected — wait for “connected” in the chip, then try Preview Changes again."
+            ? "Dev channel is not connected — wait for “connected” in the chip, then try Validate Changes again."
             : "Nothing is selected — click an element on the page first.",
         );
       } else {
@@ -434,6 +483,8 @@ export function NuvioDevShellInner(): ReactElement {
       kind: dryRun ? "preview" : "apply",
       opsFingerprint,
       ops,
+      patchHostId: id,
+      bulkSessionId,
     });
     if (dryRun) {
       setPreviewBusy(true);
@@ -465,8 +516,113 @@ export function NuvioDevShellInner(): ReactElement {
     [],
   );
 
+  const clearBrandBulkSession = useCallback(() => {
+    brandBulkSessionRef.current = null;
+    setBrandBulkProgress(null);
+    setBrandBulkApplyReady(false);
+    setBrandBulkValidatedAction(null);
+    setBrandBulkValidatedConfig(null);
+  }, []);
+
+  const onBrandDraftChange = useCallback(
+    (draft: BrandConfig) => {
+      const session = brandBulkSessionRef.current;
+      if (!session || !brandBulkApplyReady) {
+        return;
+      }
+      if (!brandConfigsEqual(draft, session.brandConfig)) {
+        revertBrandDomStaging();
+        setBrandPagePreviewActive(false);
+        clearBrandBulkSession();
+        setBrandPreviewSummary(null);
+        setPreviewSummary(null);
+      }
+    },
+    [brandBulkApplyReady, clearBrandBulkSession],
+  );
+
+  const revertBrandPagePreview = useCallback(() => {
+    revertBrandDomStaging();
+    setBrandPagePreviewActive(false);
+  }, []);
+
+  const runNextBulkPreview = useCallback(() => {
+    const session = brandBulkSessionRef.current;
+    if (!session || session.mode !== "preview") {
+      return;
+    }
+    if (session.nextPreviewIndex >= session.targets.length) {
+      setPreviewBusy(false);
+      setBrandBulkProgress(bulkProgressFromSession(session));
+      const ready = session.validated.length > 0;
+      setBrandBulkApplyReady(ready);
+      if (ready) {
+        setBrandBulkValidatedAction(session.action);
+        setBrandBulkValidatedConfig(session.brandConfig);
+      } else {
+        setBrandBulkValidatedAction(null);
+        setBrandBulkValidatedConfig(null);
+      }
+      setBrandPreviewSummary(session.summaryLabel);
+      setPreviewSummary(groupedBulkValidateSummary(session.validated));
+      if (session.failures.length > 0) {
+        setPreviewError(
+          `${session.failures.length} element${session.failures.length === 1 ? "" : "s"} could not be validated.`,
+        );
+      } else {
+        setPreviewError(null);
+      }
+      setPreviewValidatedFingerprint(null);
+      setPreviewValidatedOps(null);
+      captureBrandBulkValidated(session.action, session.validated.length, session.failures.length > 0);
+      return;
+    }
+    const target = session.targets[session.nextPreviewIndex]!;
+    setBrandBulkProgress(bulkProgressFromSession(session));
+    sendPatchMessage(target.ops, true, target.hostId, activeBreakpoint, session.sessionId);
+  }, [activeBreakpoint, sendPatchMessage]);
+
+  const runNextBulkApply = useCallback(() => {
+    const session = brandBulkSessionRef.current;
+    if (!session || session.mode !== "apply") {
+      return;
+    }
+    if (session.nextApplyIndex >= session.validated.length) {
+      setPreviewBusy(false);
+      captureBrandBulkApplied(session.action, session.validated.length);
+      setBrandBulkAppliedByAction((prev) => ({
+        ...prev,
+        [session.action]: session.brandConfig,
+      }));
+      clearBrandBulkSession();
+      setStructuralPreviewActive(false);
+      setLastPatchError(null);
+      setPreviewSummary(null);
+      setPreviewError(null);
+      setPreviewValidatedFingerprint(null);
+      setPreviewValidatedOps(null);
+      setPreviewOrigin(null);
+      setBrandPreviewSummary(null);
+      setStagedVersion((v) => v + 1);
+      return;
+    }
+    const item = session.validated[session.nextApplyIndex]!;
+    setBrandBulkProgress(bulkProgressFromSession(session));
+    sendPatchMessage(item.ops, false, item.hostId, activeBreakpoint, session.sessionId);
+  }, [activeBreakpoint, clearBrandBulkSession, sendPatchMessage]);
+
+  useEffect(() => {
+    runNextBulkPreviewRef.current = runNextBulkPreview;
+    runNextBulkApplyRef.current = runNextBulkApply;
+  }, [runNextBulkApply, runNextBulkPreview]);
+
   const onRequestPreview = useCallback(
-    (ops: PatchOp[], patchHostId: string) => {
+    (ops: PatchOp[], patchHostId: string, origin: PreviewOrigin = "panel") => {
+      clearBrandBulkSession();
+      setPreviewOrigin(origin);
+      if (origin !== "brand") {
+        setBrandPreviewSummary(null);
+      }
       setStructuralPreviewActive(false);
       autoApplyStructuralRef.current = false;
       setPreviewValidatedFingerprint(null);
@@ -476,8 +632,79 @@ export function NuvioDevShellInner(): ReactElement {
       setLastPatchError(null);
       sendPatchMessage(ops, true, patchHostId, activeBreakpoint);
     },
-    [activeBreakpoint, sendPatchMessage],
+    [activeBreakpoint, clearBrandBulkSession, sendPatchMessage],
   );
+
+  const onRequestBrandBulkPreview = useCallback(
+    (
+      action: BrandApplyAction,
+      brandConfig: BrandConfig,
+      targets: Array<{ hostId: string; ops: PatchOp[] }>,
+      summaryLabel: string,
+    ) => {
+      if (targets.length === 0) {
+        return;
+      }
+      revertBrandDomStaging();
+      setBrandPagePreviewActive(false);
+      lastStagedOpsFpRef.current = null;
+      patchPendingMapRef.current.clear();
+      if (previewTimeoutRef.current) {
+        clearTimeout(previewTimeoutRef.current);
+        previewTimeoutRef.current = null;
+      }
+      setPreviewOrigin("brand");
+      setBrandPreviewSummary(summaryLabel);
+      setPreviewValidatedFingerprint(null);
+      setPreviewValidatedOps(null);
+      setPreviewSummary(null);
+      setPreviewError(null);
+      setLastPatchError(null);
+      setStructuralPreviewActive(false);
+      autoApplyStructuralRef.current = false;
+      setBrandBulkApplyReady(false);
+      setBrandBulkValidatedAction(null);
+      setBrandBulkValidatedConfig(null);
+      const sessionId = `bulk-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
+      brandBulkSessionRef.current = createBrandBulkSession(
+        action,
+        brandConfig,
+        summaryLabel,
+        targets,
+        sessionId,
+      );
+      setBrandBulkProgress(bulkProgressFromSession(brandBulkSessionRef.current));
+      runNextBulkPreview();
+    },
+    [runNextBulkPreview],
+  );
+
+  const onRequestBrandBulkApply = useCallback(() => {
+    const session = brandBulkSessionRef.current;
+    if (!session || session.validated.length === 0) {
+      setLastPatchError("Run Validate all first — no bulk brand validation is ready.");
+      return;
+    }
+    revertBrandDomStaging();
+    setBrandPagePreviewActive(false);
+    session.mode = "apply";
+    session.nextApplyIndex = 0;
+    setLastPatchError(null);
+    setPreviewBusy(true);
+    runNextBulkApply();
+  }, [runNextBulkApply]);
+
+  const onRequestBrandPagePreview = useCallback(() => {
+    const session = brandBulkSessionRef.current;
+    if (!session || session.validated.length === 0) {
+      return;
+    }
+    const painted = stageBrandHostsOnPage(session.validated);
+    setBrandPagePreviewActive(painted > 0);
+    if (painted > 0) {
+      captureBrandPagePreviewed(session.action, painted);
+    }
+  }, []);
 
   const onRequestStructuralPreview = useCallback(
     (ops: PatchOp[]) => {
@@ -499,7 +726,7 @@ export function NuvioDevShellInner(): ReactElement {
       const fp = JSON.stringify(ops);
       if (fp !== previewValidatedFingerprint) {
         setLastPatchError(
-          "Run Preview Changes first — staged edits changed since the last successful preview.",
+          "Run Validate Changes first — staged edits changed since the last successful validation.",
         );
         return;
       }
@@ -531,13 +758,18 @@ export function NuvioDevShellInner(): ReactElement {
       clearTimeout(previewTimeoutRef.current);
       previewTimeoutRef.current = null;
     }
+    revertBrandDomStaging();
+    setBrandPagePreviewActive(false);
     setPreviewBusy(false);
     setPreviewSummary(null);
     setPreviewError(null);
     setLastPatchError(null);
     setPreviewValidatedFingerprint(null);
     setPreviewValidatedOps(null);
-  }, []);
+    setPreviewOrigin(null);
+    setBrandPreviewSummary(null);
+    clearBrandBulkSession();
+  }, [clearBrandBulkSession]);
 
   const onStagedPatchFingerprint = useCallback((fp: string) => {
     if (lastStagedOpsFpRef.current === fp) {
@@ -642,6 +874,9 @@ export function NuvioDevShellInner(): ReactElement {
       setPreviewError(null);
       setPreviewValidatedFingerprint(null);
       setPreviewValidatedOps(null);
+      setPreviewOrigin(null);
+      setBrandPreviewSummary(null);
+      clearBrandBulkSession();
       setLastPatchError(null);
       setSelectedId(id);
       setSelectError(null);
@@ -656,7 +891,7 @@ export function NuvioDevShellInner(): ReactElement {
       }
       sendSelect(id);
     },
-    [sendSelect],
+    [clearBrandBulkSession, sendSelect],
   );
 
   useEffect(() => {
@@ -799,6 +1034,28 @@ export function NuvioDevShellInner(): ReactElement {
                 previewTimeoutRef.current = null;
               }
               setPreviewBusy(false);
+              const bulkSession = brandBulkSessionRef.current;
+              if (pending.bulkSessionId && bulkSession?.sessionId === pending.bulkSessionId) {
+                if (msg.ok) {
+                  const summary =
+                    msg.diffSummary?.trim() ||
+                    "Validation OK — server did not return a change summary line.";
+                  bulkSession.validated.push({
+                    hostId: pending.patchHostId,
+                    ops: pending.ops,
+                    fingerprint: savedFp,
+                    diffSummary: summary,
+                  });
+                } else {
+                  bulkSession.failures.push({
+                    hostId: pending.patchHostId,
+                    error: msg.errorMessage ?? msg.errorCode ?? "Validation failed",
+                  });
+                }
+                bulkSession.nextPreviewIndex += 1;
+                runNextBulkPreviewRef.current();
+                return;
+              }
               if (msg.ok) {
                 const summary =
                   msg.diffSummary?.trim() ||
@@ -827,13 +1084,35 @@ export function NuvioDevShellInner(): ReactElement {
               return;
             }
             if (pending.kind === "apply") {
+              const bulkSession = brandBulkSessionRef.current;
+              if (pending.bulkSessionId && bulkSession?.sessionId === pending.bulkSessionId) {
+                setPreviewBusy(false);
+                if (msg.ok) {
+                  bulkSession.nextApplyIndex += 1;
+                  if (msg.undoStackDepth !== undefined) {
+                    setUndoStackDepth(msg.undoStackDepth);
+                  }
+                  runNextBulkApplyRef.current();
+                } else {
+                  setLastPatchError(msg.errorMessage ?? msg.errorCode ?? "Apply failed");
+                  captureApplyFailed(msg.errorCode, {
+                    duplicateIdsActive: duplicateErrorsRef.current.length > 0,
+                  });
+                }
+                return;
+              }
               if (msg.ok) {
+                if (previewOriginRef.current === "brand") {
+                  captureBrandStyleApplied();
+                }
                 setStructuralPreviewActive(false);
                 setLastPatchError(null);
                 setPreviewSummary(null);
                 setPreviewError(null);
                 setPreviewValidatedFingerprint(null);
                 setPreviewValidatedOps(null);
+                setPreviewOrigin(null);
+                setBrandPreviewSummary(null);
                 setStagedVersion((v) => v + 1);
                 if (msg.undoStackDepth !== undefined) {
                   setUndoStackDepth(msg.undoStackDepth);
@@ -858,6 +1137,7 @@ export function NuvioDevShellInner(): ReactElement {
               if (msg.undoStackDepth !== undefined) {
                 setUndoStackDepth(msg.undoStackDepth);
               }
+              setBrandBulkAppliedByAction({});
               setStagedVersion((v) => v + 1);
               setLastPatchError(null);
             } else {
@@ -983,6 +1263,7 @@ export function NuvioDevShellInner(): ReactElement {
       ) : null}
       {editMode && !untaggedTarget ? (
         <PropertyPanelShell
+          editMode={editMode}
           shellRef={panelRef}
           panelCollapsed={chromeLayout.panel.collapsed}
           panelPosition={chromeLayout.panel.position}
@@ -1011,9 +1292,29 @@ export function NuvioDevShellInner(): ReactElement {
           previewBusy={previewBusy}
           onStagedPatchFingerprint={onStagedPatchFingerprint}
           onRequestPreview={onRequestPreview}
+          onRequestBrandBulkPreview={onRequestBrandBulkPreview}
+          onRequestBrandBulkApply={onRequestBrandBulkApply}
+          onBrandSaved={() => {
+            setBrandBulkAppliedByAction({});
+            revertBrandPagePreview();
+            clearBrandBulkSession();
+            setBrandPreviewSummary(null);
+            setPreviewSummary(null);
+          }}
+          onBrandDraftChange={onBrandDraftChange}
           onRequestApply={onRequestApply}
           onRequestUndo={onRequestUndo}
           onCancelPreview={onCancelPreview}
+          previewOrigin={previewOrigin}
+          brandPreviewSummary={brandPreviewSummary}
+          brandBulkProgress={brandBulkProgress}
+          brandBulkApplyReady={brandBulkApplyReady}
+          brandBulkValidatedAction={brandBulkValidatedAction}
+          brandBulkValidatedConfig={brandBulkValidatedConfig}
+          brandBulkAppliedByAction={brandBulkAppliedByAction}
+          brandPagePreviewActive={brandPagePreviewActive}
+          onRequestBrandPagePreview={onRequestBrandPagePreview}
+          onRevertBrandPagePreview={revertBrandPagePreview}
           runtimeDiagnostics={runtimeDiagnostics}
           developerDetails={developerDetails}
           onDeveloperDetailsChange={onDeveloperDetailsChange}

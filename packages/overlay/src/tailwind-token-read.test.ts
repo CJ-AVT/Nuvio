@@ -5,7 +5,31 @@ import {
   isBgColorUtility,
   isTextColorUtility,
   lastMatchingToken,
+  readBreakpointForCardInference,
+  viewportBreakpoint,
 } from "./tailwind-token-read.js";
+
+describe("readBreakpointForCardInference", () => {
+  it("uses viewport breakpoint for responsive card class stacks", () => {
+    const cardClass =
+      "bg-white border border-rose-300 rounded-md p-6 xl:border-0 xl:rounded-md xl:p-6";
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: (query: string) => ({
+        matches: query === "(min-width: 1280px)",
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }),
+    });
+    expect(viewportBreakpoint()).toBe("xl");
+    expect(readBreakpointForCardInference(cardClass, "base")).toBe("xl");
+  });
+
+  it("keeps active breakpoint for non-responsive cards", () => {
+    expect(readBreakpointForCardInference("bg-white border border-rose-300 p-6", "md")).toBe("md");
+  });
+});
 
 describe("classNameHasResponsiveUtilities", () => {
   it("returns false for base-only utilities", () => {

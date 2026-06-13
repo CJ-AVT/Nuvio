@@ -4,7 +4,6 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { MoreDotIcon } from "../../icons";
 import { useState } from "react";
-
 export default function MonthlySalesChart() {
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -75,7 +74,6 @@ export default function MonthlySalesChart() {
     fill: {
       opacity: 1,
     },
-
     tooltip: {
       x: {
         show: false,
@@ -92,18 +90,22 @@ export default function MonthlySalesChart() {
     },
   ];
   const [isOpen, setIsOpen] = useState(false);
-
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
-
   function closeDropdown() {
     setIsOpen(false);
   }
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+    <div
+      data-nuvio-id="chart.monthly.card"
+      className="overflow-hidden bg-white border border-rose-300 rounded-md p-6 sm:px-6 sm:pt-6 xl:shadow-sm xl:border-gray-200 xl:bg-white xl:border-0 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+        <h3
+          data-nuvio-id="chart.monthly.title"
+          className="text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-rose-600 dark:text-white/90"
+        >
           Monthly Sales
         </h3>
         <div className="relative inline-block">

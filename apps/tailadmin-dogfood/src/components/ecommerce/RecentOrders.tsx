@@ -65,14 +65,14 @@ const tableData: Product[] = [
 export default function RecentOrders() {
   return (
     <div
-      data-nuvio-id="orders.section"
-      className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6"
+      data-nuvio-id="orders.card"
+      className="overflow-hidden bg-white border border-rose-300 rounded-md p-6 sm:px-6 xl:shadow-sm xl:border-gray-200 xl:bg-white xl:border-0 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
     >
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3
             data-nuvio-id="orders.title"
-            className="text-lg font-semibold text-gray-800 dark:text-white/90"
+            className="text-lg font-semibold text-rose-600 xl:text-lg xl:font-semibold xl:text-rose-600 dark:text-white/90"
           >
             Recent Orders
           </h3>
@@ -82,20 +82,23 @@ export default function RecentOrders() {
           <button
             data-nuvio-id="orders.filter"
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium shadow-theme-xs text-red-500 xl:text-red-800 xl:p-2 xl:bg-zinc-400 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700"
           >
             Filter Button Test
           </button>
           <button
             data-nuvio-id="orders.seeAll"
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700"
           >
             See all
           </button>
         </div>
       </div>
-      <div data-nuvio-id="orders.table" className="max-w-full overflow-x-auto">
+      <div
+        data-nuvio-id="orders.table"
+        className="overflow-x-auto max-w-full border border-rose-300 rounded-md xl:max-w-full xl:border-0 xl:rounded-md"
+      >
         <Table>
           <TableHeader className="border-y border-gray-100 dark:border-gray-800">
             <TableRow data-nuvio-id="orders.header.row">
@@ -149,7 +152,7 @@ export default function RecentOrders() {
                     <div>
                       <p
                         data-nuvio-id={`orders.row.${product.id}.nameText`}
-                        className="text-theme-sm font-medium text-gray-800 dark:text-white/90"
+                        className="font-medium text-gray-800 xl:text-sm xl:font-normal xl:text-gray-600 dark:text-white/90"
                       >
                         {product.name}
                       </p>

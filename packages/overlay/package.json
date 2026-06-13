@@ -52,9 +52,11 @@
   },
   "dependencies": {
     "@nuvio/shared": "workspace:*",
-    "posthog-js": "^1.380.1"
+    "posthog-js": "^1.380.1",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@nuvio/ast-engine": "workspace:*",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "jsdom": "^26.0.0",

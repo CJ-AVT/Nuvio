@@ -2,6 +2,7 @@ import type { TextWireTarget } from "@nuvio/shared";
 import type { RefObject } from "react";
 import { useEffect, useState, type ReactElement } from "react";
 import { isNuvioChromeComposedPath } from "./nuvio-chrome-hit.js";
+import { hostIsInsideAppLink } from "./nuvio-dom.js";
 import {
   pickUntaggedClickTarget,
   readUntaggedLocTarget,
@@ -126,6 +127,9 @@ export function InteractionLayer({
       }
       const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
       if (el) {
+        if (hostIsInsideAppLink(el)) {
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         const id = el.getAttribute("data-nuvio-id");

@@ -12,7 +12,7 @@ pnpm dev:tailadmin
 # or: cd apps/tailadmin-dogfood && pnpm dev
 ```
 
-Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip, select instrumented elements, **Preview Changes** → **Apply to Code** → undo.
+Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip, select instrumented elements, **Validate Changes** → **Apply to Code** → undo.
 
 **v0.5:** leave **Developer details** off for the vibe-coder path. Use task menus (Card, Table, Button, Form, Nav, Chart, Section) and **Outline** first.
 
@@ -27,11 +27,18 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 | `metric.customers.card` / `.label` / `.value` | `src/components/ecommerce/EcommerceMetrics.tsx` |
 | `metric.orders.card` / `.label` / `.value` | same |
 | `chart.sales` / `chart.sales.title` / `chart.sales.subtitle` | `src/components/ecommerce/StatisticsChart.tsx` |
+| `chart.monthly.card` / `chart.monthly.title` | `src/components/ecommerce/MonthlySalesChart.tsx` |
 | `target.monthly.card` / `.title` / `.subtitle` | `src/components/ecommerce/MonthlyTarget.tsx` |
 | `demo.card` / `demo.title` / `demo.subtitle` | `src/components/ecommerce/DemographicCard.tsx` |
-| `form.email.label` / `form.email.input` | `src/components/form/form-elements/DefaultInputs.tsx` |
+| `form.page.title` | `src/pages/Forms/FormElements.tsx` |
+| `forms.default.card` / `.title` | `DefaultInputs.tsx` section |
+| `forms.checkbox.card` / `.title` | `CheckboxComponents.tsx` section |
+| `form.email.label` / `form.email.input` | `DefaultInputs.tsx` (native label/input) |
+| `tables.page.title` | `src/pages/Tables/BasicTables.tsx` |
+| `tables.basic.card` / `.title` / `.table` | `BasicTables.tsx` + `BasicTableOne.tsx` |
+| `nav.form-elements` / `nav.basic-tables` | `AppSidebar.tsx` submenu links |
 | **Recent Orders (v0.4 table contract)** | `src/components/ecommerce/RecentOrders.tsx` |
-| `orders.section` | Section card wrapper |
+| `orders.card` | Section card wrapper |
 | `orders.title` | “Recent Orders” heading |
 | `orders.filter` / `orders.seeAll` | Header buttons |
 | `orders.table` | Table scroll area |
@@ -39,6 +46,21 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 | `orders.header.products` / `.category` / `.price` / `.status` | Column headers |
 | `orders.row.{id}` | Each data row (`tableData.map`) |
 | `orders.row.{id}.nameText` | Product name (Tier C → `tableData`) |
+
+## PCC (Page Coverage Contract)
+
+Dashboard coverage is declared in `nuvio/pages/dashboard.pcc.yaml`. Verify offline (CI-safe):
+
+```bash
+pnpm exec nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+pnpm coverage:dogfood
+pnpm brand:apply:dogfood
+pnpm brand:dogfood
+```
+
+Manifests: `dashboard.pcc.yaml`, `form-elements.pcc.yaml`, `basic-tables.pcc.yaml`, `badges.pcc.yaml`.
+
+See `docs/mds/PCC.md` for manifest format and exit codes.
 
 ## Custom components
 
