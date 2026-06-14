@@ -27,7 +27,7 @@ Stop burning AI prompts on padding, colors, and layout tweaks — edit visually,
 
 ### Element editing
 
-**Edit on → click an element → Preview Changes → Apply to Code**
+**Edit on → click an element → Validate Changes → Apply to Code**
 
 <img src="docs/assets/nuvio-element16.gif" width="100%" alt="nuvio demo: Edit on → click an element → Preview Changes → Apply to Code" />
 
