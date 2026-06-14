@@ -50,11 +50,11 @@ if (!existsSync(cliEntry)) fail("missing packages/cli/dist/cli-entry.js");
 
 for (const rel of PUBLISH_PACKAGES) {
   const pkg = JSON.parse(readFileSync(join(root, rel), "utf8"));
-  if (pkg.version !== "1.0.0") {
-    fail(`${rel} version is ${pkg.version}, expected 1.0.0`);
+  if (pkg.version !== "1.1.0") {
+    fail(`${rel} version is ${pkg.version}, expected 1.1.0`);
   }
 }
-console.log("v10:acceptance — all publish packages at 1.0.0");
+console.log("v10:acceptance — all publish packages at 1.1.0");
 
 const v051 = spawnSync("node", ["scripts/v051-cli-acceptance.mjs"], {
   cwd: root,

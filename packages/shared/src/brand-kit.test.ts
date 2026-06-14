@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   BRAND_APPLY_ACTIONS,
   BRAND_BUTTON_VARIANTS,
-  BRAND_COLORS,
   BRAND_DENSITY,
   BRAND_RADIUS,
   BRAND_SURFACES,

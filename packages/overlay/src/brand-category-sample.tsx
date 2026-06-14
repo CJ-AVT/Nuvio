@@ -3,7 +3,6 @@ import type {
   BrandApplyAction,
   BrandColor,
   BrandConfig,
-  BrandButtonVariant,
   BrandDensity,
   BrandRadius,
   BrandSurface,

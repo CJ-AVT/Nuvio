@@ -52,8 +52,8 @@ describe("shouldSyncDraftFromPageInference", () => {
 
 describe("define-brand draft vs page baseline", () => {
   it("keeps saved brand in draft while page baseline reflects selection inference", () => {
-    const saved = { ...DEFAULT_BRAND_CONFIG, color: "rose" };
-    const pageBaseline = buildBrandPageBaselineDraft(saved, { color: "blue" }, ["color", "radius"]);
+    const saved = { ...DEFAULT_BRAND_CONFIG, color: "rose" as const };
+    const pageBaseline = buildBrandPageBaselineDraft(saved, { color: "blue" as const }, ["color", "radius"]);
     expect(pageBaseline.color).toBe("blue");
     expect(saved.color).toBe("rose");
   });

@@ -1,6 +1,6 @@
 {
   "name": "@nuvio/cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Nuvio CLI 1.0 — Vite + Tailwind onboarding and diagnostics (init, doctor, scan, stats).",
   "license": "MIT",
   "repository": {

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { IndexWireEntry } from "./protocol.js";
 import {
   isBrandableEntry,
-  isNonBrandableNavEntry,
   resolveBrandCategoryForEntry,
 } from "./brand-selection.js";
 

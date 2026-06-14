@@ -2,7 +2,27 @@
 
 All notable changes to `@nuvio/*` packages are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
-**Release policy:** `@nuvio/*` **1.0.0** is the stable npm line (`latest`). Milestones v0.6–v0.9 were internal checkpoints ([v1.0.md](docs/v1.0.md)).
+**Release policy:** `@nuvio/*` **1.1.0** is the stable npm line (`latest`). **1.0.0** was the first stable release without Brand Kit.
+
+## [Unreleased]
+
+_No changes yet._
+
+## [1.1.0] — 2026-06-14
+
+Brand Kit release — project-wide branding by category across pages. All five publish packages aligned at **1.1.0**.
+
+### Added
+
+- **Brand Kit** — overlay tab to define brand presets (`nuvio/brand.json`), validate, and bulk-apply by category (card, heading, text, button, table, form, badge).
+- **Cross-page branding** — save once, navigate routes, validate/apply per category with saved config and per-page PCC hosts.
+- **PCC manifests** — `nuvio/pages/*.pcc.yaml` route-to-host mapping; dev HTTP endpoints for brand and PCC config.
+- **CLI** — `nuvio brand scan|apply`, `nuvio coverage verify` for offline brand/coverage checks.
+- **Brand telemetry** — `brand_kit_opened`, `brand_saved`, `brand_bulk_validated`, `brand_bulk_applied`, and related overlay events.
+
+### Changed
+
+- TailAdmin dogfood app instrumented for Brand Kit demos (PCC hosts, category counts documented in dogfood README).
 
 ## [1.0.0] — 2026-06-10
 
@@ -29,10 +49,6 @@ First stable open-source release for React + Vite + Tailwind vibe coders. All fi
 ### Migration
 
 See [MIGRATION_0.5_to_1.0.md](docs/MIGRATION_0.5_to_1.0.md).
-
-## [Unreleased]
-
-_No changes yet._
 
 ## [0.5.5] — 2026-06-09 (telemetry reliability — internal milestone)
 

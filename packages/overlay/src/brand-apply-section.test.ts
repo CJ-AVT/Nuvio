@@ -68,7 +68,7 @@ describe("isValidateBrandEnabled", () => {
   });
 
   it("re-enables validate for a category after saved brand changes", () => {
-    const updated = { ...DEFAULT_BRAND_CONFIG, color: "green" };
+    const updated = { ...DEFAULT_BRAND_CONFIG, color: "green" as const };
     expect(
       isValidateBrandEnabled(
         baseInput({

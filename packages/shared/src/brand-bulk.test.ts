@@ -6,6 +6,7 @@ import {
   filterBrandBulkCandidates,
   resolveBrandBulkPatchHostId,
 } from "./brand-bulk.js";
+import { DEFAULT_BRAND_CONFIG } from "./brand-kit.js";
 import type { IndexWireEntry } from "./protocol.js";
 
 function entry(partial: Partial<IndexWireEntry> & { id: string }): IndexWireEntry {
@@ -113,6 +114,7 @@ describe("buildBrandValidateSummary", () => {
     const summary = buildBrandValidateSummary(
       "button",
       {
+        ...DEFAULT_BRAND_CONFIG,
         color: "green",
         surface: "white",
         buttonVariant: "solid",
@@ -132,6 +134,7 @@ describe("buildBrandBulkPreviewSummary (deprecated)", () => {
     const summary = buildBrandBulkPreviewSummary(
       "button",
       {
+        ...DEFAULT_BRAND_CONFIG,
         color: "green",
         surface: "white",
         buttonVariant: "solid",

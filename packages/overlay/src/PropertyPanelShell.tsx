@@ -79,7 +79,6 @@ import { LAYOUT_HELPERS } from "./layout-helpers.js";
 import { presetsForContext, applyStylePresetToPicks, QUICK_TEXT_STYLE_PRESETS } from "./style-presets.js";
 import { HandoffActionBar } from "./handoff-actions.js";
 import {
-  NUVO_PREVIEW_ON_PAGE_LABEL,
   SimpleModeActionBar,
   type PreviewOrigin,
 } from "./simple-mode-actions.js";
@@ -2280,7 +2279,7 @@ export function PropertyPanelShell({
             brandPreviewSummary={brandPreviewSummary}
             brandApplyReady={brandApplyReady}
             brandBulkApplyReady={brandBulkApplyReady}
-            brandBulkFlowActive={editorTab === "brand" && brandBulkApplyReady}
+            brandBulkFlowActive={false}
             brandPagePreviewActive={brandPagePreviewActive}
             onBrandPagePreview={() => onRequestBrandPagePreview()}
             onPreview={() => {

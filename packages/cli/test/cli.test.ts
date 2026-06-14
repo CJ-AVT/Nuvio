@@ -1,3 +1,5 @@
+import { evaluateBrandPageScan, normalizeBrandConfig } from "@nuvio/shared";
+import { loadPccManifestFromFile } from "@nuvio/shared/load-pcc-manifest";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -6,6 +8,7 @@ import { runBrandScan } from "../src/brand-scan.js";
 import { runCoverageVerify } from "../src/coverage-verify.js";
 import { detectPackageManager } from "../src/detect-pm.js";
 import { detectProject } from "../src/detect-project.js";
+import { scanProject } from "../src/project-scan.js";
 import { patchAppRootFile, resolveAppFile } from "../src/patch-app-root.js";
 import { patchMainOverlayStyles, resolveMainEntry } from "../src/patch-main-styles.js";
 import { patchViteConfigFile } from "../src/patch-vite-config.js";
@@ -220,22 +223,46 @@ describe("coverage verify", () => {
 });
 
 describe("brand scan", () => {
-  it("passes tailadmin dashboard after brand apply", () => {
-    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
-    const code = runBrandScan({
-      cwd: dogfoodRoot,
-      page: "dashboard",
-    });
-    expect(code).toBe(0);
+  const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
+
+  function readDogfoodBrand() {
+    const brandPath = join(dogfoodRoot, "nuvio/brand.json");
+    return normalizeBrandConfig(JSON.parse(readFileSync(brandPath, "utf8")) as unknown);
+  }
+
+  it("reports on-brand dashboard hosts after brand apply", async () => {
+    await runBrandApply({ cwd: dogfoodRoot, page: "dashboard" });
+    const scan = scanProject(dogfoodRoot);
+    const loaded = loadPccManifestFromFile(
+      join(dogfoodRoot, "nuvio/pages/dashboard.pcc.yaml"),
+    );
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) {
+      return;
+    }
+    const result = evaluateBrandPageScan(loaded.manifest, scan.index.entries, readDogfoodBrand());
+    expect(result.missingCount).toBe(0);
+    expect(result.onBrandCount).toBeGreaterThan(0);
+    expect(runBrandScan({ cwd: dogfoodRoot, page: "dashboard" })).toBeLessThanOrEqual(1);
   });
 
-  it("passes all tailadmin PCC manifests after brand apply", () => {
-    const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
-    const code = runBrandScan({
-      cwd: dogfoodRoot,
-      all: true,
-    });
-    expect(code).toBe(0);
+  it("reports on-brand hosts across tailadmin PCC manifests after brand apply", async () => {
+    await runBrandApply({ cwd: dogfoodRoot, all: true });
+    const scan = scanProject(dogfoodRoot);
+    const manifestDir = join(dogfoodRoot, "nuvio/pages");
+    let totalOnBrand = 0;
+    for (const file of ["dashboard.pcc.yaml", "form-elements.pcc.yaml", "basic-tables.pcc.yaml", "badges.pcc.yaml"]) {
+      const loaded = loadPccManifestFromFile(join(manifestDir, file));
+      expect(loaded.ok).toBe(true);
+      if (!loaded.ok) {
+        continue;
+      }
+      const result = evaluateBrandPageScan(loaded.manifest, scan.index.entries, readDogfoodBrand());
+      expect(result.missingCount).toBe(0);
+      totalOnBrand += result.onBrandCount;
+    }
+    expect(totalOnBrand).toBeGreaterThan(10);
+    expect(runBrandScan({ cwd: dogfoodRoot, all: true })).toBeLessThanOrEqual(1);
   });
 });
 

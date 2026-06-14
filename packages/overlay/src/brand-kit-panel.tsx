@@ -286,7 +286,7 @@ export function BrandKitPanel({
   selectedId,
   selectedEntry = null,
   selectionMissing,
-  styleHostId,
+  styleHostId: _styleHostId,
   developerDetails,
   embeddedInTab = false,
   activeBreakpoint = "xl",

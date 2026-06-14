@@ -64,7 +64,7 @@ function readProjectBrandConfig(cwd: string): BrandConfig {
 }
 
 function duplicateIdSet(errors: readonly DuplicateIdError[]): Set<string> {
-  return new Set(errors.flatMap((error) => error.occurrences.map((occurrence) => occurrence.id)));
+  return new Set(errors.map((error) => error.id));
 }
 
 function collectApplyTargets(
