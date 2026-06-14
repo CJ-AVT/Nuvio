@@ -19,17 +19,17 @@ Stop burning AI prompts on padding, colors, and layout tweaks — edit visually,
 
 ## Demo
 
-### Element editing
-
-**Edit on → click an element → Preview Changes → Apply to Code**
-
-<img src="docs/assets/nuvio-22.gif" width="100%" alt="nuvio demo: Edit on → click an element → Preview Changes → Apply to Code" />
-
 ### Brand Kit (project branding)
 
 **Edit on → Brand Kit tab → pick a category → Save Brand → Validate → Apply** on the current page. Navigate to another route and repeat per category — one saved brand in `nuvio/brand.json`, applied across your app.
 
 <img src="docs/assets/nuvio-brand-kit26.gif" width="100%" alt="Brand Kit demo: define heading styles, save brand, validate and apply across dashboard pages" />
+
+### Element editing
+
+**Edit on → click an element → Preview Changes → Apply to Code**
+
+<img src="docs/assets/nuvio-element16.gif" width="100%" alt="nuvio demo: Edit on → click an element → Preview Changes → Apply to Code" />
 
 Try it on the TailAdmin dogfood app after [Quick Start](#quick-start):
 
@@ -41,7 +41,7 @@ Open the printed URL → nuvio chip → **Edit on** → **Brand Kit** tab.
 
 Or run the smaller demo app: `pnpm build && pnpm --filter @nuvio/demo-app dev` → `http://localhost:5174`.
 
-Assets: [nuvio-22.gif](docs/assets/nuvio-22.gif) · [nuvio-brand-kit26.gif](docs/assets/nuvio-brand-kit26.gif) · More captures: [docs/screenshots/v0.5/README.md](docs/screenshots/v0.5/README.md)
+Assets: [nuvio-brand-kit26.gif](docs/assets/nuvio-brand-kit26.gif) · [nuvio-element16.gif](docs/assets/nuvio-element16.gif) · More captures: [docs/screenshots/v0.5/README.md](docs/screenshots/v0.5/README.md)
 
 ---
 
