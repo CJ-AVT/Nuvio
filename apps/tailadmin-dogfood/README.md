@@ -12,9 +12,30 @@ pnpm dev:tailadmin
 # or: cd apps/tailadmin-dogfood && pnpm dev
 ```
 
-Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip, select instrumented elements, **Validate Changes** → **Apply to Code** → undo.
+Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip to open the Editor panel.
+
+**Brand Kit (cross-page):** open the **Brand Kit** tab → pick a **category** chip (Card, Heading, Text, Form, …) → adjust presets → **Save Brand** → **Validate** → **Apply** for that category on the **current page**. Navigate to another route (e.g. Dashboard → Form Elements) and repeat **Validate** / **Apply** per category. One saved brand in `nuvio/brand.json` applies project-wide; each page and category is validated separately.
+
+**Edit tab (single element):** select an element → **Validate Changes** → **Apply to Code** → undo.
 
 **v0.5:** leave **Developer details** off for the vibe-coder path. Use task menus (Card, Table, Button, Form, Nav, Chart, Section) and **Outline** first.
+
+## Brand Kit dogfood flow
+
+| Step | Dashboard (`/`) | Form Elements (`/form-elements`) |
+| --- | --- | --- |
+| Card | 7 cards | 10 section cards |
+| Heading | 6 headings | 11 (page title + section titles) |
+| Text | 7 text blocks | 2 helper lines |
+| Form | — | 2 patchable fields (`form.email.*`) |
+| Button / Table | buttons + orders table | — |
+
+Verify per-page PCC:
+
+```bash
+pnpm exec nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+pnpm exec nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
+```
 
 ## Instrumented ids (dashboard)
 
@@ -30,10 +51,6 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 | `chart.monthly.card` / `chart.monthly.title` | `src/components/ecommerce/MonthlySalesChart.tsx` |
 | `target.monthly.card` / `.title` / `.subtitle` | `src/components/ecommerce/MonthlyTarget.tsx` |
 | `demo.card` / `demo.title` / `demo.subtitle` | `src/components/ecommerce/DemographicCard.tsx` |
-| `form.page.title` | `src/pages/Forms/FormElements.tsx` |
-| `forms.default.card` / `.title` | `DefaultInputs.tsx` section |
-| `forms.checkbox.card` / `.title` | `CheckboxComponents.tsx` section |
-| `form.email.label` / `form.email.input` | `DefaultInputs.tsx` (native label/input) |
 | `tables.page.title` | `src/pages/Tables/BasicTables.tsx` |
 | `tables.basic.card` / `.title` / `.table` | `BasicTables.tsx` + `BasicTableOne.tsx` |
 | `nav.form-elements` / `nav.basic-tables` | `AppSidebar.tsx` submenu links |
@@ -47,12 +64,34 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 | `orders.row.{id}` | Each data row (`tableData.map`) |
 | `orders.row.{id}.nameText` | Product name (Tier C → `tableData`) |
 
+## Instrumented ids (form elements)
+
+Declared in `nuvio/pages/form-elements.pcc.yaml`. Each form section uses a literal `data-nuvio-id` on the card wrapper and section title (required for Brand Kit bulk apply).
+
+| Id | Location |
+| --- | --- |
+| `form.page.title` | `src/pages/Forms/FormElements.tsx` |
+| `forms.default.card` / `.title` | `DefaultInputs.tsx` |
+| `forms.select.card` / `.title` | `SelectInputs.tsx` |
+| `forms.textarea.card` / `.title` | `TextAreaInput.tsx` |
+| `forms.states.card` / `.title` / `.desc` | `InputStates.tsx` (`.desc` = text category) |
+| `forms.inputGroup.card` / `.title` | `InputGroup.tsx` |
+| `forms.fileInput.card` / `.title` | `FileInputExample.tsx` |
+| `forms.checkbox.card` / `.title` | `CheckboxComponents.tsx` |
+| `forms.radio.card` / `.title` | `RadioButtons.tsx` |
+| `forms.toggle.card` / `.title` | `ToggleSwitch.tsx` |
+| `forms.dropzone.card` / `.title` / `.hint` | `DropZone.tsx` (`.hint` = text category) |
+| `form.email.label` / `form.email.input` | `DefaultInputs.tsx` (native label/input — form category bulk apply) |
+
+**Note:** Shared wrappers (`Label`, `Input`, `Select`, …) need **literal** `className` on a native DOM node for form-category bulk patches. Only `form.email.*` is patchable today; other form fields are editable via the Edit tab.
+
 ## PCC (Page Coverage Contract)
 
-Dashboard coverage is declared in `nuvio/pages/dashboard.pcc.yaml`. Verify offline (CI-safe):
+Dashboard and Form Elements coverage are declared in `nuvio/pages/*.pcc.yaml`. Verify offline (CI-safe):
 
 ```bash
 pnpm exec nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+pnpm exec nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
 pnpm coverage:dogfood
 pnpm brand:apply:dogfood
 pnpm brand:dogfood
