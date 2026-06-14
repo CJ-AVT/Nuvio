@@ -11,7 +11,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.customers.card"
-        className="bg-white border border-rose-300 rounded-md p-6 md:p-6 xl:text-red-700 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+        className="bg-white border border-rose-300 rounded-md p-6 md:p-6 xl:text-red-700 xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
@@ -43,7 +43,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.orders.card"
-        className="bg-white border border-rose-300 rounded-md p-6 md:p-4 md:gap-2 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+        className="bg-white border border-rose-300 rounded-md p-6 md:p-4 md:gap-2 xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />

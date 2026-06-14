@@ -13,7 +13,7 @@ export default function DemographicCard() {
   }
   return (
     <div
-      className="bg-white border border-rose-300 rounded-md p-6 sm:p-6 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+      className="bg-white border border-rose-300 rounded-md p-6 sm:p-6 xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       data-nuvio-id="demo.card"
     >
       <div className="flex justify-between">

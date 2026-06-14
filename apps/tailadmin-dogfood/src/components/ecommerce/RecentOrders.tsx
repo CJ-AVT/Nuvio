@@ -66,7 +66,7 @@ export default function RecentOrders() {
   return (
     <div
       data-nuvio-id="orders.card"
-      className="overflow-hidden bg-white border border-rose-300 rounded-md p-6 sm:px-6 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+      className="overflow-hidden bg-white border border-rose-300 rounded-md p-6 sm:px-6 xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
     >
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -82,14 +82,14 @@ export default function RecentOrders() {
           <button
             data-nuvio-id="orders.filter"
             type="button"
-            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-purple-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700"
+            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-blue-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700 hover:bg-purple-700 hover:bg-blue-700"
           >
             Filter Button Test
           </button>
           <button
             data-nuvio-id="orders.seeAll"
             type="button"
-            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-purple-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700"
+            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-md px-4 py-2 xl:bg-blue-600 xl:text-white xl:rounded-md xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700 hover:bg-purple-700 hover:bg-blue-700"
           >
             See all
           </button>

@@ -148,7 +148,7 @@ export default function StatisticsChart() {
   return (
     <div
       data-nuvio-id="chart.sales"
-      className="bg-white border border-rose-300 rounded-md p-6 sm:px-6 sm:pt-6 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+      className="bg-white border border-rose-300 rounded-md p-6 sm:px-6 sm:pt-6 xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
     >
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">

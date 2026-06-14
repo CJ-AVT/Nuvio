@@ -15,7 +15,7 @@ const DropzoneComponent: React.FC = () => {
   return (
     <div
       data-nuvio-id="forms.dropzone.card"
-      className="rounded-2xl border border-gray-200 bg-white xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03]"
+      className="rounded-2xl border border-gray-200 bg-white xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03]"
     >
       <div className="px-6 py-5">
         <h3
