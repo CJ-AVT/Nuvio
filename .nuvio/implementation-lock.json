@@ -29,16 +29,6 @@
       "globs": ["packages/ast-engine/**"]
     },
     {
-      "id": "demo-app",
-      "description": "demo-app Nuvio fixture and wiring",
-      "globs": ["apps/demo-app/**"]
-    },
-    {
-      "id": "tailwind-v4-test",
-      "description": "Tailwind v4 test fixture",
-      "globs": ["apps/tailwind-v4-test/**"]
-    },
-    {
       "id": "tailadmin-dogfood",
       "description": "TailAdmin dogfood fixture",
       "globs": ["apps/tailadmin-dogfood/**"]

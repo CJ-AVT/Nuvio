@@ -12,13 +12,13 @@ Before publishing stable: `pnpm dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md
 - `packages/vite-plugin` — Vite dev integration (WebSocket, source index, patch apply)
 - `packages/overlay` — dev overlay UI (React)
 - `packages/ast-engine` — AST patch engine (text + whitelist Tailwind merge, Prettier)
-- `apps/demo-app` — reference Vite + React + Tailwind app
+- `apps/tailadmin-dogfood` — TailAdmin dashboard dogfood app
 
 ## Dev loop
 
 1. `pnpm install` — from the **repo root** (see root `.npmrc` for React hoisting so editors resolve `react` reliably).
 2. `pnpm build` — required after changing `packages/*` before running the demo (or use package-level `pnpm --filter @nuvio/vite-plugin dev` watch while iterating).
-3. `pnpm --filter @nuvio/demo-app dev` — Vite dev server with Nuvio plugin.
+3. `pnpm dev:tailadmin` — Vite dev server with Nuvio plugin (port 5173).
 
 ## Tests and types
 

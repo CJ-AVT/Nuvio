@@ -9,41 +9,43 @@ const MONOREPO_SCAN_GLOBS = [
   "packages/**/src/**/*.{tsx,jsx}",
 ] as const;
 
+const TAILADMIN_FIXTURE_ID = "dashboard.title";
+
 describe("pickBestSourceIndex", () => {
-  it("prefers the tree that contains demo contract ids", () => {
+  it("prefers the tree that contains dogfood contract ids", () => {
     const repoRoot = path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
       "../../../",
     );
     const overlayRoot = path.join(repoRoot, "packages/overlay");
-    const demoRoot = path.join(repoRoot, "apps/demo-app");
-    const r = pickBestSourceIndex([overlayRoot, demoRoot], [...MONOREPO_SCAN_GLOBS]);
-    expect(r.entries.some((e) => e.id === "demo.hero.title")).toBe(true);
+    const dogfoodRoot = path.join(repoRoot, "apps/tailadmin-dogfood");
+    const r = pickBestSourceIndex([overlayRoot, dogfoodRoot], [...MONOREPO_SCAN_GLOBS]);
+    expect(r.entries.some((e) => e.id === TAILADMIN_FIXTURE_ID)).toBe(true);
   });
 });
 
 describe("buildSourceIndex (monorepo root)", () => {
-  it("still finds demo-app ids when root is the repo root", () => {
+  it("still finds tailadmin-dogfood ids when root is the repo root", () => {
     const repoRoot = path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
       "../../../",
     );
     const r = buildSourceIndex(repoRoot, [...MONOREPO_SCAN_GLOBS]);
     expect(r.scannedFileCount).toBeGreaterThan(0);
-    expect(r.entries.some((e) => e.id === "demo.hero.title")).toBe(true);
+    expect(r.entries.some((e) => e.id === TAILADMIN_FIXTURE_ID)).toBe(true);
   });
 });
 
-describe("buildSourceIndex (demo-app fixture)", () => {
-  it("indexes App.tsx ids under apps/demo-app", () => {
+describe("buildSourceIndex (tailadmin-dogfood fixture)", () => {
+  it("indexes dashboard ids under apps/tailadmin-dogfood", () => {
     const repoRoot = path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
       "../../../",
     );
-    const demoRoot = path.join(repoRoot, "apps/demo-app");
-    const r = buildSourceIndex(demoRoot, ["src/**/*.{tsx,jsx}"]);
+    const dogfoodRoot = path.join(repoRoot, "apps/tailadmin-dogfood");
+    const r = buildSourceIndex(dogfoodRoot, ["src/**/*.{tsx,jsx}"]);
     expect(r.scannedFileCount).toBeGreaterThan(0);
-    expect(r.entries.some((e) => e.id === "demo.hero.title")).toBe(true);
+    expect(r.entries.some((e) => e.id === TAILADMIN_FIXTURE_ID)).toBe(true);
   });
 });
 

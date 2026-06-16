@@ -184,9 +184,9 @@ Root `package.json` scripts for this monorepo:
 | `pnpm build` | Build all `packages/*` |
 | `pnpm typecheck` | Typecheck packages and apps |
 | `pnpm test` | Run package tests |
-| `pnpm dev` | Build packages, then start `@nuvio/demo-app` |
-| `pnpm dev:tailadmin` | Build packages, then TailAdmin dogfood (port 5173) |
-| `pnpm dogfood` | Build + typecheck + test + demo-app production build |
+| `pnpm dev` | Build packages, then TailAdmin dogfood (port 5173) |
+| `pnpm dev:tailadmin` | Same as `pnpm dev` |
+| `pnpm dogfood` | Build + typecheck + test + TailAdmin production build |
 | `pnpm test:cli` | CLI test suite |
 | `pnpm coverage:dogfood` | PCC verify all tailadmin pages |
 | `pnpm brand:dogfood` | Brand scan all tailadmin pages |

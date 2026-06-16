@@ -40,6 +40,6 @@ Treat manifest globs like gitignore-style patterns from repo root (`packages/ove
 - `shared-v0.3` → `packages/shared/**`
 - `vite-plugin-v0.3` → `packages/vite-plugin/**`
 - `ast-engine-v0.3` → `packages/ast-engine/**`
-- `demo-app`, `tailwind-v4-test`, `tailadmin-dogfood` → respective `apps/*` trees
+- `tailadmin-dogfood` → `apps/tailadmin-dogfood/**`
 
 When adding features, prefer **new files** or **unlocked** areas unless the user unlocks.
