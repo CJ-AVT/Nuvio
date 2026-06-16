@@ -3,6 +3,7 @@ import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { DEFAULT_BRAND_CONFIG, normalizeBrandConfig, serializeBrandConfig, type BrandConfig } from "@nuvio/shared";
 import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+import { validateNuvioBearer } from "./dev-auth-guard.js";
 
 export const BRAND_CONFIG_RELATIVE = "nuvio/brand.json" as const;
 
@@ -58,7 +59,14 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
 export type BrandConfigHttpContext = {
   projectRoot: string;
   writeGuardRoot: string;
+  devAuthToken: string;
 };
+
+function unauthorized(res: ServerResponse): void {
+  res.statusCode = 401;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify({ error: "unauthorized" }));
+}
 
 export async function handleBrandConfigHttp(
   req: IncomingMessage,
@@ -74,6 +82,10 @@ export async function handleBrandConfigHttp(
       return;
     }
     if (req.method === "PUT" || req.method === "POST") {
+      if (!validateNuvioBearer(req, ctx.devAuthToken)) {
+        unauthorized(res);
+        return;
+      }
       const body = await readJsonBody(req);
       const config = normalizeBrandConfig(body);
       writeBrandConfigFile(ctx.projectRoot, ctx.writeGuardRoot, config);

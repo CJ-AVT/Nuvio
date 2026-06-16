@@ -97,7 +97,6 @@ export async function handlePccConfigHttp(
       JSON.stringify({
         ok: true,
         manifest: resolved.manifest,
-        path: resolved.path,
       }),
     );
   } catch (e) {

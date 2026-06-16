@@ -1,11 +1,5 @@
 import { PreflightError } from "./detect-project.js";
-import { detectPackageManager } from "./detect-pm.js";
 import { relPath, scanProject } from "./project-scan.js";
-import {
-  buildCliTelemetryProps,
-  captureCliEvent,
-  type ScanRunTelemetry,
-} from "./telemetry.js";
 
 export type ScanOptions = {
   cwd: string;
@@ -68,15 +62,6 @@ export function runScan(opts: ScanOptions): number {
     detectedLibraries,
     scannedFileCount: index.scannedFileCount,
   };
-
-  const pm = detectPackageManager(ctx.root);
-  const telemetry: ScanRunTelemetry = {
-    ...buildCliTelemetryProps(pm, ctx),
-    host_count: result.hostCount,
-    duplicate_count: result.duplicateErrors.length,
-    library_count: detectedLibraries.length,
-  };
-  captureCliEvent("scan_run", telemetry);
 
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));

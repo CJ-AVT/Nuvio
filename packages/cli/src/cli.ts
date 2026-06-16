@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { resolve } from "node:path";
 import { runBrandApply } from "./brand-apply.js";
 import { runBrandScan } from "./brand-scan.js";
@@ -7,15 +8,6 @@ import { runInit, type InitOptions } from "./init.js";
 import { runScan } from "./scan-cmd.js";
 import { runStats } from "./stats.js";
 import type { PackageManager } from "./detect-pm.js";
-import {
-  buildCliTelemetryProps,
-  captureCliEvent,
-  captureCliInvoked,
-  registerTelemetrySignalHandlers,
-  resolveCliInvokedCommand,
-  shutdownTelemetry,
-} from "./telemetry.js";
-import { detectPackageManager } from "./detect-pm.js";
 
 export type CommonCliOptions = {
   cwd: string;
@@ -278,7 +270,6 @@ function parseBrandArgs(argv: string[]): {
 }
 
 export async function runCli(argv: string[]): Promise<number> {
-  registerTelemetrySignalHandlers();
   const rawCommand = argv[2] ?? null;
   const isCoverageCmd = rawCommand === "coverage";
   const isBrandCmd = rawCommand === "brand";
@@ -319,13 +310,6 @@ export async function runCli(argv: string[]): Promise<number> {
     command = parsed.command;
     initOpts = parsed.opts;
   }
-
-  const cwd =
-    isProjectCmd ? commonOpts.cwd : initOpts.cwd;
-  captureCliInvoked(
-    resolveCliInvokedCommand(help, command),
-    isProjectCmd ? undefined : initOpts.pm,
-  );
 
   try {
     if (help) {
@@ -402,16 +386,9 @@ export async function runCli(argv: string[]): Promise<number> {
         return 1;
     }
   } catch (e) {
-    const pm = detectPackageManager(cwd, initOpts.pm);
-    captureCliEvent("nuvio_init_failed", {
-      ...buildCliTelemetryProps(pm),
-      error_code: "unexpected_error",
-    });
     const verbose = isProjectCmd ? commonOpts.verbose : initOpts.verbose;
     if (verbose) console.error(e);
     else console.error("Something went wrong. Run with --verbose for details.");
     return 2;
-  } finally {
-    await shutdownTelemetry();
   }
 }

@@ -1,5 +1,4 @@
 import { readRuntimeVersions } from "@nuvio/vite-plugin/scan";
-import { detectPackageManager } from "./detect-pm.js";
 import { PreflightError } from "./detect-project.js";
 import {
   aggregateClassNameModes,
@@ -7,11 +6,6 @@ import {
   relPath,
   scanProject,
 } from "./project-scan.js";
-import {
-  buildCliTelemetryProps,
-  captureCliEvent,
-  type StatsRunTelemetry,
-} from "./telemetry.js";
 
 export type StatsOptions = {
   cwd: string;
@@ -62,17 +56,6 @@ export function runStats(opts: StatsOptions): number {
     tailwindVersion: versions.tailwindVersion,
     classNameModes,
   };
-
-  const pm = detectPackageManager(ctx.root);
-  const telemetry: StatsRunTelemetry = {
-    ...buildCliTelemetryProps(pm, ctx),
-    editable_hosts: result.editableHosts,
-    tagged_files: result.taggedFiles,
-    duplicate_ids: result.duplicateIds,
-    table_hosts: result.tableHosts,
-    library_count: detectedLibraries.length,
-  };
-  captureCliEvent("stats_run", telemetry);
 
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));

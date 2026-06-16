@@ -12,6 +12,7 @@ import { handleTagElementMessage } from "./handle-tag-element.js";
 import { injectJsxLocAttributes } from "./jsx-loc-transform.js";
 import {
   NUVIO_BRAND_PATH,
+  NUVIO_DEV_TOKEN_PATH,
   NUVIO_PCC_PATH,
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
@@ -25,7 +26,13 @@ import { readRuntimeVersions } from "./read-dep-version.js";
 import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
 import { handleBrandConfigHttp, brandConfigPath } from "./handle-brand-config.js";
+import { handleDevTokenHttp } from "./handle-dev-token.js";
 import { handlePccConfigHttp } from "./handle-pcc-config.js";
+import {
+  validateNuvioUpgrade,
+  warnIfWideDevServerHost,
+} from "./dev-auth-guard.js";
+import { getOrCreateDevSessionToken } from "./dev-session-token.js";
 import {
   buildSourceIndex,
   extractIdsFromSource,
@@ -111,21 +118,6 @@ const DEFAULT_GLOBS = [
   "packages/**/src/**/*.{tsx,jsx}",
 ];
 
-function isAllowedOrigin(origin: string | undefined): boolean {
-  if (origin === undefined || origin === "") {
-    return true;
-  }
-  try {
-    const u = new URL(origin);
-    return (
-      (u.hostname === "localhost" || u.hostname === "127.0.0.1") &&
-      (u.protocol === "http:" || u.protocol === "https:")
-    );
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Nuvio Vite plugin — Phase 1: WebSocket protocol + dev-time source index + selection ack.
  */
@@ -146,11 +138,15 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
   return {
     name: "nuvio",
     apply: "serve",
-    config() {
-      if (!enabled) {
+    config(_config, { command }) {
+      if (!enabled || command !== "serve") {
         return {};
       }
+      const devAuthToken = getOrCreateDevSessionToken();
       return {
+        define: {
+          "import.meta.env.VITE_NUVIO_DEV_TOKEN": JSON.stringify(devAuthToken),
+        },
         server: {
           watch: {
             ignored: ["**/nuvio/brand.json"],
@@ -158,9 +154,27 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         },
       };
     },
+    configResolved(config) {
+      if (!enabled) {
+        return;
+      }
+      warnIfWideDevServerHost(config.server.host, (msg) => {
+        config.logger.warn(msg);
+      });
+    },
     transform(code, id) {
       if (!enabled) {
         return null;
+      }
+      const norm = id.replace(/\\/g, "/");
+      if (norm.includes("/packages/overlay/src/dev-token.ts")) {
+        const next = code.replace(
+          /return env\.env\?\.VITE_NUVIO_DEV_TOKEN \?\? "";/,
+          'return import.meta.env.VITE_NUVIO_DEV_TOKEN ?? "";',
+        );
+        if (next !== code) {
+          return { code: next, map: null };
+        }
       }
       if (!id || id.includes("node_modules") || !/\.(tsx|jsx)$/.test(id)) {
         return null;
@@ -192,6 +206,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         process.cwd(),
       ];
       const rootsLabel = [...new Set(rootCandidates)].join(" | ");
+      const devAuthToken = getOrCreateDevSessionToken();
       const wss = new WebSocketServer({ noServer: true });
 
       type UndoSnapshot = { file: string; contents: string };
@@ -601,7 +616,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           if (pathname !== NUVIO_WS_PATH) {
             return;
           }
-          if (!isAllowedOrigin(request.headers.origin)) {
+          if (!validateNuvioUpgrade(request, devAuthToken)) {
             socket.destroy();
             return;
           }
@@ -625,6 +640,10 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       server.middlewares.use((req, res, next) => {
         const url = req.url ?? "";
         const pathname = url.split("?")[0] ?? "";
+        if (pathname === NUVIO_DEV_TOKEN_PATH) {
+          handleDevTokenHttp(req, res, devAuthToken);
+          return;
+        }
         if (pathname === NUVIO_PCC_PATH) {
           void handlePccConfigHttp(req, res, {
             projectRoot,
@@ -639,6 +658,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         void handleBrandConfigHttp(req, res, {
           projectRoot,
           writeGuardRoot,
+          devAuthToken,
         });
       });
 

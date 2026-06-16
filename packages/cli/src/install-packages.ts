@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import type { PackageManager } from "./detect-pm.js";
-import { installCommand } from "./detect-pm.js";
 
 function parseInstalledVersion(
   pkg: Record<string, unknown>,
@@ -29,22 +28,54 @@ export function packagesNeedInstall(
   return false;
 }
 
+function installArgv(
+  pm: PackageManager,
+  version: string,
+): { command: string; args: string[]; display: string } {
+  const pkgs = [`@nuvio/vite-plugin@${version}`, `@nuvio/overlay@${version}`];
+  switch (pm) {
+    case "pnpm":
+      return {
+        command: "pnpm",
+        args: ["add", "-D", ...pkgs],
+        display: `pnpm add -D ${pkgs.join(" ")}`,
+      };
+    case "yarn":
+      return {
+        command: "yarn",
+        args: ["add", "-D", ...pkgs],
+        display: `yarn add -D ${pkgs.join(" ")}`,
+      };
+    case "bun":
+      return {
+        command: "bun",
+        args: ["add", "-d", ...pkgs],
+        display: `bun add -d ${pkgs.join(" ")}`,
+      };
+    default:
+      return {
+        command: "npm",
+        args: ["install", "-D", ...pkgs],
+        display: `npm install -D ${pkgs.join(" ")}`,
+      };
+  }
+}
+
 export function runInstall(
   root: string,
   pm: PackageManager,
   version: string,
 ): { ok: boolean; message?: string } {
-  const cmd = installCommand(pm, version);
-  const result = spawnSync(cmd, {
+  const { command, args, display } = installArgv(pm, version);
+  const result = spawnSync(command, args, {
     cwd: root,
-    shell: true,
     stdio: "inherit",
     env: process.env,
   });
   if (result.status !== 0) {
     return {
       ok: false,
-      message: `Install failed. Try manually:\n  ${cmd}`,
+      message: `Install failed. Try manually:\n  ${display}`,
     };
   }
   return { ok: true };

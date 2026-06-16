@@ -87,14 +87,6 @@ import {
   flattenTokensAtBreakpoint,
   readBreakpointForCardInference,
 } from "./tailwind-token-read.js";
-import {
-  captureBrandKitOpened,
-  captureBrandPresetChanged,
-  captureBrandSaved,
-  captureBrandStyleFailed,
-  captureBrandStylePreviewed,
-  captureBrandCrossPageApplyStarted,
-} from "./brand-kit-telemetry.js";
 
 const PREVIEW_COLORS: Record<
   BrandColor,
@@ -310,7 +302,6 @@ export function BrandKitPanel({
   const [loadState, setLoadState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [applyError, setApplyError] = useState<string | null>(null);
-  const [openedTracked, setOpenedTracked] = useState(false);
   const [pagePcc, setPagePcc] = useState<PccManifest | null>(null);
   const [activeCategory, setActiveCategory] = useState<BrandApplyAction>("button");
   const [manualCategory, setManualCategory] = useState<BrandApplyAction | null>(null);
@@ -393,13 +384,6 @@ export function BrandKitPanel({
     dismissBrandKitFirstRun();
     setShowFirstRunChecklist(false);
   }, []);
-
-  const trackOpened = useCallback(() => {
-    if (!openedTracked) {
-      captureBrandKitOpened();
-      setOpenedTracked(true);
-    }
-  }, [openedTracked]);
 
   useEffect(() => {
     if (prevPathnameRef.current === pathname) {
@@ -550,9 +534,7 @@ export function BrandKitPanel({
   ]);
 
   const updateDraft = useCallback(
-    (patch: Partial<BrandConfig>, category: BrandPresetDimension) => {
-      trackOpened();
-      captureBrandPresetChanged(category);
+    (patch: Partial<BrandConfig>, _category: BrandPresetDimension) => {
       userEditedPresetsRef.current = true;
       setDraft((prev) => {
         const next = { ...prev, ...patch };
@@ -561,7 +543,7 @@ export function BrandKitPanel({
       });
       setSaveState("idle");
     },
-    [onBrandDraftChange, trackOpened],
+    [onBrandDraftChange],
   );
 
   const onSaveBrand = useCallback(async () => {
@@ -575,11 +557,9 @@ export function BrandKitPanel({
       setDraft(written);
       userEditedPresetsRef.current = false;
       setSaveState("saved");
-      captureBrandSaved();
       onBrandSaved?.();
     } catch {
       setSaveState("error");
-      captureBrandStyleFailed("brand_save_failed");
     }
   }, [channelReady, draft, onBrandSaved]);
 
@@ -589,12 +569,10 @@ export function BrandKitPanel({
       brandConfig: BrandConfig,
       options?: { crossPageApply?: boolean },
     ) => {
-      trackOpened();
       setApplyError(null);
       if (!channelReady) {
         const msg = "Dev channel is not connected yet.";
         setApplyError(msg);
-        captureBrandStyleFailed("channel_not_ready");
         return;
       }
       const targets = bulkTargetsByAction[action] ?? [];
@@ -604,10 +582,6 @@ export function BrandKitPanel({
       }
       const opsTargets = buildBrandBulkTargetOps(action, brandConfig, targets, indexEntries);
       const summary = buildBrandValidateSummary(action, brandConfig, targets.length);
-      captureBrandStylePreviewed(action, !brandConfigsEqual(brandConfig, saved));
-      if (options?.crossPageApply) {
-        captureBrandCrossPageApplyStarted(action);
-      }
       onRequestBrandBulkPreview?.(action, brandConfig, opsTargets, summary);
     },
     [
@@ -616,7 +590,6 @@ export function BrandKitPanel({
       indexEntries,
       onRequestBrandBulkPreview,
       saved,
-      trackOpened,
     ],
   );
 
@@ -688,7 +661,6 @@ export function BrandKitPanel({
                 disabled={count === 0}
                 title={count === 0 ? `No ${BULK_ACTION_LABELS[action].toLowerCase()} on this page` : undefined}
                 onClick={() => {
-                  trackOpened();
                   setManualCategory(action);
                   setActiveCategory(action);
                   setApplyError(null);

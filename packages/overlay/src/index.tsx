@@ -1,9 +1,5 @@
 import type { ReactElement } from "react";
-import "./styles/overlay.css";
-import { loadOverlayStyles } from "./load-overlay-styles.js";
 import { NuvioDevShellInner } from "./NuvioDevShell.js";
-
-loadOverlayStyles();
 
 function nuvioDevEnabled(): boolean {
   const env = (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env;

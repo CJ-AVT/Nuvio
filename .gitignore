@@ -8,6 +8,7 @@ coverage
 .env
 .env.*
 apps/demo-app/dist
+my-check/
 
 # npm 2FA recovery codes
 npm_recovery_codes.txt

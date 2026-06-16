@@ -4,6 +4,7 @@ import {
   normalizeBrandConfig,
   type BrandConfig,
 } from "@nuvio/shared";
+import { nuvioDevAuthHeaders, resolveOverlayDevToken } from "./dev-token.js";
 
 export async function fetchBrandConfig(): Promise<BrandConfig> {
   try {
@@ -19,9 +20,13 @@ export async function fetchBrandConfig(): Promise<BrandConfig> {
 }
 
 export async function saveBrandConfig(config: BrandConfig): Promise<BrandConfig> {
+  const token = await resolveOverlayDevToken();
   const res = await fetch(NUVIO_BRAND_PATH, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...nuvioDevAuthHeaders(token),
+    },
     body: JSON.stringify(config),
   });
   if (!res.ok) {

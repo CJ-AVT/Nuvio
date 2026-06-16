@@ -58,16 +58,8 @@ import {
   loadDeveloperDetails,
   saveDeveloperDetails,
 } from "./developer-details-storage.js";
-import {
-  captureApplyFailed,
-  captureFirstSelection,
-  captureOverlayConnected,
-  captureOverlayEvent,
-  captureTagElementCompleted,
-  captureTagElementFailed,
-  captureTagElementStarted,
-} from "./telemetry.js";
-import { captureBrandStyleApplied, captureBrandBulkApplied, captureBrandBulkValidated, captureBrandPagePreviewed } from "./brand-kit-telemetry.js";
+import { nuvioWebSocketUrl, resolveOverlayDevToken } from "./dev-token.js";
+import { loadOverlayStyles } from "./load-overlay-styles.js";
 import {
   revertBrandDomStaging,
   stageBrandHostsOnPage,
@@ -153,6 +145,10 @@ function assignRef<T extends HTMLElement>(
 }
 
 export function NuvioDevShellInner(): ReactElement {
+  useEffect(() => {
+    loadOverlayStyles();
+  }, []);
+
   const shadowMount = useNuvioShadowMount();
   const panelRef = useRef<HTMLElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
@@ -582,7 +578,6 @@ export function NuvioDevShellInner(): ReactElement {
       }
       setPreviewValidatedFingerprint(null);
       setPreviewValidatedOps(null);
-      captureBrandBulkValidated(session.action, session.validated.length, session.failures.length > 0);
       return;
     }
     const target = session.targets[session.nextPreviewIndex]!;
@@ -597,7 +592,6 @@ export function NuvioDevShellInner(): ReactElement {
     }
     if (session.nextApplyIndex >= session.validated.length) {
       setPreviewBusy(false);
-      captureBrandBulkApplied(session.action, session.validated.length);
       setBrandBulkAppliedByAction((prev) => ({
         ...prev,
         [session.action]: session.brandConfig,
@@ -709,9 +703,6 @@ export function NuvioDevShellInner(): ReactElement {
     }
     const painted = stageBrandHostsOnPage(session.validated);
     setBrandPagePreviewActive(painted > 0);
-    if (painted > 0) {
-      captureBrandPagePreviewed(session.action, painted);
-    }
   }, []);
 
   const onRequestStructuralPreview = useCallback(
@@ -850,7 +841,6 @@ export function NuvioDevShellInner(): ReactElement {
     tagPendingRequestIdRef.current = requestId;
     setTagBusy(true);
     setTagError(null);
-    captureTagElementStarted();
     ws.send(
       JSON.stringify({
         type: "tagElement",
@@ -888,7 +878,6 @@ export function NuvioDevShellInner(): ReactElement {
       setLastPatchError(null);
       setSelectedId(id);
       setSelectError(null);
-      captureFirstSelection();
       const hit = lastIndexEntriesRef.current.find((e) => e.id === id);
       if (hit) {
         setResolvedFile(shortDisplayPath(hit.file));
@@ -908,14 +897,20 @@ export function NuvioDevShellInner(): ReactElement {
     let retryMs = 400;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const connect = () => {
+    const connect = async () => {
       if (cancelled) {
         return;
       }
       const myGen = ++connectGenRef.current;
       setChannel("connecting");
       const proto = location.protocol === "https:" ? "wss:" : "ws:";
-      ws = new WebSocket(`${proto}//${location.host}${NUVIO_WS_PATH}`);
+      const token = await resolveOverlayDevToken();
+      if (cancelled || connectGenRef.current !== myGen) {
+        return;
+      }
+      ws = new WebSocket(
+        nuvioWebSocketUrl(proto, location.host, NUVIO_WS_PATH, token),
+      );
       wsRef.current = ws;
 
       ws.addEventListener("open", () => {
@@ -925,7 +920,6 @@ export function NuvioDevShellInner(): ReactElement {
         }
         retryMs = 400;
         setChannel("ready");
-        captureOverlayConnected();
         patchPendingMapRef.current.clear();
         if (previewTimeoutRef.current) {
           clearTimeout(previewTimeoutRef.current);
@@ -998,14 +992,11 @@ export function NuvioDevShellInner(): ReactElement {
             tagPendingRequestIdRef.current = null;
             setTagBusy(false);
             if (msg.ok && msg.id) {
-              captureTagElementCompleted();
               setUntaggedTarget(null);
               setTagError(null);
               setSelectedId(msg.id);
-              captureFirstSelection();
               sendSelect(msg.id);
             } else {
-              captureTagElementFailed(msg.errorCode);
               setTagError(msg.errorMessage ?? "Could not tag this element");
             }
             return;
@@ -1072,7 +1063,6 @@ export function NuvioDevShellInner(): ReactElement {
                 setPreviewError(null);
                 setPreviewValidatedFingerprint(savedFp);
                 setPreviewValidatedOps(pending.ops);
-                captureOverlayEvent("preview_changes");
                 if (autoApplyStructuralRef.current && isStructuralOnlyOps(pending.ops)) {
                   autoApplyStructuralRef.current = false;
                   sendPatchMessage(
@@ -1103,16 +1093,10 @@ export function NuvioDevShellInner(): ReactElement {
                   runNextBulkApplyRef.current();
                 } else {
                   setLastPatchError(msg.errorMessage ?? msg.errorCode ?? "Apply failed");
-                  captureApplyFailed(msg.errorCode, {
-                    duplicateIdsActive: duplicateErrorsRef.current.length > 0,
-                  });
                 }
                 return;
               }
               if (msg.ok) {
-                if (previewOriginRef.current === "brand") {
-                  captureBrandStyleApplied();
-                }
                 setStructuralPreviewActive(false);
                 setLastPatchError(null);
                 setPreviewSummary(null);
@@ -1125,12 +1109,8 @@ export function NuvioDevShellInner(): ReactElement {
                 if (msg.undoStackDepth !== undefined) {
                   setUndoStackDepth(msg.undoStackDepth);
                 }
-                captureOverlayEvent("apply_to_code");
               } else {
                 setLastPatchError(msg.errorMessage ?? msg.errorCode ?? "Apply failed");
-                captureApplyFailed(msg.errorCode, {
-                  duplicateIdsActive: duplicateErrorsRef.current.length > 0,
-                });
               }
               return;
             }
@@ -1209,12 +1189,12 @@ export function NuvioDevShellInner(): ReactElement {
         setChannel("idle");
         reconnectTimer = setTimeout(() => {
           retryMs = Math.min(retryMs * 2, 10_000);
-          connect();
+          void connect();
         }, retryMs);
       });
     };
 
-    connect();
+    void connect();
 
     return () => {
       cancelled = true;

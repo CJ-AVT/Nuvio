@@ -1,12 +1,6 @@
-import { detectPackageManager } from "./detect-pm.js";
 import { PreflightError } from "./detect-project.js";
 import { nuvioOverlayLinkKind } from "./nuvio-deps.js";
 import { scanProject } from "./project-scan.js";
-import {
-  buildCliTelemetryProps,
-  captureCliEvent,
-  type DoctorRunTelemetry,
-} from "./telemetry.js";
 import { verifyProject } from "./verify.js";
 
 export type DoctorCheckStatus = "pass" | "warn" | "fail";
@@ -192,16 +186,6 @@ export async function runDoctor(opts: DoctorOptions): Promise<number> {
     warnCount,
     failCount,
   };
-
-  const pm = detectPackageManager(ctx.root);
-  const telemetry: DoctorRunTelemetry = {
-    ...buildCliTelemetryProps(pm, ctx),
-    pass_count: passCount,
-    warn_count: warnCount,
-    fail_count: failCount,
-    ready: failCount === 0,
-  };
-  captureCliEvent("doctor_run", telemetry);
 
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));

@@ -1,14 +1,14 @@
 {
   "version": 2,
   "tokens": {
-    "accent": "green",
-    "surface": "white",
-    "radius": "soft",
+    "accent": "rose",
+    "surface": "muted",
+    "radius": "rounded",
     "density": "balanced",
     "typography": "clean",
     "buttonVariant": "solid",
     "buttonHover": "darken",
-    "cardShadow": "sm",
-    "cardHover": "none"
+    "cardShadow": "md",
+    "cardHover": "border"
   }
 }

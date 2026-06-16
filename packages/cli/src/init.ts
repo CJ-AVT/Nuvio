@@ -20,11 +20,6 @@ import { MSG } from "./messages.js";
 import { NUVIO_VERSION } from "./version.js";
 import { writeNuvioFolder } from "./write-nuvio-folder.js";
 import { printVerification, verifyProject } from "./verify.js";
-import {
-  buildCliTelemetryProps,
-  captureCliEvent,
-  preflightErrorCode,
-} from "./telemetry.js";
 
 export type InitOptions = {
   cwd: string;
@@ -113,19 +108,11 @@ function printSuccess(
       "\nnuvio helped you as far as it safely could. See warnings above.",
     );
   }
-  console.log(`\n${MSG.telemetryNotice}`);
 }
 
 export async function runInit(opts: InitOptions): Promise<number> {
   const root = opts.cwd;
   const pm = detectPackageManager(root, opts.pm);
-
-  if (!opts.dryRun) {
-    captureCliEvent(
-      "nuvio_init_started",
-      buildCliTelemetryProps(pm),
-    );
-  }
 
   let project;
   try {
@@ -133,26 +120,13 @@ export async function runInit(opts: InitOptions): Promise<number> {
   } catch (e) {
     if (e instanceof PreflightError) {
       console.error(e.message);
-      if (!opts.dryRun) {
-        captureCliEvent("nuvio_init_failed", {
-          ...buildCliTelemetryProps(pm),
-          error_code: preflightErrorCode(e.message),
-        });
-      }
       return 1;
     }
     if (opts.verbose) console.error(e);
     console.error("Something went wrong. Run with --verbose for details.");
-    if (!opts.dryRun) {
-      captureCliEvent("nuvio_init_failed", {
-        ...buildCliTelemetryProps(pm),
-        error_code: "unexpected_error",
-      });
-    }
     return 2;
   }
 
-  const projectProps = buildCliTelemetryProps(pm, project);
   const plan = createPlan(root, pm);
   plan.installCommand = opts.noInstall
     ? "(skipped — --no-install)"
@@ -163,10 +137,6 @@ export async function runInit(opts: InitOptions): Promise<number> {
       "Tailwind CSS not detected. Class/style edits may not work until Tailwind is installed.";
     if (opts.strict) {
       console.error(MSG.strictTailwind);
-      captureCliEvent("nuvio_init_failed", {
-        ...projectProps,
-        error_code: "strict_tailwind",
-      });
       return 1;
     }
     plan.warnings.push(msg);
@@ -200,10 +170,6 @@ export async function runInit(opts: InitOptions): Promise<number> {
     const ok = await confirm(plan);
     if (!ok) {
       console.log("Cancelled.");
-      captureCliEvent("nuvio_init_failed", {
-        ...projectProps,
-        error_code: "user_cancelled",
-      });
       return 1;
     }
   }
@@ -214,10 +180,6 @@ export async function runInit(opts: InitOptions): Promise<number> {
       const result = runInstall(root, pm, NUVIO_VERSION);
       if (!result.ok) {
         console.error(result.message ?? "Install failed.");
-        captureCliEvent("nuvio_init_failed", {
-          ...projectProps,
-          error_code: "install_failed",
-        });
         return 1;
       }
     } else {
@@ -300,16 +262,7 @@ export async function runInit(opts: InitOptions): Promise<number> {
   printVerification(verification);
 
   if (plan.tier === "failed") {
-    captureCliEvent("nuvio_init_failed", {
-      ...projectProps,
-      error_code: "init_tier_failed",
-      result_tier: "failed",
-    });
     return 1;
   }
-  captureCliEvent("nuvio_init_completed", {
-    ...projectProps,
-    result_tier: plan.tier,
-  });
   return plan.tier === "partial" || plan.tier === "full" ? 0 : 1;
 }

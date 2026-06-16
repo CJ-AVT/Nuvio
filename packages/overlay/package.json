@@ -52,7 +52,6 @@
   },
   "dependencies": {
     "@nuvio/shared": "workspace:*",
-    "posthog-js": "^1.380.1",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {

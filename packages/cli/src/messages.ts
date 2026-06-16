@@ -14,9 +14,4 @@ export const MSG = {
     "nuvio set up what it could safely. Finish the steps in nuvio/SETUP_TODO.md, then run your dev server.",
   noHeading:
     'nuvio is wired, but I could not find a heading to mark editable. Add data-nuvio-id="page.title" to one visible element (see nuvio/START_HERE.md).',
-  telemetryNotice: `nuvio collects anonymous usage metrics to improve onboarding and reliability.
-No source code, file contents, file paths, project names, emails, or personal data are sent.
-
-Disable anytime with:
-NUVIO_TELEMETRY=0`,
 } as const;

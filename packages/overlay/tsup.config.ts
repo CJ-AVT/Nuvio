@@ -7,9 +7,7 @@ export default defineConfig({
   clean: true,
   external: ["react", "react-dom", "@nuvio/shared"],
   define: {
-    "import.meta.env.VITE_NUVIO_TELEMETRY": JSON.stringify(
-      process.env.VITE_NUVIO_TELEMETRY ?? "",
-    ),
+    "import.meta.env.VITE_NUVIO_DEV_TOKEN": JSON.stringify(""),
   },
   esbuildOptions(options) {
     options.loader = { ...options.loader, ".css": "empty" };

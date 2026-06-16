@@ -85,7 +85,6 @@ import {
 import type { BrandBulkAppliedByAction, BrandBulkProgress } from "./brand-bulk-session.js";
 import { BrandKitPanel } from "./brand-kit-panel.js";
 import { EditorPanelTabs, type EditorPanelTab } from "./editor-panel-tabs.js";
-import { captureBrandKitOpened } from "./brand-kit-telemetry.js";
 import { OnboardingGuide } from "./OnboardingGuide.js";
 import { buildHumanPreviewLines, formatHumanPreviewBlock } from "./human-preview.js";
 import { mapSelectOptionsForSimpleMode, type SimpleOptionCategory } from "./simple-option-labels.js";
@@ -1345,9 +1344,6 @@ export function PropertyPanelShell({
               onRevertBrandPagePreview();
             }
             setEditorTab(tab);
-            if (tab === "brand") {
-              captureBrandKitOpened();
-            }
           }}
         />
         <div className="nuvio-panel-body">

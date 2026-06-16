@@ -20,8 +20,6 @@
     "brand:apply:dogfood": "node packages/cli/dist/cli-entry.js brand apply --all --cwd apps/tailadmin-dogfood",
     "v051:acceptance": "node scripts/v051-cli-acceptance.mjs",
     "v10:acceptance": "node scripts/v10-acceptance.mjs",
-    "telemetry:smoke": "node scripts/telemetry-smoke.mjs",
-    "posthog:verify": "node scripts/posthog-verify.mjs",
     "publish:alpha": "pnpm -r publish --filter \"./packages/*\" --access public --tag alpha",
     "publish:stable": "pnpm -r publish --filter \"@nuvio/shared\" --filter \"@nuvio/ast-engine\" --filter \"@nuvio/vite-plugin\" --filter \"@nuvio/overlay\" --filter \"@nuvio/cli\" --access public"
   },

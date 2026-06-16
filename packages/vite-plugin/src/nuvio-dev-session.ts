@@ -1,4 +1,5 @@
-import type { IncomingMessage, Server as HttpServer } from "node:http";
+import { randomUUID } from "node:crypto";
+import type { IncomingMessage, Server as HttpServer, ServerResponse } from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import type { Duplex } from "node:stream";
@@ -9,6 +10,9 @@ import { handleTagElementMessage } from "./handle-tag-element.js";
 import { resolvePatchClassNameMode } from "./resolve-classname-mode.js";
 import { detectProjectLibraries } from "./detect-libraries.js";
 import {
+  NUVIO_BRAND_PATH,
+  NUVIO_DEV_TOKEN_PATH,
+  NUVIO_PCC_PATH,
   NUVIO_WS_PATH,
   PROTOCOL_VERSION,
   type DuplicateIdError,
@@ -20,6 +24,10 @@ import {
 import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
 import { readRuntimeVersions } from "./read-dep-version.js";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
+import { handleBrandConfigHttp } from "./handle-brand-config.js";
+import { handleDevTokenHttp } from "./handle-dev-token.js";
+import { handlePccConfigHttp } from "./handle-pcc-config.js";
+import { validateNuvioUpgrade } from "./dev-auth-guard.js";
 import {
   buildSourceIndex,
   extractIdsFromSource,
@@ -43,6 +51,8 @@ export type NuvioDevSessionOptions = {
   verbose?: boolean;
   classNameMode?: "literal-only" | "cn-basic";
   log?: Pick<Console, "info" | "warn">;
+  /** Per-server secret for WS + HTTP writes; generated when omitted. */
+  devAuthToken?: string;
 };
 
 export type NuvioDevSessionHandle = {
@@ -65,21 +75,6 @@ function nuvioWsMessageToText(data: unknown): string {
     return Buffer.from(v.buffer, v.byteOffset, v.byteLength).toString("utf8");
   }
   return String(data);
-}
-
-function isAllowedOrigin(origin: string | undefined): boolean {
-  if (origin === undefined || origin === "") {
-    return true;
-  }
-  try {
-    const u = new URL(origin);
-    return (
-      (u.hostname === "localhost" || u.hostname === "127.0.0.1") &&
-      (u.protocol === "http:" || u.protocol === "https:")
-    );
-  } catch {
-    return false;
-  }
 }
 
 function supplementIndexFromAppTsx(
@@ -131,6 +126,9 @@ export function attachNuvioDevSession(
   const fromConfigFile = options.configDir ?? "";
   const rootCandidates = [path.resolve(fromConfigFile || serverRoot), serverRoot, process.cwd()];
   const rootsLabel = [...new Set(rootCandidates)].join(" | ");
+  const devAuthToken = options.devAuthToken ?? randomUUID();
+  const projectRoot = path.resolve(fromConfigFile || serverRoot);
+  const writeGuardRoot = projectRoot;
 
   let indexVersion = 0;
   let cachedIndexPayload: string | null = null;
@@ -505,7 +503,7 @@ export function attachNuvioDevSession(
     if (pathname !== NUVIO_WS_PATH) {
       return;
     }
-    if (!isAllowedOrigin(request.headers.origin)) {
+    if (!validateNuvioUpgrade(request, devAuthToken)) {
       socket.destroy();
       return;
     }
@@ -513,6 +511,45 @@ export function attachNuvioDevSession(
       wss.emit("connection", ws, request);
     });
   };
+
+  const onNuvioHttp = (req: IncomingMessage, res: ServerResponse): boolean => {
+    if (!enabled) {
+      return false;
+    }
+    const pathname = (req.url ?? "").split("?")[0] ?? "";
+    if (pathname === NUVIO_DEV_TOKEN_PATH) {
+      handleDevTokenHttp(req, res, devAuthToken);
+      return true;
+    }
+    if (pathname === NUVIO_PCC_PATH) {
+      void handlePccConfigHttp(req, res, { projectRoot, writeGuardRoot });
+      return true;
+    }
+    if (pathname === NUVIO_BRAND_PATH) {
+      void handleBrandConfigHttp(req, res, {
+        projectRoot,
+        writeGuardRoot,
+        devAuthToken,
+      });
+      return true;
+    }
+    return false;
+  };
+
+  const priorRequestListeners = httpServer.listeners("request") as Array<
+    (req: IncomingMessage, res: ServerResponse) => void
+  >;
+  if (priorRequestListeners.length > 0) {
+    httpServer.removeAllListeners("request");
+    httpServer.on("request", (req, res) => {
+      if (onNuvioHttp(req, res)) {
+        return;
+      }
+      for (const listener of priorRequestListeners) {
+        listener.call(httpServer, req, res);
+      }
+    });
+  }
 
   httpServer.on("upgrade", onUpgrade);
 
@@ -527,6 +564,12 @@ export function attachNuvioDevSession(
     rebuildIndex,
     close: () => {
       httpServer.off("upgrade", onUpgrade);
+      if (priorRequestListeners.length > 0) {
+        httpServer.removeAllListeners("request");
+        for (const listener of priorRequestListeners) {
+          httpServer.on("request", listener);
+        }
+      }
       fileWatcher?.close();
       for (const client of wss.clients) {
         client.close();

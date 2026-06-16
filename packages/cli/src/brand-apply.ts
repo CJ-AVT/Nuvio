@@ -22,6 +22,7 @@ import {
 } from "@nuvio/shared/load-pcc-manifest";
 import { PreflightError } from "./detect-project.js";
 import { scanProject } from "./project-scan.js";
+import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
 
 export type BrandApplyOptions = {
   cwd: string;
@@ -127,6 +128,15 @@ async function applyTargetsToProject(
   const failed: Array<{ hostId: string; reason: string }> = [];
 
   for (const [filePath, fileTargets] of byFile) {
+    try {
+      assertPathWithinRoot(root, filePath);
+    } catch {
+      for (const target of fileTargets) {
+        failed.push({ hostId: target.hostId, reason: "path_escape" });
+      }
+      continue;
+    }
+
     if (!existsSync(filePath)) {
       for (const target of fileTargets) {
         failed.push({ hostId: target.hostId, reason: "file_missing" });

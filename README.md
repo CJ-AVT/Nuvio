@@ -140,23 +140,11 @@ Dogfood reference: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/REA
 
 ---
 
-## Telemetry
+## Security
 
-nuvio collects **anonymous usage events** to improve onboarding and reliability. Telemetry is **on by default** and **opt-out**.
+nuvio is a **local dev tool**. The Vite plugin exposes authenticated write APIs on the dev server (WebSocket patches, brand config). Do not expose the dev server to untrusted networks without understanding the threat model.
 
-**Collected:** CLI / overlay version · OS and Node (CLI) · event names (e.g. `nuvio_cli_invoked`, `apply_to_code`, brand-kit events) · coarse install outcome
-
-**Not collected:** source code · file contents · file paths · project names · emails · personal information
-
-**Disable anytime:**
-
-```bash
-NUVIO_TELEMETRY=0
-```
-
-In the browser overlay: `localStorage.setItem("nuvio.telemetry", "0")` then refresh.
-
-Details: [CHANGELOG.md](CHANGELOG.md) (telemetry entries under 0.5.4+)
+See [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -322,7 +310,6 @@ pnpm dev                    # build packages, then demo-app
 | `pnpm brand:apply:dogfood` | CLI brand apply (dogfood) |
 | `pnpm v10:acceptance` | v1.0 gate: init + doctor + stats on examples |
 | `pnpm test:cli` | CLI test suite |
-| `pnpm telemetry:smoke` | PostHog CLI smoke (maintainers) |
 | `pnpm publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
 
 ---

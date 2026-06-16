@@ -112,7 +112,11 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
           </button>
 
           <div className="hidden lg:block">
-            <form action="https://formbold.com/s/unique_form_id" method="POST">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+              }}
+            >
               <div className="relative">
                 <button className="absolute -translate-y-1/2 left-4 top-1/2">
                   <svg

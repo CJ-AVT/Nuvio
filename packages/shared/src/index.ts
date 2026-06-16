@@ -1,4 +1,16 @@
-export { NUVIO_BRAND_PATH, NUVIO_PCC_PATH, NUVIO_WS_PATH } from "./constants.js";
+export {
+  NUVIO_BRAND_PATH,
+  NUVIO_DEV_TOKEN_PATH,
+  NUVIO_PCC_PATH,
+  NUVIO_WS_PATH,
+} from "./constants.js";
+export {
+  NUVIO_DEV_TOKEN_QUERY,
+  bearerTokenFromHeader,
+  devTokenFromUpgradeUrl,
+  isAllowedNuvioOrigin,
+  isValidDevToken,
+} from "./dev-auth.js";
 export {
   BRAND_APPLY_ACTIONS,
   BRAND_BUTTON_VARIANTS,
