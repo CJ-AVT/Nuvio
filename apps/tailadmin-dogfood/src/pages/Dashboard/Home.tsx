@@ -13,7 +13,7 @@ export default function Home() {
         description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <h1
-        data-nuvio-id="dashboard.title"
+        data-rte-id="dashboard.title"
         className="mb-4 text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
       >
         Ecommerce Dashboard 1024356

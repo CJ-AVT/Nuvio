@@ -1,4 +1,4 @@
-import type { Breakpoint } from "@nuvio/shared";
+import type { Breakpoint } from "@rte/shared";
 
 const BREAKPOINT_LABELS: Record<Breakpoint, string> = {
   base: "All screen sizes",

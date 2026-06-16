@@ -41,7 +41,7 @@ describe("runDoctor", () => {
   });
 
   it("emits JSON with check statuses", async () => {
-    const root = fixture("vite-already-nuvio");
+    const root = fixture("vite-already-rte");
     const logs: string[] = [];
     const orig = console.log;
     console.log = (...args: unknown[]) => {

@@ -1,20 +1,20 @@
-<!-- nuvio-cli-template: 1 -->
-# Start here — nuvio in this project
+<!-- rte-cli-template: 1 -->
+# Start here — rte in this project
 
-Installed with @nuvio/cli@{{NUVIO_VERSION}}.
+Installed with @rte/cli@{{RTE_VERSION}}.
 
 **Run:** {{PM_RUN}}
 
 **Then:**
 1. Open the localhost URL from the terminal
-2. Turn **Edit** on (nuvio chip)
+2. Turn **Edit** on (rte chip)
 3. Click the starter element (usually the page title — id `page.title`)
 4. **Preview Changes** → **Apply to Code**
 
 **More UI without manual ids:** click any untagged element → **Make Editable** → confirm → edit → apply.
 
-**Dashboards (cards, tables, buttons):** ask your AI agent to read `nuvio/AGENT.md` for id patterns.
+**Dashboards (cards, tables, buttons):** ask your AI agent to read `rte/AGENT.md` for id patterns.
 
-**Diagnostics:** `nuvio doctor` · `nuvio scan` · `nuvio stats`
+**Diagnostics:** `rte doctor` · `rte scan` · `rte stats`
 
-**Manual setup:** https://github.com/ehah/Nuvio/blob/v{{NUVIO_VERSION}}/docs/nuvioUser.md
+**Manual setup:** https://github.com/ehah/Rte/blob/v{{RTE_VERSION}}/docs/rteUser.md

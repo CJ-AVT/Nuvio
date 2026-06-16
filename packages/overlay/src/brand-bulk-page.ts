@@ -6,9 +6,9 @@ import {
   type DuplicateIdError,
   type IndexWireEntry,
   type PccManifest,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import { formatFriendlyId } from "./human-naming.js";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { escapeAttrSelector } from "./rte-dom.js";
 import { isDuplicateIndexedId } from "./selection-summary.js";
 
 function duplicateIdSet(errors: readonly DuplicateIdError[]): Set<string> {
@@ -33,7 +33,7 @@ export function listVisibleBrandBulkTargets(
       if (isDuplicateIndexedId(target.hostId, duplicateErrors)) {
         return false;
       }
-      const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(target.hostId)}"]`);
+      const el = document.querySelector(`[data-rte-id="${escapeAttrSelector(target.hostId)}"]`);
       return el instanceof HTMLElement;
     })
     .map((target) => {

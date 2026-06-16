@@ -1,5 +1,5 @@
-import type { BrandApplyAction, BrandConfig, PatchOp } from "@nuvio/shared";
-import { brandConfigsEqual } from "@nuvio/shared";
+import type { BrandApplyAction, BrandConfig, PatchOp } from "@rte/shared";
+import { brandConfigsEqual } from "@rte/shared";
 
 export type BrandBulkValidatedHost = {
   hostId: string;

@@ -1,14 +1,14 @@
 {
-  "name": "@nuvio/vite-plugin",
+  "name": "@rte/vite-plugin",
   "version": "1.1.0",
-  "description": "Nuvio Vite plugin 1.0 — dev WebSocket, source index, click-to-tag, secure patch writes for React + Tailwind.",
+  "description": "Rte Vite plugin 1.0 — dev WebSocket, source index, click-to-tag, secure patch writes for React + Tailwind.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ehah/Nuvio.git",
+    "url": "https://github.com/ehah/Rte.git",
     "directory": "packages/vite-plugin"
   },
-  "keywords": ["nuvio", "vite", "vite-plugin", "devtools", "react"],
+  "keywords": ["rte", "vite", "vite-plugin", "devtools", "react"],
   "publishConfig": {
     "access": "public"
   },
@@ -22,8 +22,8 @@
       "import": "./dist/index.js"
     },
     "./dev-session": {
-      "types": "./dist/nuvio-dev-session.d.ts",
-      "import": "./dist/nuvio-dev-session.js"
+      "types": "./dist/rte-dev-session.d.ts",
+      "import": "./dist/rte-dev-session.js"
     },
     "./scan": {
       "types": "./dist/scan.d.ts",
@@ -34,7 +34,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/index.ts src/nuvio-dev-session.ts src/scan.ts --format esm --dts --clean --external vite --external @nuvio/shared --external @nuvio/ast-engine",
+    "build": "tsup src/index.ts src/rte-dev-session.ts src/scan.ts --format esm --dts --clean --external vite --external @rte/shared --external @rte/ast-engine",
     "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
@@ -45,8 +45,8 @@
   "dependencies": {
     "@babel/parser": "^7.26.9",
     "@babel/traverse": "^7.26.9",
-    "@nuvio/ast-engine": "workspace:*",
-    "@nuvio/shared": "workspace:*",
+    "@rte/ast-engine": "workspace:*",
+    "@rte/shared": "workspace:*",
     "fast-glob": "^3.3.3",
     "ws": "^8.18.0"
   },

@@ -1,4 +1,4 @@
-import { detectShadcnComponentMode, type IndexWireEntry } from "@nuvio/shared";
+import { detectShadcnComponentMode, type IndexWireEntry } from "@rte/shared";
 import { detectTableMode } from "./table-panel.js";
 
 function resolveCardContext(

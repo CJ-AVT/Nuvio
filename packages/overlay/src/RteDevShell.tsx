@@ -19,17 +19,18 @@ import type {
   IndexWireEntry,
   PatchOp,
   RuntimeDiagnostics,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import {
-  NUVIO_WS_PATH,
+  RTE_WS_PATH,
   PROTOCOL_VERSION,
   brandConfigsEqual,
   parseServerMessage,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import { InteractionLayer } from "./InteractionLayer.js";
 import { MakeEditablePanel } from "./MakeEditablePanel.js";
-import type { UntaggedLocTarget } from "./nuvio-loc-dom.js";
-import { suggestNuvioId } from "./suggest-nuvio-id.js";
+import type { UnlocatableClickTarget, UntaggedLocTarget } from "./rte-loc-dom.js";
+import { UnlocatableElementPanel } from "./UnlocatableElementPanel.js";
+import { suggestRteId } from "./suggest-rte-id.js";
 import {
   cornerAnchorPosition,
   clampToViewport,
@@ -43,24 +44,24 @@ import {
   type Point,
 } from "./overlay-chrome-storage.js";
 import {
-  NUVO_GLASS_CONTENT,
-  NUVO_GLASS_SHELL,
-  NUVO_GLASS_SHELL_INLINE,
-  NUVO_ROOT,
+  RTE_GLASS_CONTENT,
+  RTE_GLASS_SHELL,
+  RTE_GLASS_SHELL_INLINE,
+  RTE_ROOT,
 } from "./overlay-chrome-classes.js";
-import { clearNuvioOutlines } from "./nuvio-outlines.js";
+import { clearRteOutlines } from "./rte-outlines.js";
 import { pickDefaultTextTargetKey } from "./text-target-dom.js";
-import { useNuvioShadowMount } from "./NuvioShadowRoot.js";
+import { useRteShadowMount } from "./RteShadowRoot.js";
 import { PropertyPanelShell } from "./PropertyPanelShell.js";
-import { NuvioChromeHeader } from "./NuvioChromeHeader.js";
-import type { NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
+import { RteChromeHeader } from "./RteChromeHeader.js";
+import type { RteChannelState } from "./RuntimeDiagnosticsBlock.js";
 import { isStructuralOnlyOps } from "./structural-patch-ops.js";
 import { useChromeDrag } from "./useChromeDrag.js";
 import {
   loadDeveloperDetails,
   saveDeveloperDetails,
 } from "./developer-details-storage.js";
-import { nuvioWebSocketUrl, resolveOverlayDevToken } from "./dev-token.js";
+import { rteWebSocketUrl, resolveOverlayDevToken } from "./dev-token.js";
 import { loadOverlayStyles } from "./load-overlay-styles.js";
 import {
   revertBrandDomStaging,
@@ -109,13 +110,13 @@ function safeCloseWebSocket(socket: WebSocket): void {
     socket.addEventListener(
       "open",
       () => {
-        socket.close(1000, "nuvio-dispose");
+        socket.close(1000, "rte-dispose");
       },
       { once: true },
     );
     return;
   }
-  socket.close(1000, "nuvio-dispose");
+  socket.close(1000, "rte-dispose");
 }
 
 /** Normalize browser WebSocket payloads (Safari may use ArrayBuffer; Vite HMR can use Blob). */
@@ -148,12 +149,12 @@ function assignRef<T extends HTMLElement>(
   (ref as MutableRefObject<T | null>).current = el;
 }
 
-export function NuvioDevShellInner(): ReactElement {
+export function RteDevShellInner(): ReactElement {
   useEffect(() => {
     loadOverlayStyles();
   }, []);
 
-  const shadowMount = useNuvioShadowMount();
+  const shadowMount = useRteShadowMount();
   const panelRef = useRef<HTMLElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
   const shadowHostRef = useRef<HTMLElement | null>(null);
@@ -367,6 +368,7 @@ export function NuvioDevShellInner(): ReactElement {
   }, [chipPos, chipDragging]);
 
   const [editMode, setEditMode] = useState(false);
+  const [makeEditableMode, setMakeEditableMode] = useState(false);
   const [channel, setChannel] = useState<ChannelState>("idle");
   const [knownIds, setKnownIds] = useState<ReadonlySet<string>>(new Set());
   const [indexEntries, setIndexEntries] = useState<readonly IndexWireEntry[]>([]);
@@ -388,10 +390,13 @@ export function NuvioDevShellInner(): ReactElement {
   const [resolvedLine, setResolvedLine] = useState<number | undefined>(undefined);
   const [selectError, setSelectError] = useState<string | null>(null);
   const [untaggedTarget, setUntaggedTarget] = useState<UntaggedLocTarget | null>(null);
+  const [unlocatableTarget, setUnlocatableTarget] = useState<UnlocatableClickTarget | null>(null);
   const [tagSuggestedId, setTagSuggestedId] = useState("");
   const [tagBusy, setTagBusy] = useState(false);
   const [tagError, setTagError] = useState<string | null>(null);
   const tagPendingRequestIdRef = useRef<string | null>(null);
+  const zeroIdBootstrapRef = useRef(false);
+  const hadZeroIdsRef = useRef(false);
 
   const [previewSummary, setPreviewSummary] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -408,6 +413,7 @@ export function NuvioDevShellInner(): ReactElement {
   const undoPendingRef = useRef<string | null>(null);
   const resolvedFileRef = useRef<string | undefined>(undefined);
   const selectedIdRef = useRef<string | null>(null);
+  const editModeRef = useRef(false);
   const lastIndexEntriesRef = useRef<readonly IndexWireEntry[]>([]);
   const duplicateErrorsRef = useRef<readonly DuplicateIdError[]>([]);
   const lastStagedOpsFpRef = useRef<string | null>(null);
@@ -441,6 +447,10 @@ export function NuvioDevShellInner(): ReactElement {
   }, [selectedId]);
 
   useEffect(() => {
+    editModeRef.current = editMode;
+  }, [editMode]);
+
+  useEffect(() => {
     duplicateErrorsRef.current = duplicateErrors;
   }, [duplicateErrors]);
 
@@ -462,13 +472,24 @@ export function NuvioDevShellInner(): ReactElement {
   const exitEditMode = useCallback(() => {
     revertBrandDomStaging();
     setBrandPagePreviewActive(false);
-    clearNuvioOutlines();
+    clearRteOutlines();
     setSelectedId(null);
-    setUntaggedTarget(null);
-    setTagError(null);
-    setTagBusy(false);
+    editModeRef.current = false;
     setEditMode(false);
   }, []);
+
+  const exitMakeEditableMode = useCallback(() => {
+    setUntaggedTarget(null);
+    setUnlocatableTarget(null);
+    setTagError(null);
+    setTagBusy(false);
+    setMakeEditableMode(false);
+  }, []);
+
+  const exitInteractionModes = useCallback(() => {
+    exitEditMode();
+    exitMakeEditableMode();
+  }, [exitEditMode, exitMakeEditableMode]);
 
   const toggleEditMode = useCallback(() => {
     setEditMode((prev) => {
@@ -476,29 +497,62 @@ export function NuvioDevShellInner(): ReactElement {
         patchChrome({ panel: { collapsed: true }, chip: { collapsed: true } });
         revertBrandDomStaging();
         setBrandPagePreviewActive(false);
-        clearNuvioOutlines();
+        clearRteOutlines();
         setSelectedId(null);
-        setUntaggedTarget(null);
-        setTagError(null);
-        setTagBusy(false);
+        editModeRef.current = false;
+        if (!makeEditableMode) {
+          setUntaggedTarget(null);
+          setUnlocatableTarget(null);
+          setTagError(null);
+          setTagBusy(false);
+        }
         return false;
       }
       patchChrome({ panel: { collapsed: false }, chip: { collapsed: false } });
+      editModeRef.current = true;
       return true;
     });
-  }, [patchChrome]);
+  }, [makeEditableMode, patchChrome]);
+
+  const setMakeEditableModeEnabled = useCallback(
+    (enabled: boolean) => {
+      setMakeEditableMode(enabled);
+      if (enabled) {
+        patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
+      } else {
+        setUntaggedTarget(null);
+        setUnlocatableTarget(null);
+        setTagError(null);
+        setTagBusy(false);
+        clearRteOutlines();
+        if (!editModeRef.current) {
+          patchChrome({ panel: { collapsed: true }, chip: { collapsed: true } });
+        }
+      }
+    },
+    [patchChrome],
+  );
 
   const expandChrome = useCallback(() => {
+    editModeRef.current = true;
     patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
     setEditMode(true);
-  }, [patchChrome]);
+    if (makeEditableMode) {
+      setMakeEditableMode(false);
+      setUntaggedTarget(null);
+      setUnlocatableTarget(null);
+      setTagError(null);
+      setTagBusy(false);
+      clearRteOutlines();
+    }
+  }, [makeEditableMode, patchChrome]);
 
   const collapseChrome = useCallback(() => {
     patchChrome({ chip: { collapsed: true }, panel: { collapsed: true } });
-    if (editMode) {
-      window.setTimeout(() => exitEditMode(), CHROME_COLLAPSE_MS);
+    if (editMode || makeEditableMode) {
+      window.setTimeout(() => exitInteractionModes(), CHROME_COLLAPSE_MS);
     }
-  }, [editMode, exitEditMode, patchChrome]);
+  }, [editMode, exitInteractionModes, makeEditableMode, patchChrome]);
 
   const setChromeShellElement = useCallback((el: HTMLElement | null) => {
     assignRef(chipRef, el);
@@ -553,7 +607,7 @@ export function NuvioDevShellInner(): ReactElement {
         }
         patchPendingMapRef.current.delete(requestId);
         setPreviewBusy(false);
-        setPreviewError("No validation response from the dev server (timed out). Check the terminal for [nuvio] errors.");
+        setPreviewError("No validation response from the dev server (timed out). Check the terminal for [rte] errors.");
       }, 15_000);
     }
     ws.send(
@@ -864,11 +918,12 @@ export function NuvioDevShellInner(): ReactElement {
   const onSelectUntagged = useCallback(
     (target: UntaggedLocTarget | null) => {
       setUntaggedTarget(target);
+      setUnlocatableTarget(null);
       setTagError(null);
       setTagBusy(false);
       if (target) {
         setTagSuggestedId(
-          suggestNuvioId({
+          suggestRteId({
             tagName: target.tagName,
             existingIds: knownIds,
             libraryHint: runtimeDiagnostics?.detectedLibraries?.[0],
@@ -887,6 +942,23 @@ export function NuvioDevShellInner(): ReactElement {
     setUntaggedTarget(null);
     setTagError(null);
     setTagBusy(false);
+  }, []);
+
+  const onSelectUnlocatable = useCallback((target: UnlocatableClickTarget | null) => {
+    setUnlocatableTarget(target);
+    if (target) {
+      setUntaggedTarget(null);
+      setTagError(null);
+      setTagBusy(false);
+      setSelectedId(null);
+      setSelectError(null);
+      setResolvedFile(undefined);
+      setResolvedLine(undefined);
+    }
+  }, []);
+
+  const onDismissUnlocatable = useCallback(() => {
+    setUnlocatableTarget(null);
   }, []);
 
   const onConfirmMakeEditable = useCallback(() => {
@@ -908,7 +980,7 @@ export function NuvioDevShellInner(): ReactElement {
         file: target.file,
         line: target.line,
         column: target.column,
-        nuvioId: id,
+        rteId: id,
       }),
     );
   }, [tagSuggestedId, untaggedTarget]);
@@ -919,6 +991,7 @@ export function NuvioDevShellInner(): ReactElement {
         return;
       }
       setUntaggedTarget(null);
+      setUnlocatableTarget(null);
       setTagError(null);
       lastStagedOpsFpRef.current = null;
       patchPendingMapRef.current.clear();
@@ -968,7 +1041,7 @@ export function NuvioDevShellInner(): ReactElement {
         return;
       }
       ws = new WebSocket(
-        nuvioWebSocketUrl(proto, location.host, NUVIO_WS_PATH, token),
+        rteWebSocketUrl(proto, location.host, RTE_WS_PATH, token),
       );
       wsRef.current = ws;
 
@@ -1021,6 +1094,12 @@ export function NuvioDevShellInner(): ReactElement {
             setIndexEntries(msg.entries);
             setKnownIds(new Set(msg.entries.map((e) => e.id)));
             setDuplicateErrors(msg.duplicateErrors);
+            hadZeroIdsRef.current = msg.entries.length === 0;
+            if (msg.entries.length === 0 && !zeroIdBootstrapRef.current) {
+              zeroIdBootstrapRef.current = true;
+              setMakeEditableMode(true);
+              patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
+            }
             if (msg.diagnostics) {
               setRuntimeDiagnostics(msg.diagnostics);
             }
@@ -1052,9 +1131,15 @@ export function NuvioDevShellInner(): ReactElement {
             setTagBusy(false);
             if (msg.ok && msg.id) {
               setUntaggedTarget(null);
+              setUnlocatableTarget(null);
               setTagError(null);
               setSelectedId(msg.id);
               sendSelect(msg.id);
+              if (hadZeroIdsRef.current) {
+                hadZeroIdsRef.current = false;
+                editModeRef.current = true;
+                setEditMode(true);
+              }
             } else {
               setTagError(msg.errorMessage ?? "Could not tag this element");
             }
@@ -1279,8 +1364,25 @@ export function NuvioDevShellInner(): ReactElement {
     }
   }, [chromeLayout.chip.collapsed, patchChrome, untaggedTarget]);
 
+  useEffect(() => {
+    if (unlocatableTarget && chromeLayout.chip.collapsed) {
+      patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
+    }
+  }, [chromeLayout.chip.collapsed, patchChrome, unlocatableTarget]);
+
+  useEffect(() => {
+    if (makeEditableMode) {
+      document.body.classList.add("rte-make-editable-cursor");
+    } else {
+      document.body.classList.remove("rte-make-editable-cursor");
+    }
+    return () => {
+      document.body.classList.remove("rte-make-editable-cursor");
+    };
+  }, [makeEditableMode]);
+
   const channelLabel = channel === "ready" ? "connected" : channel;
-  const channelState: NuvioChannelState =
+  const channelState: RteChannelState =
     channel === "ready"
       ? "ready"
       : channel === "connecting"
@@ -1291,7 +1393,11 @@ export function NuvioDevShellInner(): ReactElement {
 
   const chromeShellCollapsed = chromeLayout.chip.collapsed;
   const chromeExpanded =
-    !chromeShellCollapsed && (editMode || Boolean(untaggedTarget));
+    !chromeShellCollapsed &&
+    (editMode ||
+      makeEditableMode ||
+      Boolean(untaggedTarget) ||
+      Boolean(unlocatableTarget));
 
   const [chromeBodyMounted, setChromeBodyMounted] = useState(chromeExpanded);
 
@@ -1305,7 +1411,7 @@ export function NuvioDevShellInner(): ReactElement {
   }, [chromeLayout.chip.collapsed]);
 
   const chromeShellStyle: CSSProperties = {
-    ...NUVO_GLASS_SHELL_INLINE,
+    ...RTE_GLASS_SHELL_INLINE,
     ...(chipPos ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" } : {}),
   };
 
@@ -1313,13 +1419,13 @@ export function NuvioDevShellInner(): ReactElement {
     <div
       ref={setChromeShellElement}
       style={chromeShellStyle}
-      className={`${NUVO_ROOT} nuvio-chrome-shell ${NUVO_GLASS_SHELL} ${
-        chromeShellCollapsed ? "nuvio-chrome-shell--collapsed" : "nuvio-chrome-shell--expanded"
-      } ${chipDragging ? "nuvio-chrome-shell--dragging" : ""}`}
+      className={`${RTE_ROOT} rte-chrome-shell ${RTE_GLASS_SHELL} ${
+        chromeShellCollapsed ? "rte-chrome-shell--collapsed" : "rte-chrome-shell--expanded"
+      } ${chipDragging ? "rte-chrome-shell--dragging" : ""}`}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className={NUVO_GLASS_CONTENT}>
-        <NuvioChromeHeader
+      <div className={RTE_GLASS_CONTENT}>
+        <RteChromeHeader
           expanded={chromeExpanded}
           dragging={chipDragging}
           channel={channelState}
@@ -1340,11 +1446,11 @@ export function NuvioDevShellInner(): ReactElement {
         />
 
         <div
-          className={`nuvio-chrome-body-wrap ${
-            chromeExpanded ? "nuvio-chrome-body-wrap--open" : ""
+          className={`rte-chrome-body-wrap ${
+            chromeExpanded ? "rte-chrome-body-wrap--open" : ""
           }`}
         >
-          <div className="nuvio-chrome-body">
+          <div className="rte-chrome-body">
             {chromeBodyMounted && untaggedTarget ? (
               <MakeEditablePanel
                 target={untaggedTarget}
@@ -1355,9 +1461,17 @@ export function NuvioDevShellInner(): ReactElement {
                 busy={tagBusy}
                 error={tagError}
               />
-            ) : chromeBodyMounted && editMode && !untaggedTarget ? (
+            ) : chromeBodyMounted && unlocatableTarget ? (
+              <UnlocatableElementPanel
+                target={unlocatableTarget}
+                developerDetails={developerDetails}
+                onDismiss={onDismissUnlocatable}
+              />
+            ) : chromeBodyMounted && (editMode || makeEditableMode) && !untaggedTarget && !unlocatableTarget ? (
               <PropertyPanelShell
                 editMode={editMode}
+                makeEditableMode={makeEditableMode}
+                onMakeEditableModeChange={setMakeEditableModeEnabled}
                 embeddedInChrome
                 shellRef={panelRef}
                 panelCollapsed={false}
@@ -1436,13 +1550,17 @@ export function NuvioDevShellInner(): ReactElement {
   return (
     <>
       <InteractionLayer
-        enabled={editMode}
+        enabled={editMode || makeEditableMode}
+        editEnabled={editMode}
+        makeEditableEnabled={makeEditableMode}
         chromeRootRefs={chromeRootRefs}
         knownIds={knownIds}
         selectedId={selectedId}
         onSelectId={onSelectId}
         untaggedTarget={untaggedTarget}
         onSelectUntagged={onSelectUntagged}
+        unlocatableTarget={unlocatableTarget}
+        onSelectUnlocatable={onSelectUnlocatable}
         textTargetHostId={selectedId}
         textTargets={selectedEntry?.textTargets}
         activeTextTargetKey={activeTextTargetKey}

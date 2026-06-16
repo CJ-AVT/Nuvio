@@ -5,31 +5,32 @@ import type { Duplex } from "node:stream";
 import type { Logger, Plugin } from "vite";
 import { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
-import { applyPatchToSource } from "@nuvio/ast-engine";
+import { applyPatchToSource } from "@rte/ast-engine";
 import { resolvePatchClassNameMode } from "./resolve-classname-mode.js";
 import { detectProjectLibraries } from "./detect-libraries.js";
 import { handleTagElementMessage } from "./handle-tag-element.js";
+import { handleUntagElementMessage } from "./handle-untag-element.js";
 import { injectJsxLocAttributes } from "./jsx-loc-transform.js";
 import {
-  NUVIO_BRAND_PATH,
-  NUVIO_DEV_TOKEN_PATH,
-  NUVIO_PCC_PATH,
-  NUVIO_WS_PATH,
+  RTE_BRAND_PATH,
+  RTE_DEV_TOKEN_PATH,
+  RTE_PCC_PATH,
+  RTE_WS_PATH,
   PROTOCOL_VERSION,
   type DuplicateIdError,
   type IndexWireEntry,
   type RuntimeDiagnostics,
   parseClientMessage,
   serializeServerMessage,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import { readRuntimeVersions } from "./read-dep-version.js";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
 import { handleBrandConfigHttp, brandConfigPath } from "./handle-brand-config.js";
 import { handleDevTokenHttp } from "./handle-dev-token.js";
 import { handlePccConfigHttp } from "./handle-pcc-config.js";
 import {
-  validateNuvioUpgrade,
+  validateRteUpgrade,
   warnIfWideDevServerHost,
 } from "./dev-auth-guard.js";
 import { getOrCreateDevSessionToken } from "./dev-session-token.js";
@@ -42,7 +43,7 @@ import {
 
 const APP_ENTRY_CANDIDATES = ["src/App.tsx", "src/app.tsx", "App.tsx"] as const;
 
-function nuvioWsMessageToText(data: unknown): string {
+function rteWsMessageToText(data: unknown): string {
   if (typeof data === "string") {
     return data;
   }
@@ -81,7 +82,7 @@ function supplementIndexFromAppTsx(
         continue;
       }
       emitWarn(
-        `[Nuvio] Source index had 0 ids; supplemented from ${appTsx} (${hits.length} id(s)). ` +
+        `[Rte] Source index had 0 ids; supplemented from ${appTsx} (${hits.length} id(s)). ` +
           `Fix scan roots if this is unexpected.`,
       );
       return {
@@ -96,7 +97,7 @@ function supplementIndexFromAppTsx(
   return built;
 }
 
-export interface NuvioPluginOptions {
+export interface RtePluginOptions {
   /** Master switch; false disables index + WS server. */
   enabled?: boolean;
   /** Glob patterns relative to Vite config root (see DEFAULT_GLOBS). */
@@ -119,10 +120,10 @@ const DEFAULT_GLOBS = [
 ];
 
 /**
- * Nuvio Vite plugin — Phase 1: WebSocket protocol + dev-time source index + selection ack.
+ * Rte Vite plugin — Phase 1: WebSocket protocol + dev-time source index + selection ack.
  */
-export function nuvio(options?: NuvioPluginOptions): Plugin {
-  const envEnabled = process.env.NUVIO !== "0";
+export function rte(options?: RtePluginOptions): Plugin {
+  const envEnabled = process.env.RTE !== "0";
   const enabled = options?.enabled ?? envEnabled;
   const scanGlobs = options?.scanGlobs ?? DEFAULT_GLOBS;
   const verbose = options?.verbose ?? false;
@@ -136,7 +137,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
   let projectRoot = process.cwd();
 
   return {
-    name: "nuvio",
+    name: "rte",
     apply: "serve",
     config(_config, { command }) {
       if (!enabled || command !== "serve") {
@@ -145,11 +146,11 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       const devAuthToken = getOrCreateDevSessionToken();
       return {
         define: {
-          "import.meta.env.VITE_NUVIO_DEV_TOKEN": JSON.stringify(devAuthToken),
+          "import.meta.env.VITE_RTE_DEV_TOKEN": JSON.stringify(devAuthToken),
         },
         server: {
           watch: {
-            ignored: ["**/nuvio/brand.json"],
+            ignored: ["**/rte/brand.json"],
           },
         },
       };
@@ -169,8 +170,8 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       const norm = id.replace(/\\/g, "/");
       if (norm.includes("/packages/overlay/src/dev-token.ts")) {
         const next = code.replace(
-          /return env\.env\?\.VITE_NUVIO_DEV_TOKEN \?\? "";/,
-          'return import.meta.env.VITE_NUVIO_DEV_TOKEN ?? "";',
+          /return env\.env\?\.VITE_RTE_DEV_TOKEN \?\? "";/,
+          'return import.meta.env.VITE_RTE_DEV_TOKEN ?? "";',
         );
         if (next !== code) {
           return { code: next, map: null };
@@ -189,7 +190,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
     configureServer(server) {
       if (!enabled) {
         server.config.logger.info(
-          "[Nuvio] disabled (set `NUVIO=1` or `nuvio({ enabled: true })` to enable).",
+          "[Rte] disabled (set `RTE=1` or `rte({ enabled: true })` to enable).",
         );
         return;
       }
@@ -228,7 +229,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], indexOptions);
           if (fallback.entries.length > 0) {
             log.warn(
-              `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)) from ${serverRoot}.`,
+              `[Rte] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)) from ${serverRoot}.`,
             );
             built = fallback;
           }
@@ -258,35 +259,35 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
 
         if (verbose) {
           if (built.parseErrors.length > 0) {
-            log.warn(`[Nuvio] index parse issues: ${built.parseErrors.length} file(s)`);
+            log.warn(`[Rte] index parse issues: ${built.parseErrors.length} file(s)`);
           }
           if (built.duplicateErrors.length > 0) {
             log.warn(
-              `[Nuvio] duplicate ids: ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
+              `[Rte] duplicate ids: ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
             );
           }
           log.info(
-            `[Nuvio] index roots=${rootsLabel} matchedFiles=${built.scannedFileCount} uniqueIds=${built.entries.length}`,
+            `[Rte] index roots=${rootsLabel} matchedFiles=${built.scannedFileCount} uniqueIds=${built.entries.length}`,
           );
         } else {
           log.info(
-            `[Nuvio] index v2 — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`,
+            `[Rte] index v2 — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`,
           );
         }
 
         if (built.scannedFileCount === 0) {
           log.warn(
-            `[Nuvio] Source index matched 0 files for globs [${scanGlobs.join(", ")}] under roots ${rootsLabel}. ` +
-              `Dev server cwd does not affect this if Vite root is correct; ensure \`data-nuvio-id\` lives under that root.`,
+            `[Rte] Source index matched 0 files for globs [${scanGlobs.join(", ")}] under roots ${rootsLabel}. ` +
+              `Dev server cwd does not affect this if Vite root is correct; ensure \`data-rte-id\` lives under that root.`,
           );
         } else if (built.entries.length === 0 && built.parseErrors.length > 0) {
           const e0 = built.parseErrors[0]!;
           log.warn(
-            `[Nuvio] Source index has 0 ids after ${built.scannedFileCount} file(s); first error: ${e0.file} — ${e0.message}`,
+            `[Rte] Source index has 0 ids after ${built.scannedFileCount} file(s); first error: ${e0.file} — ${e0.message}`,
           );
         } else if (built.entries.length === 0 && built.duplicateErrors.length > 0) {
           log.warn(
-            `[Nuvio] Source index: all contract ids appear duplicated — ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
+            `[Rte] Source index: all contract ids appear duplicated — ${built.duplicateErrors.map((d) => d.id).join(", ")}`,
           );
         } else if (
           built.entries.length === 0 &&
@@ -294,7 +295,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
           built.parseErrors.length === 0
         ) {
           log.warn(
-            `[Nuvio] Source index scanned ${built.scannedFileCount} file(s) under roots ${rootsLabel} but extracted 0 ids (no \`data-nuvio-id\` / wrapper hits).`,
+            `[Rte] Source index scanned ${built.scannedFileCount} file(s) under roots ${rootsLabel} but extracted 0 ids (no \`data-rte-id\` / wrapper hits).`,
           );
         }
 
@@ -333,7 +334,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         }
 
         ws.on("message", async (data) => {
-          const text = nuvioWsMessageToText(data);
+          const text = rteWsMessageToText(data);
           const msg = parseClientMessage(text);
           if (!msg) {
             ws.send(
@@ -359,7 +360,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
 
           if (msg.type === "ping") {
             if (verbose) {
-              log.info(`[Nuvio] ping ${msg.requestId}`);
+              log.info(`[Rte] ping ${msg.requestId}`);
             }
             ws.send(
               serializeServerMessage({
@@ -377,11 +378,11 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
 
           if (msg.type === "select") {
             if (verbose) {
-              log.info(`[Nuvio] select ${msg.id}`);
+              log.info(`[Rte] select ${msg.id}`);
             }
             const entry = idToEntry.get(msg.id);
             if (!entry) {
-              log.warn(`[Nuvio] select unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
+              log.warn(`[Rte] select unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
               ws.send(
                 serializeServerMessage({
                   type: "selectAck",
@@ -432,6 +433,17 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
             return;
           }
 
+          if (msg.type === "untagElement") {
+            const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
+            await handleUntagElementMessage(ws, msg, {
+              writeGuardRoot,
+              projectRoot,
+              idToEntry,
+              onIndexRebuilt: debouncedRebuild,
+            });
+            return;
+          }
+
           if (msg.type === "patchUndo") {
             const writeGuardRoot = path.resolve(fromConfigFile || serverRoot);
             const last = undoStack.pop();
@@ -465,7 +477,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
               );
               return;
             }
-            log.info(`[Nuvio] undo restored ${last.file}`);
+            log.info(`[Rte] undo restored ${last.file}`);
             ws.send(
               serializeServerMessage({
                 type: "patchUndoAck",
@@ -485,7 +497,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
             const dryRun = msg.dryRun === true;
             const patchAckExtras = dryRun ? ({ dryRun: true as const } as const) : {};
             if (!entry) {
-              log.warn(`[Nuvio] patch unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
+              log.warn(`[Rte] patch unknown_id: ${msg.id} (index has ${idToEntry.size} id(s))`);
               ws.send(
                 serializeServerMessage({
                   type: "patchAck",
@@ -567,7 +579,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
                 }),
               );
               if (verbose) {
-                log.info(`[Nuvio] patchPreview ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
+                log.info(`[Rte] patchPreview ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
               }
               return;
             }
@@ -588,7 +600,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
               return;
             }
             pushUndoSnapshot(entry.file, source);
-            log.info(`[Nuvio] touched ${entry.file}`);
+            log.info(`[Rte] touched ${entry.file}`);
             ws.send(
               serializeServerMessage({
                 type: "patchAck",
@@ -602,7 +614,7 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
               }),
             );
             if (verbose) {
-              log.info(`[Nuvio] patchApply ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
+              log.info(`[Rte] patchApply ${msg.id} ${msg.ops.map((o) => o.kind).join(",")}`);
             }
             return;
           }
@@ -613,10 +625,10 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
         "upgrade",
         (request: IncomingMessage, socket: Duplex, head: Buffer) => {
           const pathname = pathnameFromUpgradeUrl(request.url);
-          if (pathname !== NUVIO_WS_PATH) {
+          if (pathname !== RTE_WS_PATH) {
             return;
           }
-          if (!validateNuvioUpgrade(request, devAuthToken)) {
+          if (!validateRteUpgrade(request, devAuthToken)) {
             socket.destroy();
             return;
           }
@@ -640,18 +652,18 @@ export function nuvio(options?: NuvioPluginOptions): Plugin {
       server.middlewares.use((req, res, next) => {
         const url = req.url ?? "";
         const pathname = url.split("?")[0] ?? "";
-        if (pathname === NUVIO_DEV_TOKEN_PATH) {
+        if (pathname === RTE_DEV_TOKEN_PATH) {
           handleDevTokenHttp(req, res, devAuthToken);
           return;
         }
-        if (pathname === NUVIO_PCC_PATH) {
+        if (pathname === RTE_PCC_PATH) {
           void handlePccConfigHttp(req, res, {
             projectRoot,
             writeGuardRoot,
           });
           return;
         }
-        if (pathname !== NUVIO_BRAND_PATH) {
+        if (pathname !== RTE_BRAND_PATH) {
           next();
           return;
         }

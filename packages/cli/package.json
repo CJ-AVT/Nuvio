@@ -1,15 +1,15 @@
 {
-  "name": "@nuvio/cli",
+  "name": "@rte/cli",
   "version": "1.1.0",
-  "description": "Nuvio CLI 1.0 — Vite + Tailwind onboarding and diagnostics (init, doctor, scan, stats).",
+  "description": "Rte CLI 1.0 — Vite + Tailwind onboarding and diagnostics (init, doctor, scan, stats).",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ehah/Nuvio.git",
+    "url": "https://github.com/ehah/Rte.git",
     "directory": "packages/cli"
   },
   "keywords": [
-    "nuvio",
+    "rte",
     "vite",
     "tailwind",
     "tailwindcss",
@@ -29,21 +29,21 @@
   ],
   "type": "module",
   "bin": {
-    "nuvio": "./dist/cli-entry.js"
+    "rte": "./dist/cli-entry.js"
   },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsup src/cli-entry.ts --format esm --clean --external @babel/parser --external @babel/traverse --external @babel/generator --external @babel/types --external fast-glob --external @nuvio/vite-plugin --external @nuvio/shared --external @nuvio/ast-engine",
+    "build": "tsup src/cli-entry.ts --format esm --clean --external @babel/parser --external @babel/traverse --external @babel/generator --external @babel/types --external fast-glob --external @rte/vite-plugin --external @rte/shared --external @rte/ast-engine",
     "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@nuvio/ast-engine": "workspace:*",
-    "@nuvio/shared": "workspace:*",
-    "@nuvio/vite-plugin": "workspace:*",
+    "@rte/ast-engine": "workspace:*",
+    "@rte/shared": "workspace:*",
+    "@rte/vite-plugin": "workspace:*",
     "@babel/generator": "^7.26.9",
     "@babel/parser": "^7.26.9",
     "@babel/traverse": "^7.26.9",

@@ -9,7 +9,7 @@ const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle, pageTitleId }) =
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
       <h2
-        data-nuvio-id={pageTitleId}
+        data-rte-id={pageTitleId}
         className="text-xl font-semibold text-gray-800 dark:text-white/90"
         x-text="pageName"
       >

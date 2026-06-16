@@ -1,4 +1,4 @@
-export const DEVELOPER_DETAILS_STORAGE_KEY = "nuvio:developer-details:v2";
+export const DEVELOPER_DETAILS_STORAGE_KEY = "rte:developer-details:v2";
 
 export function loadDeveloperDetails(): boolean {
   if (typeof localStorage === "undefined") {

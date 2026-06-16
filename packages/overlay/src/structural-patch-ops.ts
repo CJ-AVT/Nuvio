@@ -1,4 +1,4 @@
-import type { PatchOp } from "@nuvio/shared";
+import type { PatchOp } from "@rte/shared";
 
 const STRUCTURAL_KINDS = new Set<PatchOp["kind"]>([
   "moveSibling",

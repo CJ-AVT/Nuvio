@@ -16,7 +16,7 @@ export function buildFixHandoffClipboard(ctx: FixHandoffContext): string {
   const component = ctx.componentName ?? ctx.hostId;
 
   return [
-    "nuvio could not apply this edit safely.",
+    "rte could not apply this edit safely.",
     "",
     `Component: ${component} (${ctx.hostId})`,
     `File: ${fileLine}`,
@@ -30,13 +30,13 @@ export function buildFixHandoffClipboard(ctx: FixHandoffContext): string {
   ].join("\n");
 }
 
-export const MAKE_TABLE_EDITABLE_SNIPPET = `Add nuvio table ids (v0.4 contract):
-- Section wrapper: data-nuvio-id="{host}.section"
-- Title h3: data-nuvio-id="{host}.title"
-- Table scroll area: data-nuvio-id="{host}.table"
-- Header cells: data-nuvio-id="{host}.header.products" (per column)
-- Each row: data-nuvio-id="{host}.row.{id}" with literal className
-- Cell text: data-nuvio-id="{host}.row.{id}.nameText" when using tableData.map()
+export const MAKE_TABLE_EDITABLE_SNIPPET = `Add rte table ids (v0.4 contract):
+- Section wrapper: data-rte-id="{host}.section"
+- Title h3: data-rte-id="{host}.title"
+- Table scroll area: data-rte-id="{host}.table"
+- Header cells: data-rte-id="{host}.header.products" (per column)
+- Each row: data-rte-id="{host}.row.{id}" with literal className
+- Cell text: data-rte-id="{host}.row.{id}.nameText" when using tableData.map()
 Keep header and title text as string literals for in-panel editing.`;
 
 export async function copyTextToClipboard(text: string): Promise<boolean> {
@@ -51,12 +51,12 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
 function resolveEditorUrlScheme(): string {
   const fromMeta =
     typeof import.meta !== "undefined"
-      ? (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_NUVIO_EDITOR_URL
+      ? (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_RTE_EDITOR_URL
       : undefined;
   const fromProcess =
     typeof globalThis !== "undefined" &&
     "process" in globalThis &&
-    (globalThis as { process?: { env?: Record<string, unknown> } }).process?.env?.NUVIO_EDITOR_URL;
+    (globalThis as { process?: { env?: Record<string, unknown> } }).process?.env?.RTE_EDITOR_URL;
   for (const candidate of [fromMeta, fromProcess]) {
     if (typeof candidate === "string" && candidate.length > 0) {
       return candidate;
@@ -65,7 +65,7 @@ function resolveEditorUrlScheme(): string {
   return "vscode";
 }
 
-/** Build an editor deep link when file path is known (`VITE_NUVIO_EDITOR_URL` / `NUVIO_EDITOR_URL`, default `vscode`). */
+/** Build an editor deep link when file path is known (`VITE_RTE_EDITOR_URL` / `RTE_EDITOR_URL`, default `vscode`). */
 export function buildEditorUrl(file?: string, line?: number): string | null {
   if (!file) {
     return null;

@@ -1,5 +1,5 @@
 /**
- * Offline source index API for `@nuvio/cli` (doctor / scan / stats).
+ * Offline source index API for `@rte/cli` (doctor / scan / stats).
  */
 export {
   buildSourceIndex,
@@ -10,4 +10,4 @@ export {
 } from "./source-index.js";
 export { detectProjectLibraries } from "./detect-libraries.js";
 export { readRuntimeVersions } from "./read-dep-version.js";
-export { NUVIO_DEFAULT_SCAN_GLOBS } from "./nuvio-dev-session.js";
+export { RTE_DEFAULT_SCAN_GLOBS } from "./rte-dev-session.js";

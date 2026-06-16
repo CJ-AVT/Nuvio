@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import type { UntaggedLocTarget } from "./nuvio-loc-dom.js";
-import { isValidNuvioId } from "./suggest-nuvio-id.js";
+import type { UntaggedLocTarget } from "./rte-loc-dom.js";
+import { isValidRteId } from "./suggest-rte-id.js";
 
 export type MakeEditablePanelProps = {
   target: UntaggedLocTarget;
@@ -21,36 +21,36 @@ export function MakeEditablePanel({
   busy,
   error,
 }: MakeEditablePanelProps): ReactElement {
-  const idOk = isValidNuvioId(suggestedId.trim());
+  const idOk = isValidRteId(suggestedId.trim());
 
   return (
-    <div className="nuvio-make-editable">
-      <p className="nuvio-make-editable-lead">
+    <div className="rte-make-editable">
+      <p className="rte-make-editable-lead">
         This <strong>{target.tagName}</strong> element is not editable yet.
       </p>
-      <p className="nuvio-make-editable-hint">
-        nuvio will add a <code>data-nuvio-id</code> in your source file so you can edit it
+      <p className="rte-make-editable-hint">
+        rte will add a <code>data-rte-id</code> in your source file so you can edit it
         visually.
       </p>
-      <label className="nuvio-field-label" htmlFor="nuvio-suggested-id">
+      <label className="rte-field-label" htmlFor="rte-suggested-id">
         Editable id
       </label>
       <input
-        id="nuvio-suggested-id"
-        className="nuvio-input"
+        id="rte-suggested-id"
+        className="rte-input"
         value={suggestedId}
         onChange={(e) => onSuggestedIdChange(e.target.value)}
         disabled={busy}
         spellCheck={false}
       />
       {!idOk ? (
-        <p className="nuvio-field-error">Use lowercase segments like page.title or hero.button</p>
+        <p className="rte-field-error">Use lowercase segments like page.title or hero.button</p>
       ) : null}
-      {error ? <p className="nuvio-field-error">{error}</p> : null}
-      <div className="nuvio-make-editable-actions">
+      {error ? <p className="rte-field-error">{error}</p> : null}
+      <div className="rte-make-editable-actions">
         <button
           type="button"
-          className="nuvio-button nuvio-button-primary"
+          className="rte-button rte-button-primary"
           disabled={busy || !idOk}
           onClick={onConfirm}
         >
@@ -58,7 +58,7 @@ export function MakeEditablePanel({
         </button>
         <button
           type="button"
-          className="nuvio-button nuvio-button-secondary"
+          className="rte-button rte-button-secondary"
           disabled={busy}
           onClick={onCancel}
         >

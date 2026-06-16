@@ -1,5 +1,5 @@
-<!-- nuvio-cli-template: 1 -->
-# nuvio
+<!-- rte-cli-template: 1 -->
+# rte
 
 **Start here:** [START_HERE.md](./START_HERE.md)
 

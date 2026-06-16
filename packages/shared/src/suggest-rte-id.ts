@@ -2,10 +2,10 @@ import { librarySegmentForTag } from "./library-registry.js";
 import type { LibraryId } from "./protocol.js";
 
 /** Segmented id: `page.title`, `metric.orders.card` */
-export const NUVIO_ID_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
+export const RTE_ID_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/;
 
-export function isValidNuvioId(id: string): boolean {
-  return NUVIO_ID_PATTERN.test(id);
+export function isValidRteId(id: string): boolean {
+  return RTE_ID_PATTERN.test(id);
 }
 
 const NATIVE_TAG_SEGMENT: Record<string, string> = {
@@ -48,10 +48,10 @@ function uniqueId(base: string, existing: ReadonlySet<string>): string {
 }
 
 /**
- * Suggest a segmented nuvio id from element tag and optional library context.
+ * Suggest a segmented rte id from element tag and optional library context.
  * Does not use element text or file paths.
  */
-export function suggestNuvioId(options: {
+export function suggestRteId(options: {
   tagName: string;
   existingIds: ReadonlySet<string>;
   parentPrefix?: string;

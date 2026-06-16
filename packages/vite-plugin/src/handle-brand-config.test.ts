@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { DEFAULT_BRAND_CONFIG } from "@nuvio/shared";
+import { DEFAULT_BRAND_CONFIG } from "@rte/shared";
 import {
   brandConfigPath,
   readBrandConfigFile,
@@ -19,12 +19,12 @@ describe("handle-brand-config", () => {
   });
 
   it("returns defaults when brand.json is missing", () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nuvio-brand-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rte-brand-"));
     expect(readBrandConfigFile(tmpDir, tmpDir)).toEqual(DEFAULT_BRAND_CONFIG);
   });
 
   it("reads and normalizes saved brand.json", () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nuvio-brand-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rte-brand-"));
     writeBrandConfigFile(tmpDir, tmpDir, {
       color: "purple",
       surface: "muted",
@@ -57,7 +57,7 @@ describe("handle-brand-config", () => {
   });
 
   it("still loads legacy v1 flat brand.json", () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nuvio-brand-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rte-brand-"));
     const filePath = brandConfigPath(tmpDir);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(
@@ -79,7 +79,7 @@ describe("handle-brand-config", () => {
   });
 
   it("falls back to defaults for invalid JSON on disk", () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nuvio-brand-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rte-brand-"));
     const filePath = brandConfigPath(tmpDir);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, "{ not json", "utf8");

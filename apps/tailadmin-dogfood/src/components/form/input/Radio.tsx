@@ -7,7 +7,7 @@ interface RadioProps {
   onChange: (value: string) => void; // Handler for value change
   className?: string; // Optional additional classes
   disabled?: boolean; // Optional disabled state for the radio button
-  "data-nuvio-id"?: string;
+  "data-rte-id"?: string;
 }
 
 const Radio: React.FC<RadioProps> = ({
@@ -19,12 +19,12 @@ const Radio: React.FC<RadioProps> = ({
   onChange,
   className = "",
   disabled = false,
-  "data-nuvio-id": dataNuvioId,
+  "data-rte-id": dataRteId,
 }) => {
   return (
     <label
       htmlFor={id}
-      data-nuvio-id={dataNuvioId}
+      data-rte-id={dataRteId}
       className={`relative flex cursor-pointer  select-none items-center gap-3 text-sm font-medium ${
         disabled
           ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"

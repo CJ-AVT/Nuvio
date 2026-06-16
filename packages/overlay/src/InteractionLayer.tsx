@@ -1,28 +1,38 @@
-import type { TextWireTarget } from "@nuvio/shared";
+import type { TextWireTarget } from "@rte/shared";
 import type { RefObject } from "react";
 import { useEffect, useState, type ReactElement } from "react";
-import { isNuvioChromeComposedPath } from "./nuvio-chrome-hit.js";
-import { hostIsInsideAppLink } from "./nuvio-dom.js";
+import { isRteChromeComposedPath } from "./rte-chrome-hit.js";
+import { hostIsInsideAppLink } from "./rte-dom.js";
 import {
+  classifyUnlocatableClick,
+  pickClickTargetElement,
   pickUntaggedClickTarget,
   readUntaggedLocTarget,
+  type UnlocatableClickTarget,
   type UntaggedLocTarget,
-} from "./nuvio-loc-dom.js";
+} from "./rte-loc-dom.js";
 import { resolveTextTargetElement } from "./text-target-dom.js";
 import {
-  clearNuvioOutlines,
-  paintNuvioOutline,
-  paintNuvioOutlineElement,
-} from "./nuvio-outlines.js";
+  clearRteOutlines,
+  paintRteOutline,
+  paintRteOutlineElement,
+} from "./rte-outlines.js";
 
 export type InteractionLayerProps = {
+  /** Master gate — listeners attach when edit or make-editable mode is on. */
   enabled: boolean;
+  /** Tagged-element selection + property editing. */
+  editEnabled: boolean;
+  /** Untagged click-to-tag + unlocatable guidance. */
+  makeEditableEnabled: boolean;
   chromeRootRefs: readonly RefObject<HTMLElement | null>[];
   knownIds: ReadonlySet<string>;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
   untaggedTarget: UntaggedLocTarget | null;
   onSelectUntagged: (target: UntaggedLocTarget | null) => void;
+  unlocatableTarget: UnlocatableClickTarget | null;
+  onSelectUnlocatable: (target: UnlocatableClickTarget | null) => void;
   /** Index v3: highlight alternate text targets under the selected host. */
   textTargetHostId?: string | null;
   textTargets?: readonly TextWireTarget[];
@@ -59,11 +69,11 @@ function pickIndexedTarget(
     if (isUnderOverlayChrome(node, chromeRootRefs)) {
       continue;
     }
-    const host = node.closest("[data-nuvio-id]");
+    const host = node.closest("[data-rte-id]");
     if (!(host instanceof HTMLElement)) {
       continue;
     }
-    const id = host.getAttribute("data-nuvio-id")?.trim() ?? "";
+    const id = host.getAttribute("data-rte-id")?.trim() ?? "";
     if (!id) {
       continue;
     }
@@ -77,12 +87,16 @@ function pickIndexedTarget(
 
 export function InteractionLayer({
   enabled,
+  editEnabled,
+  makeEditableEnabled,
   chromeRootRefs,
   knownIds,
   selectedId,
   onSelectId,
   untaggedTarget,
   onSelectUntagged,
+  unlocatableTarget,
+  onSelectUnlocatable,
   textTargetHostId = null,
   textTargets = [],
   activeTextTargetKey = null,
@@ -91,71 +105,105 @@ export function InteractionLayer({
 }: InteractionLayerProps): ReactElement | null {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [hoverUntagged, setHoverUntagged] = useState<HTMLElement | null>(null);
+  const [unlocatableEl, setUnlocatableEl] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!unlocatableTarget) {
+      setUnlocatableEl(null);
+    }
+  }, [unlocatableTarget]);
 
   useEffect(() => {
     if (!enabled) {
       setHoverId(null);
       setHoverUntagged(null);
+      setUnlocatableEl(null);
       return;
     }
 
     const onMove = (e: MouseEvent) => {
-      if (isNuvioChromeComposedPath(e)) {
+      if (isRteChromeComposedPath(e)) {
         setHoverId(null);
         setHoverUntagged(null);
         return;
       }
-      const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
-      if (el) {
-        setHoverId(el.getAttribute("data-nuvio-id"));
-        setHoverUntagged(null);
+      if (editEnabled) {
+        const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
+        if (el) {
+          setHoverId(el.getAttribute("data-rte-id"));
+          setHoverUntagged(null);
+          return;
+        }
+      }
+      if (makeEditableEnabled) {
+        const untagged = pickUntaggedClickTarget(
+          e.clientX,
+          e.clientY,
+          chromeRootRefs,
+          knownIds,
+        );
+        setHoverId(null);
+        setHoverUntagged(untagged);
         return;
       }
-      const untagged = pickUntaggedClickTarget(
-        e.clientX,
-        e.clientY,
-        chromeRootRefs,
-        knownIds,
-      );
       setHoverId(null);
-      setHoverUntagged(untagged);
+      setHoverUntagged(null);
     };
 
     const onClick = (e: MouseEvent) => {
-      if (isNuvioChromeComposedPath(e)) {
+      if (isRteChromeComposedPath(e)) {
         return;
       }
-      const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
-      if (el) {
-        if (hostIsInsideAppLink(el)) {
+      if (editEnabled) {
+        const el = pickIndexedTarget(e.clientX, e.clientY, chromeRootRefs, knownIds);
+        if (el) {
+          if (hostIsInsideAppLink(el)) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          const id = el.getAttribute("data-rte-id");
+          if (id) {
+            onSelectUntagged(null);
+            onSelectUnlocatable(null);
+            onSelectId(id);
+          }
           return;
         }
-        e.preventDefault();
-        e.stopPropagation();
-        const id = el.getAttribute("data-nuvio-id");
-        if (id) {
-          onSelectUntagged(null);
-          onSelectId(id);
+      }
+      if (makeEditableEnabled) {
+        const untaggedEl = pickUntaggedClickTarget(
+          e.clientX,
+          e.clientY,
+          chromeRootRefs,
+          knownIds,
+        );
+        if (untaggedEl) {
+          const target = readUntaggedLocTarget(untaggedEl);
+          if (!target) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          onSelectId(null);
+          onSelectUnlocatable(null);
+          onSelectUntagged(target);
+          return;
         }
-        return;
+        const unlocatable = classifyUnlocatableClick(
+          e.clientX,
+          e.clientY,
+          chromeRootRefs,
+        );
+        if (unlocatable) {
+          e.preventDefault();
+          e.stopPropagation();
+          onSelectId(null);
+          onSelectUntagged(null);
+          setUnlocatableEl(pickClickTargetElement(e.clientX, e.clientY, chromeRootRefs));
+          onSelectUnlocatable(unlocatable);
+        }
       }
-      const untaggedEl = pickUntaggedClickTarget(
-        e.clientX,
-        e.clientY,
-        chromeRootRefs,
-        knownIds,
-      );
-      if (!untaggedEl) {
-        return;
-      }
-      const target = readUntaggedLocTarget(untaggedEl);
-      if (!target) {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      onSelectId(null);
-      onSelectUntagged(target);
     };
 
     window.addEventListener("mousemove", onMove, true);
@@ -167,18 +215,30 @@ export function InteractionLayer({
       setHoverId(null);
       setHoverUntagged(null);
     };
-  }, [chromeRootRefs, enabled, knownIds, onSelectId, onSelectUntagged]);
+  }, [
+    chromeRootRefs,
+    editEnabled,
+    enabled,
+    knownIds,
+    makeEditableEnabled,
+    onSelectId,
+    onSelectUnlocatable,
+    onSelectUntagged,
+  ]);
 
   useEffect(() => {
-    clearNuvioOutlines();
+    clearRteOutlines();
     if (!enabled) {
       return;
     }
     const hoverPaint = hoverId && hoverId !== selectedId ? hoverId : null;
     if (hoverPaint) {
-      paintNuvioOutline(hoverPaint, "hover");
+      paintRteOutline(hoverPaint, "hover");
     } else if (hoverUntagged) {
-      paintNuvioOutlineElement(hoverUntagged, "hover");
+      paintRteOutlineElement(
+        hoverUntagged,
+        makeEditableEnabled ? "taggable" : "hover",
+      );
     }
 
     const showTargetHints =
@@ -194,28 +254,33 @@ export function InteractionLayer({
           continue;
         }
         if (target.key === activeTextTargetKey) {
-          paintNuvioOutlineElement(el, "target-active");
+          paintRteOutlineElement(el, "target-active");
         } else if (target.key === hoverTextTargetKey) {
-          paintNuvioOutlineElement(el, "target-hover");
+          paintRteOutlineElement(el, "target-hover");
         }
       }
-      paintNuvioOutline(textTargetHostId, "selected");
+      paintRteOutline(textTargetHostId, "selected");
     } else if (selectedId) {
-      paintNuvioOutline(selectedId, "selected");
+      paintRteOutline(selectedId, "selected");
     } else if (untaggedTarget) {
       const el = document.querySelector(
-        `[data-nuvio-loc="${CSS.escape(`${untaggedTarget.file}:${untaggedTarget.line}:${untaggedTarget.column}`)}"]`,
+        `[data-rte-loc="${CSS.escape(`${untaggedTarget.file}:${untaggedTarget.line}:${untaggedTarget.column}`)}"]`,
       );
       if (el instanceof HTMLElement) {
-        paintNuvioOutlineElement(el, "selected");
+        paintRteOutlineElement(el, "selected");
       }
+    } else if (unlocatableTarget && unlocatableEl) {
+      paintRteOutlineElement(unlocatableEl, "selected");
     }
   }, [
     enabled,
     hoverId,
     hoverUntagged,
+    makeEditableEnabled,
     selectedId,
     untaggedTarget,
+    unlocatableTarget,
+    unlocatableEl,
     textTargetHostId,
     textTargets,
     activeTextTargetKey,

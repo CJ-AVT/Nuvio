@@ -1,4 +1,4 @@
-export const ONBOARDING_STORAGE_KEY = "nuvio:onboarding:v1";
+export const ONBOARDING_STORAGE_KEY = "rte:onboarding:v1";
 
 export type OnboardingGuideId =
   | "welcome"

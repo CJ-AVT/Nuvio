@@ -2,7 +2,7 @@ import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import type { JSXElement, JSXOpeningElement } from "@babel/types";
 import path from "node:path";
-import type { StyleWireTarget, TextWireTarget } from "@nuvio/shared";
+import type { StyleWireTarget, TextWireTarget } from "@rte/shared";
 import { analyzeHost, type AnalyzeHostContext } from "./source-index-metadata.js";
 
 const TEXT_TAG_PRIORITY = [
@@ -43,12 +43,12 @@ function jsxElementHasElementChildren(el: JSXElement): boolean {
   return false;
 }
 
-function readNuvioId(opening: JSXOpeningElement): string | undefined {
+function readRteId(opening: JSXOpeningElement): string | undefined {
   for (const attr of opening.attributes) {
     if (
       attr.type === "JSXAttribute" &&
       attr.name.type === "JSXIdentifier" &&
-      attr.name.name === "data-nuvio-id" &&
+      attr.name.name === "data-rte-id" &&
       attr.value?.type === "StringLiteral"
     ) {
       const id = attr.value.value.trim();
@@ -125,10 +125,10 @@ function isTextCandidateTag(tagName: string, isNative: boolean): boolean {
   return isNative && tagName !== "svg" && tagName !== "path";
 }
 
-function formatLabel(tagName: string, textPreview: string, nuvioId?: string): string {
+function formatLabel(tagName: string, textPreview: string, rteId?: string): string {
   const snippet =
     textPreview.length > 36 ? `${textPreview.slice(0, 33)}…` : textPreview || "(empty)";
-  if (nuvioId) {
+  if (rteId) {
     return `${tagName} · ${snippet}`;
   }
   return `${tagName} · ${snippet}`;
@@ -137,16 +137,16 @@ function formatLabel(tagName: string, textPreview: string, nuvioId?: string): st
 function resolvePatchHostId(
   hostId: string,
   hostCtx: AnalyzeHostContext,
-  targetNuvioId: string | undefined,
+  targetRteId: string | undefined,
   targetHasLiteralClassName: boolean,
 ): string {
-  if (targetNuvioId && targetHasLiteralClassName) {
-    return targetNuvioId;
+  if (targetRteId && targetHasLiteralClassName) {
+    return targetRteId;
   }
   if (hostCtx.hasLiteralClassName) {
     return hostId;
   }
-  return targetNuvioId ?? hostId;
+  return targetRteId ?? hostId;
 }
 
 function tryAddTarget(
@@ -178,8 +178,8 @@ function tryAddTarget(
   }
 
   const loc = openingPath.node.loc?.start ?? { line: 1, column: 0 };
-  const nuvioId = readNuvioId(openingPath.node);
-  const key = nuvioId ?? `loc:${loc.line}:${loc.column}`;
+  const rteId = readRteId(openingPath.node);
+  const key = rteId ?? `loc:${loc.line}:${loc.column}`;
   if (seen.has(key)) {
     return;
   }
@@ -190,18 +190,18 @@ function tryAddTarget(
 
   targets.push({
     key,
-    label: formatLabel(tagName, textPreview, nuvioId),
+    label: formatLabel(tagName, textPreview, rteId),
     file: path.resolve(fileAbs),
     line: loc.line,
     column: loc.column,
     tagName,
     textEditable: childAnalyze?.textEditable ?? true,
     textPreview: textPreview || undefined,
-    nuvioId,
+    rteId,
     patchHostId: resolvePatchHostId(
       hostId,
       hostCtx,
-      nuvioId,
+      rteId,
       classNameValue !== undefined,
     ),
     insideMap: isInsideMap(openingPath),
@@ -229,7 +229,7 @@ export function resolveEntryPatchHostId(
   if (hostCtx.hasLiteralClassName) {
     return hostId;
   }
-  const withClass = targets.find((t) => t.nuvioId && t.patchHostId === t.nuvioId);
+  const withClass = targets.find((t) => t.rteId && t.patchHostId === t.rteId);
   return withClass?.patchHostId ?? hostId;
 }
 
@@ -290,29 +290,29 @@ export function collectStyleTargets(
   const seen = new Set<string>();
 
   const pushStyleTarget = (openingPath: NodePath<JSXOpeningElement>, fallbackKey?: string) => {
-    const nuvioId = readNuvioId(openingPath.node) ?? fallbackKey;
-    if (!nuvioId || seen.has(nuvioId)) {
+    const rteId = readRteId(openingPath.node) ?? fallbackKey;
+    if (!rteId || seen.has(rteId)) {
       return;
     }
-    seen.add(nuvioId);
+    seen.add(rteId);
     const tagName = getTagName(openingPath.node);
     const classNameValue = readLiteralClassName(openingPath.node);
     const childCtx = analyzeHost(openingPath);
     const loc = openingPath.node.loc?.start ?? { line: 1, column: 0 };
     const classNamePatchable =
-      classNameValue !== undefined || Boolean(hostCtx.hasLiteralClassName && nuvioId === hostId);
+      classNameValue !== undefined || Boolean(hostCtx.hasLiteralClassName && rteId === hostId);
     targets.push({
-      key: nuvioId === hostId ? "host" : nuvioId,
-      label: nuvioId === hostId ? `${tagName} · container` : `${tagName} · ${nuvioId}`,
+      key: rteId === hostId ? "host" : rteId,
+      label: rteId === hostId ? `${tagName} · container` : `${tagName} · ${rteId}`,
       file: path.resolve(fileAbs),
       line: loc.line,
       column: loc.column,
       tagName,
-      nuvioId,
+      rteId,
       patchHostId: resolvePatchHostId(
         hostId,
         hostCtx,
-        nuvioId,
+        rteId,
         classNameValue !== undefined,
       ),
       classNamePatchable,
@@ -329,8 +329,8 @@ export function collectStyleTargets(
       if (!isDescendantPath(innerPath, hostElementPath)) {
         return;
       }
-      const nuvioId = readNuvioId(innerPath.node);
-      if (!nuvioId) {
+      const rteId = readRteId(innerPath.node);
+      if (!rteId) {
         return;
       }
       pushStyleTarget(innerPath);

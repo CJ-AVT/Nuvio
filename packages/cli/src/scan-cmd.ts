@@ -68,7 +68,7 @@ export function runScan(opts: ScanOptions): number {
     return result.duplicateErrors.length > 0 ? 1 : 0;
   }
 
-  console.log(`nuvio scan — ${result.hostCount} editable host(s)\n`);
+  console.log(`rte scan — ${result.hostCount} editable host(s)\n`);
   for (const host of hosts) {
     console.log(
       `  ${host.id.padEnd(28)} ${host.file}:${host.line}`,
@@ -91,7 +91,7 @@ export function runScan(opts: ScanOptions): number {
 
   if (result.hostCount === 0) {
     console.log(
-      "\n  No hosts found — use Make Editable in the browser or add data-nuvio-id manually.",
+      "\n  No hosts found — use Make Editable in the browser or add data-rte-id manually.",
     );
   }
 

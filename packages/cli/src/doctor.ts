@@ -1,5 +1,5 @@
 import { PreflightError } from "./detect-project.js";
-import { nuvioOverlayLinkKind } from "./nuvio-deps.js";
+import { rteOverlayLinkKind } from "./rte-deps.js";
 import { scanProject } from "./project-scan.js";
 import { verifyProject } from "./verify.js";
 
@@ -59,10 +59,10 @@ function summarize(result: DoctorResult): void {
   const passed = result.passCount;
   const label =
     result.failCount > 0
-      ? "nuvio not ready"
+      ? "rte not ready"
       : result.warnCount > 0
-        ? "nuvio partially ready"
-        : "nuvio ready";
+        ? "rte partially ready"
+        : "rte ready";
   console.log(`\nResult: ${passed}/${total} passed — ${label}`);
 }
 
@@ -90,42 +90,42 @@ export async function runDoctor(opts: DoctorOptions): Promise<number> {
   const checks: DoctorCheck[] = [
     {
       id: "deps_plugin",
-      label: "@nuvio/vite-plugin installed",
+      label: "@rte/vite-plugin installed",
       status: verification.deps === "OK" ? "pass" : "fail",
     },
     {
       id: "deps_overlay",
-      label: "@nuvio/overlay installed",
+      label: "@rte/overlay installed",
       status: verification.deps === "OK" ? "pass" : "fail",
     },
     {
       id: "vite_plugin",
-      label: "vite.config contains nuvio()",
+      label: "vite.config contains rte()",
       status: verification.vite === "OK" ? "pass" : "fail",
     },
     {
       id: "optimize_deps",
-      label: "optimizeDeps.exclude includes @nuvio/overlay",
+      label: "optimizeDeps.exclude includes @rte/overlay",
       status: verification.optimizeDeps === "OK" ? "pass" : "fail",
       detail:
         verification.optimizeDeps === "OK" &&
-        nuvioOverlayLinkKind(pkg) === "workspace"
+        rteOverlayLinkKind(pkg) === "workspace"
           ? "workspace install — optional"
           : undefined,
     },
     {
       id: "overlay_css",
-      label: "main entry imports @nuvio/overlay/style.css",
+      label: "main entry imports @rte/overlay/style.css",
       status: verification.overlayCss === "OK" ? "pass" : "fail",
       detail:
         verification.overlayCss === "OK" &&
-        nuvioOverlayLinkKind(pkg) === "workspace"
+        rteOverlayLinkKind(pkg) === "workspace"
           ? "workspace install — optional"
           : undefined,
     },
     {
       id: "dev_shell",
-      label: "NuvioDevShell mounted in app",
+      label: "RteDevShell mounted in app",
       status: verification.shell === "OK" ? "pass" : "fail",
     },
     {
@@ -138,7 +138,7 @@ export async function runDoctor(opts: DoctorOptions): Promise<number> {
     },
     {
       id: "editable_hosts",
-      label: "At least one data-nuvio-id indexed",
+      label: "At least one data-rte-id indexed",
       status: index.entries.length > 0 ? "pass" : "fail",
       detail:
         index.entries.length > 0
@@ -159,14 +159,14 @@ export async function runDoctor(opts: DoctorOptions): Promise<number> {
   if (index.duplicateErrors.length > 0) {
     checks.push({
       id: "duplicate_ids",
-      label: "No duplicate data-nuvio-id values",
+      label: "No duplicate data-rte-id values",
       status: "fail",
-      detail: `${index.duplicateErrors.length} duplicate id(s) — run nuvio scan`,
+      detail: `${index.duplicateErrors.length} duplicate id(s) — run rte scan`,
     });
   } else {
     checks.push({
       id: "duplicate_ids",
-      label: "No duplicate data-nuvio-id values",
+      label: "No duplicate data-rte-id values",
       status: "pass",
     });
   }
@@ -192,7 +192,7 @@ export async function runDoctor(opts: DoctorOptions): Promise<number> {
     return failCount > 0 ? 1 : 0;
   }
 
-  console.log(`nuvio doctor — ${projectName}\n`);
+  console.log(`rte doctor — ${projectName}\n`);
   for (const check of checks) {
     const icon =
       check.status === "pass" ? "✅" : check.status === "warn" ? "⚠" : "❌";

@@ -5,12 +5,12 @@ import {
   evaluatePageCoverage,
   pccCategoryLabel,
   type CoverageEvaluationResult,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import {
   listPccManifestFiles,
   loadPccManifestFromFile,
   resolvePccManifestPath,
-} from "@nuvio/shared/load-pcc-manifest";
+} from "@rte/shared/load-pcc-manifest";
 
 export type CoverageVerifyOptions = {
   cwd: string;
@@ -35,7 +35,7 @@ function formatCategoryLine(summary: CoverageEvaluationResult["categories"][numb
 }
 
 function printHumanReport(result: CoverageEvaluationResult, manifestPath: string): void {
-  console.log("Nuvio Coverage Report\n");
+  console.log("Rte Coverage Report\n");
   console.log(`Page: ${result.page}`);
   console.log(`Route: ${result.route}`);
   console.log(`Manifest: ${manifestPath}\n`);
@@ -89,7 +89,7 @@ function printHumanReport(result: CoverageEvaluationResult, manifestPath: string
 }
 
 function printAllHumanReport(summary: CoverageVerifyAllResult): void {
-  console.log("Nuvio Coverage Report (all pages)\n");
+  console.log("Rte Coverage Report (all pages)\n");
   for (const entry of summary.pages) {
     const status = entry.result.pass ? "PASS" : "FAIL";
     console.log(`${entry.result.page.padEnd(16)} ${status}  ${entry.manifestPath}`);
@@ -119,7 +119,7 @@ function verifyLoadedManifest(
 export function runCoverageVerifyAll(opts: CoverageVerifyOptions): number {
   const manifestPaths = listPccManifestFiles(opts.cwd);
   if (manifestPaths.length === 0) {
-    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/nuvio/pages`);
+    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/rte/pages`);
     return 2;
   }
 

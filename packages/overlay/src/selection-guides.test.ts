@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import { pickContextualGuide, shouldShowWelcome } from "./selection-guides.js";
 import { resetOnboardingForTests } from "./onboarding-storage.js";
 

@@ -44,8 +44,8 @@ describe("runScan", () => {
     expect(parsed.hosts[0]?.id).toBe("page.title");
   });
 
-  it("lists existing host in vite-already-nuvio fixture", () => {
-    const root = fixture("vite-already-nuvio");
+  it("lists existing host in vite-already-rte fixture", () => {
+    const root = fixture("vite-already-rte");
     const logs: string[] = [];
     const orig = console.log;
     console.log = (...args: unknown[]) => {

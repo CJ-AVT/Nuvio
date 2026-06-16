@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { NUVIO_SHADOW_HOST_ID } from "./nuvio-chrome-hit.js";
+import { RTE_SHADOW_HOST_ID } from "./rte-chrome-hit.js";
 import { getOverlayCssHref, getOverlayCssMode } from "./load-overlay-styles.js";
 
-export type NuvioShadowMount = {
+export type RteShadowMount = {
   host: HTMLElement;
   mount: HTMLElement;
 };
 
-export function useNuvioShadowMount(): NuvioShadowMount | null {
-  const [mount, setMount] = useState<NuvioShadowMount | null>(null);
+export function useRteShadowMount(): RteShadowMount | null {
+  const [mount, setMount] = useState<RteShadowMount | null>(null);
 
   useEffect(() => {
     const host = document.createElement("div");
-    host.id = NUVIO_SHADOW_HOST_ID;
+    host.id = RTE_SHADOW_HOST_ID;
     host.style.position = "fixed";
     host.style.inset = "0";
     host.style.zIndex = "2147483000";
@@ -23,11 +23,11 @@ export function useNuvioShadowMount(): NuvioShadowMount | null {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = getOverlayCssHref();
-    link.setAttribute("data-nuvio-overlay-css-mode", getOverlayCssMode());
+    link.setAttribute("data-rte-overlay-css-mode", getOverlayCssMode());
     shadow.appendChild(link);
 
     const portalMount = document.createElement("div");
-    portalMount.className = "nuvio-shadow-mount";
+    portalMount.className = "rte-shadow-mount";
     shadow.appendChild(portalMount);
 
     document.body.appendChild(host);

@@ -1,11 +1,12 @@
-import type { DuplicateIdError, IndexWireEntry } from "@nuvio/shared";
+import type { DuplicateIdError, IndexWireEntry } from "@rte/shared";
 import type { ReactElement } from "react";
-import { NuvioChipStatus, type NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
+import { RteChipStatus, type RteChannelState } from "./RuntimeDiagnosticsBlock.js";
+import { RteChromeMenu } from "./RteChromeMenu.js";
 
-export type NuvioChromeHeaderProps = {
+export type RteChromeHeaderProps = {
   expanded: boolean;
   dragging: boolean;
-  channel: NuvioChannelState;
+  channel: RteChannelState;
   channelLabel: string;
   indexedCount: number;
   duplicateErrors: readonly DuplicateIdError[];
@@ -22,7 +23,7 @@ export type NuvioChromeHeaderProps = {
   onHeaderPointerDown: (e: React.PointerEvent) => void;
 };
 
-export function NuvioChromeHeader({
+export function RteChromeHeader({
   expanded,
   dragging,
   channel,
@@ -40,20 +41,20 @@ export function NuvioChromeHeader({
   onResetPanelPosition,
   onDeveloperDetailsChange,
   onHeaderPointerDown,
-}: NuvioChromeHeaderProps): ReactElement {
+}: RteChromeHeaderProps): ReactElement {
   return (
     <header
-      className={`nuvio-chrome-header ${dragging ? "nuvio-chrome-header--grabbing" : ""}`}
+      className={`rte-chrome-header ${dragging ? "rte-chrome-header--grabbing" : ""}`}
       onPointerDown={onHeaderPointerDown}
     >
-      <div className="nuvio-chrome-header-top">
-        <span className="nuvio-chrome-title">Real-Time Editor</span>
-        <span className="nuvio-chip-spacer" aria-hidden="true" />
+      <div className="rte-chrome-header-top">
+        <span className="rte-chrome-title">Real-Time Editor</span>
+        <span className="rte-chip-spacer" aria-hidden="true" />
 
         {!expanded ? (
           <button
             type="button"
-            className="nuvio-button-icon nuvio-chrome-expand-btn"
+            className="rte-button-icon rte-chrome-expand-btn"
             title="Expand editor"
             aria-label="Expand Real-Time Editor"
             onPointerDown={(e) => e.stopPropagation()}
@@ -65,36 +66,18 @@ export function NuvioChromeHeader({
             +
           </button>
         ) : (
-          <div className="nuvio-chrome-header-tools">
-            <button
-              type="button"
-              className={`nuvio-toggle-details ${
-                developerDetails ? "nuvio-toggle-details--on" : ""
-              }`}
-              title="Show file paths, risk level, and technical diagnostics"
-              aria-label="Developer details"
-              aria-pressed={developerDetails}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onDeveloperDetailsChange(!developerDetails)}
-            >
-              Developer details
-            </button>
-            <button
-              type="button"
-              className="nuvio-button-icon"
-              title="Reset position"
-              aria-label="Reset position"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => {
+          <div className="rte-chrome-header-tools">
+            <RteChromeMenu
+              developerDetails={developerDetails}
+              onReset={() => {
                 onResetPanelPosition();
                 onResetChipPosition();
               }}
-            >
-              Reset
-            </button>
+              onDeveloperDetailsChange={onDeveloperDetailsChange}
+            />
             <button
               type="button"
-              className="nuvio-button-icon nuvio-chrome-collapse-btn"
+              className="rte-button-icon rte-chrome-collapse-btn"
               title="Collapse editor"
               aria-label="Collapse Real-Time Editor"
               onPointerDown={(e) => e.stopPropagation()}
@@ -109,8 +92,8 @@ export function NuvioChromeHeader({
         )}
       </div>
 
-      <div className={`nuvio-chrome-header-meta ${expanded ? "nuvio-chrome-header-meta--visible" : ""}`}>
-        <NuvioChipStatus
+      <div className={`rte-chrome-header-meta ${expanded ? "rte-chrome-header-meta--visible" : ""}`}>
+        <RteChipStatus
           channel={channel}
           channelLabel={channelLabel}
           indexedCount={indexedCount}

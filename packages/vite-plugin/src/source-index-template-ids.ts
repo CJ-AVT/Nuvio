@@ -2,7 +2,7 @@ import type { JSXAttribute } from "@babel/types";
 import * as t from "@babel/types";
 
 /** Expand `orders.row.${product.id}` → orders.row.1, orders.row.2, … when row keys are known. */
-export function expandTemplateNuvioIds(
+export function expandTemplateRteIds(
   attr: JSXAttribute,
   rowKeys: readonly string[],
 ): string[] {

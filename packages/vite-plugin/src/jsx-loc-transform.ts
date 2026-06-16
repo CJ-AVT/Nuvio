@@ -10,7 +10,7 @@ const generate = require("@babel/generator").default as (
   opts?: Record<string, unknown>,
 ) => { code: string };
 
-const LOC_ATTR = "data-nuvio-loc";
+const LOC_ATTR = "data-rte-loc";
 
 function getTraverseFn(): (ast: t.File, visitor: object) => void {
   if (typeof traverseImport === "function") {
@@ -20,15 +20,15 @@ function getTraverseFn(): (ast: t.File, visitor: object) => void {
   if (typeof d === "function") {
     return d as (ast: t.File, visitor: object) => void;
   }
-  throw new Error("[Nuvio] @babel/traverse did not resolve to a callable export");
+  throw new Error("[Rte] @babel/traverse did not resolve to a callable export");
 }
 
-function hasNuvioId(opening: t.JSXOpeningElement): boolean {
+function hasRteId(opening: t.JSXOpeningElement): boolean {
   return opening.attributes.some(
     (attr) =>
       t.isJSXAttribute(attr) &&
       t.isJSXIdentifier(attr.name) &&
-      (attr.name.name === "data-nuvio-id" || attr.name.name === LOC_ATTR),
+      (attr.name.name === "data-rte-id" || attr.name.name === LOC_ATTR),
   );
 }
 
@@ -41,7 +41,7 @@ function hasLocAttr(opening: t.JSXOpeningElement): boolean {
 }
 
 /**
- * Dev-only: stamp `data-nuvio-loc="relativePath:line:column"` on JSX hosts for click-to-tag.
+ * Dev-only: stamp `data-rte-loc="relativePath:line:column"` on JSX hosts for click-to-tag.
  */
 export function injectJsxLocAttributes(
   code: string,
@@ -71,7 +71,7 @@ export function injectJsxLocAttributes(
       if (opening.name.type !== "JSXIdentifier") {
         return;
       }
-      if (hasNuvioId(opening)) {
+      if (hasRteId(opening)) {
         return;
       }
       if (hasLocAttr(opening)) {
@@ -95,7 +95,7 @@ export function injectJsxLocAttributes(
   return { code: generate(ast, { retainLines: true }).code, changed: true };
 }
 
-export function parseNuvioLocValue(
+export function parseRteLocValue(
   value: string,
 ): { file: string; line: number; column: number } | null {
   const match = /^(.+):(\d+):(\d+)$/.exec(value.trim());

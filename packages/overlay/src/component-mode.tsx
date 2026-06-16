@@ -1,4 +1,4 @@
-import { detectShadcnComponentMode, type IndexWireEntry } from "@nuvio/shared";
+import { detectShadcnComponentMode, type IndexWireEntry } from "@rte/shared";
 import { useMemo, type ReactElement } from "react";
 import { formatFriendlyId } from "./selection-summary.js";
 import { detectTableMode, TablePanel } from "./table-panel.js";
@@ -81,7 +81,7 @@ function ModeHeader({
   };
   const prefix = entry.id.replace(/\.(section|card|table|button)$/, "");
   return (
-    <h3 className="nuvio-section-title">
+    <h3 className="rte-section-title">
       {developerDetails
         ? `${kind} mode`
         : `Editing: ${formatFriendlyId(prefix, entry)} ${labels[kind]}`}
@@ -104,12 +104,12 @@ function TargetChips({
     return null;
   }
   return (
-    <div className="nuvio-row-wrap">
+    <div className="rte-row-wrap">
       {targets.map((t) => (
         <button
           key={t.id}
           type="button"
-          className={`nuvio-button-chip ${selectedId === t.id ? "nuvio-button-chip--active" : ""}`}
+          className={`rte-button-chip ${selectedId === t.id ? "rte-button-chip--active" : ""}`}
           onClick={() => onSelectId(t.id)}
         >
           {developerDetails ? t.id : formatFriendlyId(t.id, t)}
@@ -146,9 +146,9 @@ export function ComponentModePanel(props: ComponentModePanelProps): ReactElement
   }
 
   return (
-    <section className="nuvio-card nuvio-stack-2">
+    <section className="rte-card rte-stack-2">
       <ModeHeader kind={kind} entry={entry} developerDetails={developerDetails} />
-      <p className="nuvio-text-2xs nuvio-text-muted">Pick the part you want to change:</p>
+      <p className="rte-text-2xs rte-text-muted">Pick the part you want to change:</p>
       <TargetChips
         targets={quickTargets}
         selectedId={selectedId}

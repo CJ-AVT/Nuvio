@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { nuvio } from "@nuvio/vite-plugin";
+import { rte } from "@rte/vite-plugin";
 
 export default defineConfig({
-  plugins: [react(), nuvio()],
+  plugins: [react(), rte()],
 });

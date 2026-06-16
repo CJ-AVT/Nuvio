@@ -1,4 +1,4 @@
-import { NuvioDevShell } from "@nuvio/overlay";
+import { RteDevShell } from "@rte/overlay";
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
@@ -24,7 +24,7 @@ const LayoutContent: React.FC = () => {
           <Outlet />
         </div>
       </div>
-      <NuvioDevShell />
+      <RteDevShell />
     </div>
   );
 };

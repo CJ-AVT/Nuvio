@@ -149,7 +149,7 @@ describe("parseClientMessage", () => {
         file: "src/App.tsx",
         line: 4,
         column: 9,
-        nuvioId: "page.title",
+        rteId: "page.title",
       }),
     );
     expect(msg).toEqual({
@@ -159,7 +159,7 @@ describe("parseClientMessage", () => {
       file: "src/App.tsx",
       line: 4,
       column: 9,
-      nuvioId: "page.title",
+      rteId: "page.title",
     });
   });
 
@@ -340,7 +340,7 @@ describe("server messages", () => {
               tagName: "h3",
               textEditable: true,
               textPreview: "Orders",
-              nuvioId: "metric.orders.label",
+              rteId: "metric.orders.label",
               patchHostId: "metric.orders.label",
             },
           ],
@@ -352,7 +352,7 @@ describe("server messages", () => {
               line: 10,
               column: 4,
               tagName: "div",
-              nuvioId: "metric.orders.card",
+              rteId: "metric.orders.card",
               patchHostId: "metric.orders.card",
               classNamePatchable: true,
             },

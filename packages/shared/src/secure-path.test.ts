@@ -8,20 +8,20 @@ describe("assertPathWithinRoot", () => {
   let root: string;
 
   it("allows root itself", () => {
-    root = mkdtempSync(path.join(os.tmpdir(), "nuvio-root-"));
+    root = mkdtempSync(path.join(os.tmpdir(), "rte-root-"));
     expect(() => assertPathWithinRoot(root, root)).not.toThrow();
     rmSync(root, { recursive: true, force: true });
   });
 
   it("allows nested file", () => {
-    root = mkdtempSync(path.join(os.tmpdir(), "nuvio-root-"));
+    root = mkdtempSync(path.join(os.tmpdir(), "rte-root-"));
     const file = path.join(root, "src", "App.tsx");
     expect(() => assertPathWithinRoot(root, file)).not.toThrow();
     rmSync(root, { recursive: true, force: true });
   });
 
   it("rejects parent escape", () => {
-    root = mkdtempSync(path.join(os.tmpdir(), "nuvio-root-"));
+    root = mkdtempSync(path.join(os.tmpdir(), "rte-root-"));
     const evil = path.join(root, "..", "outside", "x.ts");
     expect(() => assertPathWithinRoot(root, evil)).toThrow(PathEscapeError);
     rmSync(root, { recursive: true, force: true });

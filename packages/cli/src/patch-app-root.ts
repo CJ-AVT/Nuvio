@@ -26,7 +26,7 @@ function hasOverlayImport(ast: t.File): boolean {
   let found = false;
   traverse(ast, {
     ImportDeclaration(path: NodePath<t.ImportDeclaration>) {
-      if (path.node.source.value === "@nuvio/overlay") found = true;
+      if (path.node.source.value === "@rte/overlay") found = true;
     },
   });
   return found;
@@ -37,7 +37,7 @@ function hasDevShell(ast: t.File): boolean {
   traverse(ast, {
     JSXElement(path: NodePath<t.JSXElement>) {
       const name = path.node.openingElement.name;
-      if (t.isJSXIdentifier(name) && name.name === "NuvioDevShell") found = true;
+      if (t.isJSXIdentifier(name) && name.name === "RteDevShell") found = true;
     },
   });
   return found;
@@ -53,7 +53,7 @@ function unwrapJsx(
 }
 
 const devShellElement = t.jsxElement(
-  t.jsxOpeningElement(t.jsxIdentifier("NuvioDevShell"), [], true),
+  t.jsxOpeningElement(t.jsxIdentifier("RteDevShell"), [], true),
   null,
   [],
   true,
@@ -100,11 +100,11 @@ export function patchAppRootFile(filePath: string): PatchOutcome {
       t.importDeclaration(
         [
           t.importSpecifier(
-            t.identifier("NuvioDevShell"),
-            t.identifier("NuvioDevShell"),
+            t.identifier("RteDevShell"),
+            t.identifier("RteDevShell"),
           ),
         ],
-        t.stringLiteral("@nuvio/overlay"),
+        t.stringLiteral("@rte/overlay"),
       ),
     );
   }
@@ -124,11 +124,11 @@ export function appHasDevShell(filePath: string): boolean {
     const ast = parseTs(source, filePath);
     return hasOverlayImport(ast) && hasDevShell(ast);
   } catch {
-    return /NuvioDevShell/.test(source);
+    return /RteDevShell/.test(source);
   }
 }
 
-/** True when any src TSX/JSX file mounts NuvioDevShell (not only App.tsx). */
+/** True when any src TSX/JSX file mounts RteDevShell (not only App.tsx). */
 export function projectHasDevShell(root: string): boolean {
   const appFile = resolveAppFile(root);
   if (appFile && appHasDevShell(appFile)) return true;

@@ -20,16 +20,16 @@ export type DoctorCliOptions = CommonCliOptions & {
 };
 
 function printHelp(): void {
-  console.log(`nuvio — CLI for React + Vite
+  console.log(`rte — CLI for React + Vite
 
 Usage:
-  nuvio init [options]
-  nuvio doctor [options]
-  nuvio scan [options]
-  nuvio stats [options]
-  nuvio coverage verify [options]
-  nuvio brand scan [options]
-  nuvio brand apply [options]
+  rte init [options]
+  rte doctor [options]
+  rte scan [options]
+  rte stats [options]
+  rte coverage verify [options]
+  rte brand scan [options]
+  rte brand apply [options]
 
 Common options:
   --cwd <path>          Project root (default: current directory)
@@ -44,37 +44,37 @@ Init options:
   --pm <pnpm|npm|yarn|bun>  Force package manager
   --strict              Fail if Tailwind is not detected
   --skip-tailwind-check Do not warn when Tailwind is missing
-  --force-agent         Overwrite nuvio/AGENT.md
+  --force-agent         Overwrite rte/AGENT.md
 
 Doctor options:
   --skip-dev-server     Skip localhost dev-server health check
 
 Coverage verify options:
-  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --page <slug>         Page slug (loads rte/pages/<slug>.pcc.yaml)
   --manifest <path>     Explicit PCC manifest path (overrides --page)
-  --all                 Verify every manifest in nuvio/pages/
+  --all                 Verify every manifest in rte/pages/
 
 Brand scan options:
-  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --page <slug>         Page slug (loads rte/pages/<slug>.pcc.yaml)
   --manifest <path>     Explicit PCC manifest path (overrides --page)
-  --all                 Scan every manifest in nuvio/pages/
+  --all                 Scan every manifest in rte/pages/
 
 Brand apply options:
-  --page <slug>         Page slug (loads nuvio/pages/<slug>.pcc.yaml)
+  --page <slug>         Page slug (loads rte/pages/<slug>.pcc.yaml)
   --manifest <path>     Explicit PCC manifest path (overrides --page)
-  --all                 Apply to every manifest in nuvio/pages/
+  --all                 Apply to every manifest in rte/pages/
   --dry-run             Report targets without writing source files
 
 Examples:
-  bunx @nuvio/cli init --yes
-  bunx @nuvio/cli doctor
-  bunx @nuvio/cli scan --json
-  bunx @nuvio/cli stats
-  bunx @nuvio/cli coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-  bunx @nuvio/cli coverage verify --all --cwd apps/tailadmin-dogfood
-  bunx @nuvio/cli brand scan --page dashboard --cwd apps/tailadmin-dogfood
-  bunx @nuvio/cli brand scan --all --cwd apps/tailadmin-dogfood
-  bunx @nuvio/cli brand apply --all --cwd apps/tailadmin-dogfood
+  bunx @rte/cli init --yes
+  bunx @rte/cli doctor
+  bunx @rte/cli scan --json
+  bunx @rte/cli stats
+  bunx @rte/cli coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+  bunx @rte/cli coverage verify --all --cwd apps/tailadmin-dogfood
+  bunx @rte/cli brand scan --page dashboard --cwd apps/tailadmin-dogfood
+  bunx @rte/cli brand scan --all --cwd apps/tailadmin-dogfood
+  bunx @rte/cli brand apply --all --cwd apps/tailadmin-dogfood
 `);
 }
 
@@ -336,7 +336,7 @@ export async function runCli(argv: string[]): Promise<number> {
         return runStats({ cwd: commonOpts.cwd, json: commonOpts.json });
       case "coverage": {
         if (!coverageOpts || coverageOpts.subcommand !== "verify") {
-          console.error("Usage: nuvio coverage verify --page <slug>");
+          console.error("Usage: rte coverage verify --page <slug>");
           printHelp();
           return 1;
         }
@@ -354,7 +354,7 @@ export async function runCli(argv: string[]): Promise<number> {
       }
       case "brand": {
         if (!brandOpts || (brandOpts.subcommand !== "scan" && brandOpts.subcommand !== "apply")) {
-          console.error("Usage: nuvio brand scan|apply --page <slug>");
+          console.error("Usage: rte brand scan|apply --page <slug>");
           printHelp();
           return 1;
         }

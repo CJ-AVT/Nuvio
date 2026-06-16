@@ -1,4 +1,4 @@
-import type { DuplicateIdError, IndexWireEntry } from "@nuvio/shared";
+import type { DuplicateIdError, IndexWireEntry } from "@rte/shared";
 
 export {
   containsSimpleModeNamingLeak,
@@ -105,13 +105,13 @@ export function getSimpleBlockedEditFallback(
       /\.(label|value|nameText|name|price|category|status|title|subtitle)$/.test(selectedId)) ||
     (selectedId != null && selectedId.includes(".header."));
   if (textContext) {
-    return "nuvio can't safely edit this text yet.";
+    return "rte can't safely edit this text yet.";
   }
-  return "nuvio can't safely edit this element.";
+  return "rte can't safely edit this element.";
 }
 
 export function getSimpleIndexEmptyMessage(): string {
-  return "Nothing is set up to edit yet. Add nuvio ids to elements in your project, then restart the dev server.";
+  return "Nothing is set up to edit yet. Turn on Make Editable, then click an element on the page.";
 }
 
 export function getSimplePatchBlockedMessage(

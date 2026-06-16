@@ -1,4 +1,4 @@
-import type { Breakpoint } from "@nuvio/shared";
+import type { Breakpoint } from "@rte/shared";
 import type { AlphaStylePicks } from "./alpha-patch-ops.js";
 import { EMPTY_ALPHA_PICKS } from "./alpha-patch-ops.js";
 import { BACKGROUND_COLOR_VALUES, TEXT_COLOR_VALUES } from "./tailwind-color-options.js";

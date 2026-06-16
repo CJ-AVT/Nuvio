@@ -1,6 +1,6 @@
-# TailAdmin dogfood (`@nuvio/tailadmin-dogfood`)
+# TailAdmin dogfood (`@rte/tailadmin-dogfood`)
 
-Real-world Nuvio compatibility fixture: [TailAdmin free React dashboard](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard) (Tailwind v4 + Vite 6 + React 19) wired to workspace `@nuvio/vite-plugin` and `@nuvio/overlay`.
+Real-world Rte compatibility fixture: [TailAdmin free React dashboard](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard) (Tailwind v4 + Vite 6 + React 19) wired to workspace `@rte/vite-plugin` and `@rte/overlay`.
 
 ## Run
 
@@ -12,9 +12,9 @@ bun run dev:tailadmin
 # or: cd apps/tailadmin-dogfood && bun run dev
 ```
 
-Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip to open the Editor panel.
+Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Rte chip to open the Editor panel.
 
-**Brand Kit (cross-page):** open the **Brand Kit** tab → pick a **category** chip (Card, Heading, Text, Form, …) → adjust presets → **Save Brand** → **Validate** → **Apply** for that category on the **current page**. Navigate to another route (e.g. Dashboard → Form Elements) and repeat **Validate** / **Apply** per category. One saved brand in `nuvio/brand.json` applies project-wide; each page and category is validated separately.
+**Brand Kit (cross-page):** open the **Brand Kit** tab → pick a **category** chip (Card, Heading, Text, Form, …) → adjust presets → **Save Brand** → **Validate** → **Apply** for that category on the **current page**. Navigate to another route (e.g. Dashboard → Form Elements) and repeat **Validate** / **Apply** per category. One saved brand in `rte/brand.json` applies project-wide; each page and category is validated separately.
 
 **Edit tab (single element):** select an element → **Validate Changes** → **Apply to Code** → undo.
 
@@ -33,8 +33,8 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 Verify per-page PCC:
 
 ```bash
-bunx nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-bunx nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
+bunx rte coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+bunx rte coverage verify --page form-elements --cwd apps/tailadmin-dogfood
 ```
 
 ## Instrumented ids (dashboard)
@@ -66,7 +66,7 @@ bunx nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
 
 ## Instrumented ids (form elements)
 
-Declared in `nuvio/pages/form-elements.pcc.yaml`. Each form section uses a literal `data-nuvio-id` on the card wrapper and section title (required for Brand Kit bulk apply).
+Declared in `rte/pages/form-elements.pcc.yaml`. Each form section uses a literal `data-rte-id` on the card wrapper and section title (required for Brand Kit bulk apply).
 
 | Id | Location |
 | --- | --- |
@@ -87,11 +87,11 @@ Declared in `nuvio/pages/form-elements.pcc.yaml`. Each form section uses a liter
 
 ## PCC (Page Coverage Contract)
 
-Dashboard and Form Elements coverage are declared in `nuvio/pages/*.pcc.yaml`. Verify offline (CI-safe):
+Dashboard and Form Elements coverage are declared in `rte/pages/*.pcc.yaml`. Verify offline (CI-safe):
 
 ```bash
-bunx nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-bunx nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
+bunx rte coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+bunx rte coverage verify --page form-elements --cwd apps/tailadmin-dogfood
 bun run coverage:dogfood
 bun run brand:apply:dogfood
 bun run brand:dogfood
@@ -103,12 +103,12 @@ See `docs/mds/PCC.md` for manifest format and exit codes.
 
 ## Custom components
 
-`TableCell`, `TableRow`, and other UI wrappers **must forward** `data-nuvio-id` (and `className`) to the real DOM node. See `src/components/ui/table/index.tsx`.
+`TableCell`, `TableRow`, and other UI wrappers **must forward** `data-rte-id` (and `className`) to the real DOM node. See `src/components/ui/table/index.tsx`.
 
 ## Acceptance (manual)
 
 - **v0.4 Vite alpha:** [docs/DOGFOOD.md](../../docs/DOGFOOD.md) § v0.4.0-alpha.0
-- **v0.2 baseline:** [nuvio_v0.2.0.md](../../docs/nuvio_v0.2.0.md) §13.3
+- **v0.2 baseline:** [rte_v0.2.0.md](../../docs/rte_v0.2.0.md) §13.3
 
 ## Upstream
 
@@ -118,4 +118,4 @@ To refresh the TailAdmin tree:
 cd apps && rm -rf tailadmin-dogfood && git clone --depth 1 https://github.com/TailAdmin/free-react-tailwind-admin-dashboard.git tailadmin-dogfood
 ```
 
-Then re-apply Nuvio wiring (this README, `package.json`, `vite.config.ts`, `AppLayout`, `data-nuvio-id` attributes, and table component prop forwarding).
+Then re-apply Rte wiring (this README, `package.json`, `vite.config.ts`, `AppLayout`, `data-rte-id` attributes, and table component prop forwarding).

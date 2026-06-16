@@ -110,7 +110,7 @@ export default function BasicTableOne() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div
-        data-nuvio-id="tables.basic.table"
+        data-rte-id="tables.basic.table"
         className="overflow-x-auto max-w-full border border-rose-300 rounded-xl xl:max-w-full xl:border-0 xl:rounded-md"
       >
         <Table>

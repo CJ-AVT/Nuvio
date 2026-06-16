@@ -1,5 +1,5 @@
-import type { ClassNameMode } from "@nuvio/ast-engine";
-import type { IndexWireEntry, WireClassNameMode } from "@nuvio/shared";
+import type { ClassNameMode } from "@rte/ast-engine";
+import type { IndexWireEntry, WireClassNameMode } from "@rte/shared";
 
 const PATCHABLE_MODES = new Set<WireClassNameMode>([
   "literal-only",

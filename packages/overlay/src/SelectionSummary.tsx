@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import type { ReactElement } from "react";
 import {
   getSimpleSelectionStatus,
@@ -7,12 +7,12 @@ import {
 
 function toneClass(tone: ReturnType<typeof getSimpleSelectionStatus>["tone"]): string {
   if (tone === "success") {
-    return "nuvio-text-success";
+    return "rte-text-success";
   }
   if (tone === "warn") {
-    return "nuvio-text-warn";
+    return "rte-text-warn";
   }
-  return "nuvio-text-muted";
+  return "rte-text-muted";
 }
 
 export function SelectionSummary({ entry }: { entry: IndexWireEntry }): ReactElement {
@@ -20,10 +20,10 @@ export function SelectionSummary({ entry }: { entry: IndexWireEntry }): ReactEle
   const plainReasons = (entry.unsupportedReasons ?? []).slice(0, 2).map(mapUnsupportedReasonToSimple);
 
   return (
-    <div className="nuvio-card nuvio-card--strong">
-      <p className={`nuvio-text-xs nuvio-leading-snug ${toneClass(tone)}`}>{message}</p>
+    <div className="rte-card rte-card--strong">
+      <p className={`rte-text-xs rte-leading-snug ${toneClass(tone)}`}>{message}</p>
       {plainReasons.length > 0 ? (
-        <ul className="nuvio-meta-reasons">
+        <ul className="rte-meta-reasons">
           {plainReasons.map((reason, idx) => (
             <li key={`${idx}-${reason}`}>{reason}</li>
           ))}

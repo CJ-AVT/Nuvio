@@ -8,7 +8,7 @@ describe("buildFixHandoffClipboard", () => {
       file: "ecommerce/EcommerceMetrics.tsx",
       line: 45,
       componentName: "EcommerceMetrics",
-      userIntent: "edit selection in nuvio",
+      userIntent: "edit selection in rte",
       reason: "Validation failed",
       suggestedNextStep: "Simplify responsive classes on this element.",
     });
@@ -24,17 +24,17 @@ describe("buildEditorUrl", () => {
 
   it("ignores non-string env values", () => {
     const prev = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env
-      ?.VITE_NUVIO_EDITOR_URL;
+      ?.VITE_RTE_EDITOR_URL;
     (import.meta as ImportMeta & { env?: Record<string, unknown> }).env = {
       ...(import.meta as ImportMeta & { env?: Record<string, unknown> }).env,
-      VITE_NUVIO_EDITOR_URL: true,
+      VITE_RTE_EDITOR_URL: true,
     };
     expect(buildEditorUrl("src/App.tsx", 12)).toBe("vscode://file/src/App.tsx:12");
     if (prev === undefined) {
       delete (import.meta as ImportMeta & { env?: Record<string, unknown> }).env
-        ?.VITE_NUVIO_EDITOR_URL;
+        ?.VITE_RTE_EDITOR_URL;
     } else {
-      (import.meta as ImportMeta & { env?: Record<string, unknown> }).env!.VITE_NUVIO_EDITOR_URL =
+      (import.meta as ImportMeta & { env?: Record<string, unknown> }).env!.VITE_RTE_EDITOR_URL =
         prev;
     }
   });

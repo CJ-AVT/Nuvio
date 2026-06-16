@@ -2,8 +2,8 @@ import { resolve } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   pccHostsForBrandAction,
-} from "@nuvio/shared";
-import { loadPccManifestFromFile } from "@nuvio/shared/load-pcc-manifest";
+} from "@rte/shared";
+import { loadPccManifestFromFile } from "@rte/shared/load-pcc-manifest";
 import { listVisibleBrandBulkTargets } from "./brand-bulk-page.js";
 
 const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
@@ -15,7 +15,7 @@ describe("listVisibleBrandBulkTargets with PCC", () => {
 
   it("counts all dashboard card hosts when present in the DOM", async () => {
     const loaded = loadPccManifestFromFile(
-      resolve(dogfoodRoot, "nuvio/pages/dashboard.pcc.yaml"),
+      resolve(dogfoodRoot, "rte/pages/dashboard.pcc.yaml"),
     );
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) {
@@ -27,7 +27,7 @@ describe("listVisibleBrandBulkTargets with PCC", () => {
 
     for (const hostId of pccHosts ?? []) {
       const el = document.createElement("div");
-      el.setAttribute("data-nuvio-id", hostId);
+      el.setAttribute("data-rte-id", hostId);
       el.className = "rounded-xl border p-4";
       document.body.appendChild(el);
     }

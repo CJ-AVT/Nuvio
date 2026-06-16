@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_BRAND_CONFIG } from "@nuvio/shared";
+import { DEFAULT_BRAND_CONFIG } from "@rte/shared";
 import { BrandCategorySample } from "./brand-category-sample.js";
 
 describe("BrandCategorySample", () => {

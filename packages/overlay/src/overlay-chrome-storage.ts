@@ -1,4 +1,4 @@
-export const OVERLAY_CHROME_STORAGE_KEY = "nuvio:overlay-chrome:v2";
+export const OVERLAY_CHROME_STORAGE_KEY = "rte:overlay-chrome:v2";
 
 /** Default inset from viewport edges (chip + docked editor). */
 export const OVERLAY_CHROME_MARGIN = 24;

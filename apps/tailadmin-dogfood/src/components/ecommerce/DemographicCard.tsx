@@ -13,20 +13,20 @@ export default function DemographicCard() {
   }
   return (
     <div
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md sm:p-6 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
-      data-nuvio-id="demo.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md sm:p-6 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="demo.card"
     >
       <div className="flex justify-between">
         <div>
           <h3
             className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
-            data-nuvio-id="demo.title"
+            data-rte-id="demo.title"
           >
             Customers Demographic 1001
           </h3>
           <p
             className="mt-1 text-sm font-normal text-rose-600 xl:text-sm xl:font-normal xl:text-gray-700 dark:text-gray-400"
-            data-nuvio-id="demo.subtitle"
+            data-rte-id="demo.subtitle"
           >
             Number of customer based on country
           </p>

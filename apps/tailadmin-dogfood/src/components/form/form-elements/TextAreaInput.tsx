@@ -6,12 +6,12 @@ export default function TextAreaInput() {
   const [messageTwo, setMessageTwo] = useState("");
   return (
     <div
-      data-nuvio-id="forms.textarea.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.textarea.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.textarea.title"
+          data-rte-id="forms.textarea.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Textarea input field
@@ -20,12 +20,12 @@ export default function TextAreaInput() {
       <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
         <div className="space-y-6">
           <div>
-            <Label data-nuvio-id="forms.textarea.label">Description</Label>
+            <Label data-rte-id="forms.textarea.label">Description</Label>
             <TextArea
               value={message}
               onChange={(value) => setMessage(value)}
               rows={6}
-              data-nuvio-id="forms.textarea.input"
+              data-rte-id="forms.textarea.input"
             />
           </div>
           <div>

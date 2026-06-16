@@ -1,5 +1,5 @@
-# `@nuvio/shared`
+# `@rte/shared`
 
-Wire protocol (Zod schemas), shared TypeScript types, and Node path helpers (`secure-path` export) used by `@nuvio/vite-plugin` and `@nuvio/overlay`.
+Wire protocol (Zod schemas), shared TypeScript types, and Node path helpers (`secure-path` export) used by `@rte/vite-plugin` and `@rte/overlay`.
 
-See the [Nuvio README](../../README.md) and [CHANGELOG](../../CHANGELOG.md).
+See the [Rte README](../../README.md) and [CHANGELOG](../../CHANGELOG.md).

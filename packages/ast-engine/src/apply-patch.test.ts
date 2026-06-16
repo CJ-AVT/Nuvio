@@ -78,7 +78,7 @@ describe("applyPatchToSource", () => {
   it("golden: simple setText on a single JSXText child", async () => {
     const src = `
 export function X() {
-  return <div data-nuvio-id="hero.title">Hi</div>;
+  return <div data-rte-id="hero.title">Hi</div>;
 }
 `;
     const r = await applyPatchToSource(src, "/proj/X.tsx", "hero.title", [
@@ -92,7 +92,7 @@ export function X() {
   });
 
   it("golden: mergeTailwindClassName uses tailwind-merge (p-4 + p-6 → p-6)", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="c" className="p-4 text-sm">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="c" className="p-4 text-sm">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/C.tsx", "c", [
       { kind: "mergeTailwindClassName", classNameFragment: "p-6" },
     ]);
@@ -104,7 +104,7 @@ export function X() {
   });
 
   it("golden: removeTailwindClassName clears padding when reset to Default", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="card" className="rounded-xl p-4 shadow-sm">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="card" className="rounded-xl p-4 shadow-sm">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/Card.tsx", "card", [
       { kind: "removeTailwindClassName", classNameFragment: "p-4" },
     ]);
@@ -117,7 +117,7 @@ export function X() {
   });
 
   it("golden: mergeTailwindClassName text color + margin", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="x" className="text-slate-300 m-2">y</div>;`;
+    const src = `export const _ = () => <div data-rte-id="x" className="text-slate-300 m-2">y</div>;`;
     const r = await applyPatchToSource(src, "/proj/X.tsx", "x", [
       { kind: "mergeTailwindClassName", classNameFragment: "text-sky-400" },
       { kind: "mergeTailwindClassName", classNameFragment: "mt-4" },
@@ -131,7 +131,7 @@ export function X() {
   });
 
   it("golden: setText plus mergeTailwind in one patch", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="btn" className="rounded-md">Go</div>;`;
+    const src = `export const _ = () => <div data-rte-id="btn" className="rounded-md">Go</div>;`;
     const r = await applyPatchToSource(src, "/proj/B.tsx", "btn", [
       { kind: "setText", text: "Ship" },
       { kind: "mergeTailwindClassName", classNameFragment: "rounded-lg" },
@@ -145,7 +145,7 @@ export function X() {
   });
 
   it("golden: Phase 4 merge text-align max-width shadow", async () => {
-    const src = `export const _ = () => <p data-nuvio-id="f" className="text-xs text-slate-500">Note</p>;`;
+    const src = `export const _ = () => <p data-rte-id="f" className="text-xs text-slate-500">Note</p>;`;
     const r = await applyPatchToSource(src, "/proj/F.tsx", "f", [
       { kind: "mergeTailwindClassName", classNameFragment: "text-center" },
       { kind: "mergeTailwindClassName", classNameFragment: "max-w-prose" },
@@ -160,7 +160,7 @@ export function X() {
   });
 
   it("rejects unknown id", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="a">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="a">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/A.tsx", "missing", [
       { kind: "setText", text: "y" },
     ]);
@@ -171,7 +171,7 @@ export function X() {
   });
 
   it("rejects disallowed utilities before merge", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="c" className="p-4">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="c" className="p-4">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/C.tsx", "c", [
       { kind: "mergeTailwindClassName", classNameFragment: "wobble-99" },
     ]);
@@ -183,7 +183,7 @@ export function X() {
 
   it("golden: setText replaces rich JSX children with one text node", async () => {
     const src = `export const _ = () => (
-  <p data-nuvio-id="lead">
+  <p data-rte-id="lead">
     <strong>A</strong> and <span className="x">B</span>.
   </p>
 );`;
@@ -199,9 +199,9 @@ export function X() {
 
   it("golden: moveSibling down swaps JSX siblings under flex parent", async () => {
     const src = `export const _ = () => (
-  <div className="flex gap-2" data-nuvio-id="row">
-    <div data-nuvio-id="a">A</div>
-    <div data-nuvio-id="b">B</div>
+  <div className="flex gap-2" data-rte-id="row">
+    <div data-rte-id="a">A</div>
+    <div data-rte-id="b">B</div>
   </div>
 );`;
     const r = await applyPatchToSource(src, "/proj/R.tsx", "a", [
@@ -209,8 +209,8 @@ export function X() {
     ]);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      const aPos = r.source.indexOf('data-nuvio-id="a"');
-      const bPos = r.source.indexOf('data-nuvio-id="b"');
+      const aPos = r.source.indexOf('data-rte-id="a"');
+      const bPos = r.source.indexOf('data-rte-id="b"');
       expect(aPos).toBeGreaterThan(bPos);
     }
   });
@@ -218,8 +218,8 @@ export function X() {
   it("rejects moveSibling when parent is not flex/grid", async () => {
     const src = `export const _ = () => (
   <div>
-    <span data-nuvio-id="a">A</span>
-    <span data-nuvio-id="b">B</span>
+    <span data-rte-id="a">A</span>
+    <span data-rte-id="b">B</span>
   </div>
 );`;
     const r = await applyPatchToSource(src, "/proj/R.tsx", "a", [
@@ -232,7 +232,7 @@ export function X() {
   });
 
   it("golden: setHidden adds hidden utility", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="x" className="p-4">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="x" className="p-4">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/X.tsx", "x", [
       { kind: "setHidden", hidden: true },
     ]);
@@ -243,7 +243,7 @@ export function X() {
   });
 
   it("golden: setHidden false removes hidden", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="x" className="hidden p-4">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="x" className="hidden p-4">x</div>;`;
     const r = await applyPatchToSource(src, "/proj/X.tsx", "x", [
       { kind: "setHidden", hidden: false },
     ]);
@@ -254,11 +254,11 @@ export function X() {
     }
   });
 
-  it("golden: duplicateHost remaps descendant data-nuvio-id values", async () => {
+  it("golden: duplicateHost remaps descendant data-rte-id values", async () => {
     const src = `export const _ = () => (
   <div className="grid">
-    <div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">
-      <p data-nuvio-id="metric.orders.value" className="text-3xl">5,359</p>
+    <div data-rte-id="metric.orders.card" className="rounded-xl p-4">
+      <p data-rte-id="metric.orders.value" className="text-3xl">5,359</p>
     </div>
   </div>
 );`;
@@ -267,30 +267,30 @@ export function X() {
     ]);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.source).toContain('data-nuvio-id="metric.orders.card.copy"');
-      expect(r.source).toContain('data-nuvio-id="metric.orders.value.copy"');
-      expect(r.source.match(/data-nuvio-id="metric.orders.value"/g)?.length).toBe(1);
+      expect(r.source).toContain('data-rte-id="metric.orders.card.copy"');
+      expect(r.source).toContain('data-rte-id="metric.orders.value.copy"');
+      expect(r.source.match(/data-rte-id="metric.orders.value"/g)?.length).toBe(1);
     }
   });
 
   it("golden: duplicateHost clones element with new id", async () => {
     const src = `export const _ = () => (
   <div className="flex">
-    <button data-nuvio-id="cta">Go</button>
+    <button data-rte-id="cta">Go</button>
   </div>
 );`;
     const r = await applyPatchToSource(src, "/proj/B.tsx", "cta", [{ kind: "duplicateHost" }]);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.source).toContain('data-nuvio-id="cta"');
-      expect(r.source).toContain('data-nuvio-id="cta.copy"');
+      expect(r.source).toContain('data-rte-id="cta"');
+      expect(r.source).toContain('data-rte-id="cta.copy"');
       expect(r.diffSummary).toMatch(/cta\.copy/);
     }
   });
 
   it("rejects non-literal className", async () => {
     const src = `import { cn } from "./u";
-export const _ = () => <div data-nuvio-id="c" className={cn("p-4")}>x</div>;`;
+export const _ = () => <div data-rte-id="c" className={cn("p-4")}>x</div>;`;
     const r = await applyPatchToSource(src, "/proj/C.tsx", "c", [
       { kind: "mergeTailwindClassName", classNameFragment: "p-6" },
     ]);
@@ -302,7 +302,7 @@ export const _ = () => <div data-nuvio-id="c" className={cn("p-4")}>x</div>;`;
 
   it("cn-basic: allows simple cn string-list", async () => {
     const src = `import { cn } from "./u";
-export const _ = () => <div data-nuvio-id="c" className={cn("p-4","rounded-md")}>x</div>;`;
+export const _ = () => <div data-rte-id="c" className={cn("p-4","rounded-md")}>x</div>;`;
     const r = await applyPatchToSource(
       src,
       "/proj/C.tsx",
@@ -318,7 +318,7 @@ export const _ = () => <div data-nuvio-id="c" className={cn("p-4","rounded-md")}
 
   it("cn-basic: rejects conditional cn patterns", async () => {
     const src = `import { cn } from "./u";
-export const _ = ({ active }: {active:boolean}) => <div data-nuvio-id="c" className={cn("p-4", active && "bg-blue-500")}>x</div>;`;
+export const _ = ({ active }: {active:boolean}) => <div data-rte-id="c" className={cn("p-4", active && "bg-blue-500")}>x</div>;`;
     const r = await applyPatchToSource(
       src,
       "/proj/C.tsx",
@@ -337,7 +337,7 @@ export const _ = ({ active }: {active:boolean}) => <div data-nuvio-id="c" classN
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.source).toContain("Updated by fixture test.");
-      expect(r.source).toContain('data-nuvio-id="hero.title"');
+      expect(r.source).toContain('data-rte-id="hero.title"');
     }
   });
 
@@ -349,7 +349,7 @@ export const _ = ({ active }: {active:boolean}) => <div data-nuvio-id="c" classN
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.source).toMatch(/shadow-md/);
-      expect(r.source).toContain('data-nuvio-id="promo.message"');
+      expect(r.source).toContain('data-rte-id="promo.message"');
     }
   });
 
@@ -515,7 +515,7 @@ describe("removeAtBreakpoint", () => {
 
 describe("applyPatchToSource with activeBreakpoint", () => {
   it("updates only md bucket for responsive className", async () => {
-    const src = `export const _ = () => <div data-nuvio-id="card" className="p-4 md:p-6 lg:p-8">x</div>;`;
+    const src = `export const _ = () => <div data-rte-id="card" className="p-4 md:p-6 lg:p-8">x</div>;`;
     const r = await applyPatchToSource(
       src,
       "/proj/Responsive.tsx",

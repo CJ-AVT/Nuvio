@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import type { SimpleRouterMode } from "./task-router-modes.js";
 import {
   formatCardDisplayName,

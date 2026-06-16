@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 
 const TABLE_CELL_FIELD_TITLES: Record<string, string> = {
   nameText: "Product Name",
@@ -41,7 +41,7 @@ const TECHNICAL_SUFFIXES = new Set([
 
 /** Id fragments that must never appear in Simple Mode titles, backs, or chips. */
 export const SIMPLE_MODE_NAMING_LEAK_PATTERN =
-  /(?:^|[\s·←])(?:nameText|valueText|priceText|categoryText|statusText|data-nuvio-id|metric\.|orders\.row\.|\d+ Table|· row\b)/i;
+  /(?:^|[\s·←])(?:nameText|valueText|priceText|categoryText|statusText|data-rte-id|metric\.|orders\.row\.|\d+ Table|· row\b)/i;
 
 export function containsSimpleModeNamingLeak(text: string): boolean {
   return SIMPLE_MODE_NAMING_LEAK_PATTERN.test(text);
@@ -51,14 +51,14 @@ function textPreviewForId(id: string, entry?: IndexWireEntry | null): string | u
   if (!entry) {
     return undefined;
   }
-  const byNuvioId = entry.textTargets?.find((t) => t.nuvioId === id);
-  if (byNuvioId?.textPreview) {
-    return byNuvioId.textPreview;
+  const byRteId = entry.textTargets?.find((t) => t.rteId === id);
+  if (byRteId?.textPreview) {
+    return byRteId.textPreview;
   }
   if (entry.id === id) {
     return entry.textTargets?.find((t) => t.textPreview)?.textPreview;
   }
-  return entry.textTargets?.find((t) => t.nuvioId === id)?.textPreview;
+  return entry.textTargets?.find((t) => t.rteId === id)?.textPreview;
 }
 
 function titleCaseWords(text: string): string {
@@ -79,12 +79,12 @@ function findRowTarget(
   entry?: IndexWireEntry | null,
   indexEntries?: readonly IndexWireEntry[] | null,
 ) {
-  const onEntry = entry?.rowTargets?.find((r) => r.nuvioId === rowHostId);
+  const onEntry = entry?.rowTargets?.find((r) => r.rteId === rowHostId);
   if (onEntry) {
     return onEntry;
   }
   for (const e of indexEntries ?? []) {
-    const hit = e.rowTargets?.find((r) => r.nuvioId === rowHostId);
+    const hit = e.rowTargets?.find((r) => r.rteId === rowHostId);
     if (hit) {
       return hit;
     }

@@ -1,4 +1,4 @@
-import type { TextWireTarget } from "@nuvio/shared";
+import type { TextWireTarget } from "@rte/shared";
 import type { ReactElement } from "react";
 import { formatFriendlyId } from "./selection-summary.js";
 
@@ -17,15 +17,15 @@ export function TextTargetPicker(props: {
   }
 
   return (
-    <div className="nuvio-card nuvio-stack-2">
-      <h3 className="nuvio-section-title">Edit target</h3>
-      <p className="nuvio-text-2xs nuvio-text-muted nuvio-leading-snug">
+    <div className="rte-card rte-stack-2">
+      <h3 className="rte-section-title">Edit target</h3>
+      <p className="rte-text-2xs rte-text-muted rte-leading-snug">
         This area contains multiple pieces of text. Choose which one to edit.
       </p>
-      <label className="nuvio-block nuvio-stack-1">
-        <span className="nuvio-label">Text to edit</span>
+      <label className="rte-block rte-stack-1">
+        <span className="rte-label">Text to edit</span>
         <select
-          className="nuvio-control nuvio-select"
+          className="rte-control rte-select"
           value={activeKey}
           onChange={(e) => onActiveKeyChange(e.target.value)}
           onMouseLeave={() => onHoverKeyChange?.(null)}
@@ -38,8 +38,8 @@ export function TextTargetPicker(props: {
             >
               {developerDetails
                 ? t.label
-                : t.nuvioId
-                  ? formatFriendlyId(t.nuvioId)
+                : t.rteId
+                  ? formatFriendlyId(t.rteId)
                   : t.label}
             </option>
           ))}

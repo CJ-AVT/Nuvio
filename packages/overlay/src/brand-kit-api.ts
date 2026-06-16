@@ -1,14 +1,14 @@
 import {
   DEFAULT_BRAND_CONFIG,
-  NUVIO_BRAND_PATH,
+  RTE_BRAND_PATH,
   normalizeBrandConfig,
   type BrandConfig,
-} from "@nuvio/shared";
-import { nuvioDevAuthHeaders, resolveOverlayDevToken } from "./dev-token.js";
+} from "@rte/shared";
+import { rteDevAuthHeaders, resolveOverlayDevToken } from "./dev-token.js";
 
 export async function fetchBrandConfig(): Promise<BrandConfig> {
   try {
-    const res = await fetch(NUVIO_BRAND_PATH);
+    const res = await fetch(RTE_BRAND_PATH);
     if (!res.ok) {
       return { ...DEFAULT_BRAND_CONFIG };
     }
@@ -21,11 +21,11 @@ export async function fetchBrandConfig(): Promise<BrandConfig> {
 
 export async function saveBrandConfig(config: BrandConfig): Promise<BrandConfig> {
   const token = await resolveOverlayDevToken();
-  const res = await fetch(NUVIO_BRAND_PATH, {
+  const res = await fetch(RTE_BRAND_PATH, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...nuvioDevAuthHeaders(token),
+      ...rteDevAuthHeaders(token),
     },
     body: JSON.stringify(config),
   });

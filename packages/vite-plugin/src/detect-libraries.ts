@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { LibraryId } from "@nuvio/shared";
+import type { LibraryId } from "@rte/shared";
 
 function hasDep(packageJson: Record<string, unknown>, name: string): boolean {
   const sections = ["dependencies", "devDependencies", "peerDependencies"] as const;

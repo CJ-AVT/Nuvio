@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { enrichTableIndexFromSource } from "./source-index-table.js";
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 
 const TABLE_SOURCE = `
 const tableData = [
@@ -9,12 +9,12 @@ const tableData = [
 ];
 export function RecentOrders() {
   return (
-    <div data-nuvio-id="orders.section">
-      <h3 data-nuvio-id="orders.title">Recent Orders</h3>
-      <div data-nuvio-id="orders.table">
+    <div data-rte-id="orders.section">
+      <h3 data-rte-id="orders.title">Recent Orders</h3>
+      <div data-rte-id="orders.table">
         {tableData.map((product) => (
-          <tr data-nuvio-id={\`orders.row.\${product.id}\`}>
-            <p data-nuvio-id={\`orders.row.\${product.id}.nameText\`}>{product.name}</p>
+          <tr data-rte-id={\`orders.row.\${product.id}\`}>
+            <p data-rte-id={\`orders.row.\${product.id}.nameText\`}>{product.name}</p>
           </tr>
         ))}
       </div>
@@ -81,7 +81,7 @@ describe("enrichTableIndexFromSource", () => {
             tagName: "p",
             textEditable: false,
             textPreview: 'MacBook Pro 13"',
-            nuvioId: "orders.row.1.nameText",
+            rteId: "orders.row.1.nameText",
             patchHostId: "orders.row.1.nameText",
           },
         ],

@@ -8,7 +8,7 @@ export function projectHasPageTitleId(root: string): boolean {
   const files = fg.sync(ID_GLOB, { cwd: root, absolute: true });
   for (const file of files) {
     const text = readFileSync(file, "utf8");
-    if (/data-nuvio-id=["']page\.title["']/.test(text)) {
+    if (/data-rte-id=["']page\.title["']/.test(text)) {
       return true;
     }
   }

@@ -1,4 +1,4 @@
-import type { PatchOp } from "@nuvio/shared";
+import type { PatchOp } from "@rte/shared";
 
 /** Staged Tailwind picks: Phase 3 typography/spacing + Phase 4 layout/effects (allowlist-backed). */
 export type AlphaStylePicks = {

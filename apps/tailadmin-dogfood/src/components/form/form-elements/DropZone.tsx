@@ -14,12 +14,12 @@ const DropzoneComponent: React.FC = () => {
   });
   return (
     <div
-      data-nuvio-id="forms.dropzone.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.dropzone.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.dropzone.title"
+          data-rte-id="forms.dropzone.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Dropzone
@@ -55,7 +55,7 @@ const DropzoneComponent: React.FC = () => {
                 {isDragActive ? "Drop Files Here" : "Drag & Drop Files Here"}
               </h4>
               <span
-                data-nuvio-id="forms.dropzone.hint"
+                data-rte-id="forms.dropzone.hint"
                 className="text-center mb-5 block w-full max-w-[290px] text-sm font-normal text-rose-600 dark:text-gray-400"
               >
                 Drag and drop your PNG, JPG, WebP, SVG images here or browse

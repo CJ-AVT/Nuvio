@@ -16,7 +16,7 @@ interface InputProps {
   success?: boolean;
   error?: boolean;
   hint?: string;
-  "data-nuvio-id"?: string;
+  "data-rte-id"?: string;
 }
 
 const Input: FC<InputProps> = ({
@@ -34,7 +34,7 @@ const Input: FC<InputProps> = ({
   success = false,
   error = false,
   hint,
-  "data-nuvio-id": dataNuvioId,
+  "data-rte-id": dataRteId,
 }) => {
   let inputClasses = ` h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
 
@@ -53,7 +53,7 @@ const Input: FC<InputProps> = ({
       <input
         type={type}
         id={id}
-        data-nuvio-id={dataNuvioId}
+        data-rte-id={dataRteId}
         name={name}
         placeholder={placeholder}
         value={value}

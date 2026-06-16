@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vite";
-import { nuvio } from "@nuvio/vite-plugin";
+import { rte } from "@rte/vite-plugin";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
@@ -21,11 +21,11 @@ export default defineConfig(({ command }) => ({
         namedExport: "ReactComponent",
       },
     }),
-    nuvio(),
+    rte(),
   ],
   resolve: {
     ...(command === "serve"
-      ? { alias: { "@nuvio/overlay": overlayDevEntry } }
+      ? { alias: { "@rte/overlay": overlayDevEntry } }
       : {}),
     dedupe: ["react", "react-dom"],
   },

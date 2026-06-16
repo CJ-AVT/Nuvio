@@ -4,11 +4,11 @@ import { parse } from "@babel/parser";
 import traverseImport, { type NodePath } from "@babel/traverse";
 import type { JSXOpeningElement } from "@babel/types";
 import fg from "fast-glob";
-import type { DuplicateIdError, IndexWireEntry, LibraryId } from "@nuvio/shared";
+import type { DuplicateIdError, IndexWireEntry, LibraryId } from "@rte/shared";
 import { analyzeHost, buildIndexEntry, type ClassNameMode } from "./source-index-metadata.js";
 import { enrichTableIndexFromSource } from "./source-index-table.js";
 import {
-  expandTemplateNuvioIds,
+  expandTemplateRteIds,
   extractRowKeysFromTableDataConst,
 } from "./source-index-template-ids.js";
 
@@ -20,7 +20,7 @@ function getTraverseFn(): (ast: import("@babel/types").File, visitor: object) =>
   if (typeof d === "function") {
     return d as (ast: import("@babel/types").File, visitor: object) => void;
   }
-  throw new Error("[Nuvio] @babel/traverse did not resolve to a callable export");
+  throw new Error("[Rte] @babel/traverse did not resolve to a callable export");
 }
 
 export type SourceIndexEntry = IndexWireEntry;
@@ -33,7 +33,7 @@ export type BuildSourceIndexResult = {
   scannedFileCount: number;
 };
 
-/** JSX tags whose string `id="..."` prop maps like `data-nuvio-id`. */
+/** JSX tags whose string `id="..."` prop maps like `data-rte-id`. */
 const WRAPPER_TAGS = new Set(["EditableText", "EditableContainer"]);
 
 /**
@@ -97,7 +97,7 @@ export function extractIdsFromSource(
           );
         };
 
-        if (prop === "data-nuvio-id") {
+        if (prop === "data-rte-id") {
           if (attr.value?.type === "StringLiteral") {
             const id = attr.value.value.trim();
             if (id) {
@@ -106,7 +106,7 @@ export function extractIdsFromSource(
             continue;
           }
           if (rowKeys.length > 0) {
-            const expanded = expandTemplateNuvioIds(attr, rowKeys);
+            const expanded = expandTemplateRteIds(attr, rowKeys);
             for (const id of expanded) {
               pushEntry(id);
             }

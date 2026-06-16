@@ -31,27 +31,27 @@ function openingFromSnippet(snippet: string): JSXOpeningElement {
 
 describe("classifyHostClassNameMode", () => {
   it("literal-only for string className", () => {
-    const opening = openingFromSnippet(`<div data-nuvio-id="x" className="p-4" />`);
+    const opening = openingFromSnippet(`<div data-rte-id="x" className="p-4" />`);
     expect(classifyHostClassNameMode(opening)).toBe("literal-only");
   });
 
   it("cn-basic for cn string list", () => {
     const opening = openingFromSnippet(
-      `<div data-nuvio-id="x" className={cn("p-4", "rounded")} />`,
+      `<div data-rte-id="x" className={cn("p-4", "rounded")} />`,
     );
     expect(classifyHostClassNameMode(opening)).toBe("cn-basic");
   });
 
   it("cn-conditional for cn with && branch", () => {
     const opening = openingFromSnippet(
-      `<div data-nuvio-id="x" className={cn("p-4", active && "bg-blue-500")} />`,
+      `<div data-rte-id="x" className={cn("p-4", active && "bg-blue-500")} />`,
     );
     expect(classifyHostClassNameMode(opening)).toBe("cn-conditional");
   });
 
   it("classnames-static for classnames object map", () => {
     const opening = openingFromSnippet(
-      `<div data-nuvio-id="x" className={classnames("p-4", { active: isActive })} />`,
+      `<div data-rte-id="x" className={classnames("p-4", { active: isActive })} />`,
     );
     expect(classifyHostClassNameMode(opening)).toBe("classnames-static");
     expect(readFlattenedClassName(opening, "classnames-static")).toContain("active");
@@ -62,7 +62,7 @@ describe("cn-conditional patches", () => {
   it("merges padding into base literal and keeps conditional branch", async () => {
     const src = `import { cn } from "./u";
 export const Card = ({ active }: { active: boolean }) => (
-  <div data-nuvio-id="card" className={cn("p-4", active && "bg-blue-500")}>x</div>
+  <div data-rte-id="card" className={cn("p-4", active && "bg-blue-500")}>x</div>
 );`;
     const r = await applyPatchToSource(
       src,
@@ -81,7 +81,7 @@ export const Card = ({ active }: { active: boolean }) => (
   it("rejects cn-conditional when mode is cn-basic", async () => {
     const src = `import { cn } from "./u";
 export const Card = ({ active }: { active: boolean }) => (
-  <div data-nuvio-id="card" className={cn("p-4", active && "bg-blue-500")}>x</div>
+  <div data-rte-id="card" className={cn("p-4", active && "bg-blue-500")}>x</div>
 );`;
     const r = await applyPatchToSource(
       src,
@@ -98,7 +98,7 @@ describe("classnames-static patches", () => {
   it("merges utilities into string literal and preserves object map", async () => {
     const src = `import classnames from "classnames";
 export const Card = ({ active }: { active: boolean }) => (
-  <div data-nuvio-id="card" className={classnames("p-4", { active })}>x</div>
+  <div data-rte-id="card" className={classnames("p-4", { active })}>x</div>
 );`;
     const r = await applyPatchToSource(
       src,

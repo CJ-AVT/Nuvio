@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-export const NUVO_PREVIEW_ON_PAGE_LABEL = "Preview on page";
+export const RTE_PREVIEW_ON_PAGE_LABEL = "Preview on page";
 
 export type PreviewOrigin = "brand" | "panel" | null;
 
@@ -67,37 +67,37 @@ export function SimpleModeActionBar({
         : null;
 
   return (
-    <section className="nuvio-card nuvio-card--actions nuvio-stack-2">
+    <section className="rte-card rte-card--actions rte-stack-2">
       {previewBusy ? (
-        <p className="nuvio-banner nuvio-banner--info nuvio-text-2xs">Validating your changes…</p>
+        <p className="rte-banner rte-banner--info rte-text-2xs">Validating your changes…</p>
       ) : brandPagePreviewActive ? (
-        <p className="nuvio-banner nuvio-banner--info nuvio-text-2xs">
+        <p className="rte-banner rte-banner--info rte-text-2xs">
           Brand recipe is painted on matching elements. Cancel to revert.
         </p>
       ) : (
-        <p className="nuvio-pending-label">{pendingLabel}</p>
+        <p className="rte-pending-label">{pendingLabel}</p>
       )}
       {previewBoxBody ? (
-        <div className="nuvio-preview-box nuvio-preview-box--compact">
-          <p className="nuvio-preview-box-body">{previewBoxBody}</p>
+        <div className="rte-preview-box rte-preview-box--compact">
+          <p className="rte-preview-box-body">{previewBoxBody}</p>
         </div>
       ) : null}
-      <div className="nuvio-action-stack">
+      <div className="rte-action-stack">
         {brandBulkApplyReady && onBrandPagePreview && !brandBulkFlowActive ? (
           <button
             type="button"
             disabled={brandPagePreviewActive || previewBusy}
-            className="nuvio-button nuvio-button--block"
+            className="rte-button rte-button--block"
             onClick={onBrandPagePreview}
           >
-            {NUVO_PREVIEW_ON_PAGE_LABEL}
+            {RTE_PREVIEW_ON_PAGE_LABEL}
           </button>
         ) : null}
         {!brandBulkFlowActive ? (
           <button
             type="button"
             disabled={previewDisabled}
-            className="nuvio-button nuvio-button--block"
+            className="rte-button rte-button--block"
             onClick={onPreview}
           >
             {previewLabel}
@@ -106,7 +106,7 @@ export function SimpleModeActionBar({
         <button
           type="button"
           disabled={applyDisabled}
-          className="nuvio-button nuvio-button-primary nuvio-button--block"
+          className="rte-button rte-button-primary rte-button--block"
           onClick={onApply}
         >
           {applyLabel}
@@ -114,7 +114,7 @@ export function SimpleModeActionBar({
         <button
           type="button"
           disabled={undoDisabled}
-          className="nuvio-button nuvio-button-ghost nuvio-button--block"
+          className="rte-button rte-button-ghost rte-button--block"
           onClick={onUndo}
         >
           Undo

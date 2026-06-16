@@ -10,7 +10,7 @@
       },
     },
     "apps/tailadmin-dogfood": {
-      "name": "@nuvio/tailadmin-dogfood",
+      "name": "@rte/tailadmin-dogfood",
       "version": "0.0.0",
       "dependencies": {
         "@fullcalendar/core": "^6.1.15",
@@ -19,10 +19,10 @@
         "@fullcalendar/list": "^6.1.15",
         "@fullcalendar/react": "^6.1.15",
         "@fullcalendar/timegrid": "^6.1.15",
-        "@nuvio/overlay": "workspace:*",
-        "@nuvio/vite-plugin": "workspace:*",
         "@react-jvectormap/core": "^1.0.4",
         "@react-jvectormap/world": "^1.1.2",
+        "@rte/overlay": "workspace:*",
+        "@rte/vite-plugin": "workspace:*",
         "apexcharts": "^4.1.0",
         "clsx": "^2.1.1",
         "flatpickr": "^4.6.13",
@@ -57,14 +57,14 @@
       },
     },
     "packages/ast-engine": {
-      "name": "@nuvio/ast-engine",
+      "name": "@rte/ast-engine",
       "version": "1.1.0",
       "dependencies": {
         "@babel/generator": "^7.26.9",
         "@babel/parser": "^7.26.9",
         "@babel/traverse": "^7.26.9",
         "@babel/types": "^7.26.9",
-        "@nuvio/shared": "workspace:*",
+        "@rte/shared": "workspace:*",
         "prettier": "^3.5.1",
         "tailwind-merge": "^2.6.0",
       },
@@ -77,19 +77,19 @@
       },
     },
     "packages/cli": {
-      "name": "@nuvio/cli",
+      "name": "@rte/cli",
       "version": "1.1.0",
       "bin": {
-        "nuvio": "./dist/cli-entry.js",
+        "rte": "./dist/cli-entry.js",
       },
       "dependencies": {
         "@babel/generator": "^7.26.9",
         "@babel/parser": "^7.26.9",
         "@babel/traverse": "^7.26.9",
         "@babel/types": "^7.26.9",
-        "@nuvio/ast-engine": "workspace:*",
-        "@nuvio/shared": "workspace:*",
-        "@nuvio/vite-plugin": "workspace:*",
+        "@rte/ast-engine": "workspace:*",
+        "@rte/shared": "workspace:*",
+        "@rte/vite-plugin": "workspace:*",
         "fast-glob": "^3.3.3",
       },
       "devDependencies": {
@@ -102,14 +102,14 @@
       },
     },
     "packages/overlay": {
-      "name": "@nuvio/overlay",
+      "name": "@rte/overlay",
       "version": "1.1.0",
       "dependencies": {
-        "@nuvio/shared": "workspace:*",
+        "@rte/shared": "workspace:*",
         "tailwind-merge": "^2.6.0",
       },
       "devDependencies": {
-        "@nuvio/ast-engine": "workspace:*",
+        "@rte/ast-engine": "workspace:*",
         "@types/react": "^19.0.8",
         "@types/react-dom": "^19.0.3",
         "jsdom": "^26.0.0",
@@ -125,7 +125,7 @@
       },
     },
     "packages/shared": {
-      "name": "@nuvio/shared",
+      "name": "@rte/shared",
       "version": "1.1.0",
       "dependencies": {
         "yaml": "^2.8.0",
@@ -139,13 +139,13 @@
       },
     },
     "packages/vite-plugin": {
-      "name": "@nuvio/vite-plugin",
+      "name": "@rte/vite-plugin",
       "version": "1.1.0",
       "dependencies": {
         "@babel/parser": "^7.26.9",
         "@babel/traverse": "^7.26.9",
-        "@nuvio/ast-engine": "workspace:*",
-        "@nuvio/shared": "workspace:*",
+        "@rte/ast-engine": "workspace:*",
+        "@rte/shared": "workspace:*",
         "fast-glob": "^3.3.3",
         "ws": "^8.18.0",
       },
@@ -332,18 +332,6 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@nuvio/ast-engine": ["@nuvio/ast-engine@workspace:packages/ast-engine"],
-
-    "@nuvio/cli": ["@nuvio/cli@workspace:packages/cli"],
-
-    "@nuvio/overlay": ["@nuvio/overlay@workspace:packages/overlay"],
-
-    "@nuvio/shared": ["@nuvio/shared@workspace:packages/shared"],
-
-    "@nuvio/tailadmin-dogfood": ["@nuvio/tailadmin-dogfood@workspace:apps/tailadmin-dogfood"],
-
-    "@nuvio/vite-plugin": ["@nuvio/vite-plugin@workspace:packages/vite-plugin"],
-
     "@react-dnd/asap": ["@react-dnd/asap@5.0.2", "", {}, "sha512-WLyfoHvxhs0V9U+GTsGilGgf2QsPl6ZZ44fnv0/b8T3nQyvzxidxsg/ZltbWssbsRDlYW8UKSQMTGotuTotZ6A=="],
 
     "@react-dnd/invariant": ["@react-dnd/invariant@4.0.2", "", {}, "sha512-xKCTqAK/FFauOM9Ta2pswIyT3D8AQlfrYdOi/toTPEhqCuAs1v5tcJ3Y08Izh1cJ5Jchwy9SeAXmMg6zrKs2iw=="],
@@ -411,6 +399,18 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.62.0", "", { "os": "win32", "cpu": "x64" }, "sha512-SoTb6lPg25xZlA2ibwQ++ahCCnH+FP0qmEuafMJ4gznZKOlXioKEAeJLgCrqjM98ACziXM9V1amFjICVL4IFoA=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.62.0", "", { "os": "win32", "cpu": "x64" }, "sha512-5L+T1fMX4RIEBoZzT0+sQ0PhTS36NULFmMXtl1TZo44TMAROIMHbZufSOjVWt/Y622BtxgxtaNOokbTDvfsrZA=="],
+
+    "@rte/ast-engine": ["@rte/ast-engine@workspace:packages/ast-engine"],
+
+    "@rte/cli": ["@rte/cli@workspace:packages/cli"],
+
+    "@rte/overlay": ["@rte/overlay@workspace:packages/overlay"],
+
+    "@rte/shared": ["@rte/shared@workspace:packages/shared"],
+
+    "@rte/tailadmin-dogfood": ["@rte/tailadmin-dogfood@workspace:apps/tailadmin-dogfood"],
+
+    "@rte/vite-plugin": ["@rte/vite-plugin@workspace:packages/vite-plugin"],
 
     "@svgdotjs/svg.draggable.js": ["@svgdotjs/svg.draggable.js@3.0.6", "", { "peerDependencies": { "@svgdotjs/svg.js": "^3.2.4" } }, "sha512-7iJFm9lL3C40HQcqzEfezK2l+dW2CpoVY3b77KQGqc8GXWa6LhhmX5Ckv7alQfUXBuZbjpICZ+Dvq1czlGx7gA=="],
 
@@ -1060,11 +1060,11 @@
 
     "@eslint/eslintrc/globals": ["globals@14.0.0", "", {}, "sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ=="],
 
-    "@nuvio/tailadmin-dogfood/tailwind-merge": ["tailwind-merge@3.6.0", "", {}, "sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w=="],
-
-    "@nuvio/tailadmin-dogfood/typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
-
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
+
+    "@rte/tailadmin-dogfood/tailwind-merge": ["tailwind-merge@3.6.0", "", {}, "sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w=="],
+
+    "@rte/tailadmin-dogfood/typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
 
     "@svgr/hast-util-to-babel-ast/entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
 

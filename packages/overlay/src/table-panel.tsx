@@ -1,4 +1,4 @@
-import type { IndexWireEntry, RowWireTarget } from "@nuvio/shared";
+import type { IndexWireEntry, RowWireTarget } from "@rte/shared";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { formatFriendlyId } from "./selection-summary.js";
 
@@ -42,7 +42,7 @@ function inferSubTarget(
   if (headers.some((h) => h.id === selectedId)) {
     return "headers";
   }
-  if (rows.some((r) => r.nuvioId === selectedId)) {
+  if (rows.some((r) => r.rteId === selectedId)) {
     return "rows";
   }
   if (selectedId === `${prefix}.section` || selectedId === `${prefix}.table`) {
@@ -73,10 +73,10 @@ export function TableColumnHeaderPicker({
     return null;
   }
   return (
-    <label className="nuvio-block nuvio-stack-1">
-      <span className="nuvio-label">Column</span>
+    <label className="rte-block rte-stack-1">
+      <span className="rte-label">Column</span>
       <select
-        className="nuvio-control nuvio-select"
+        className="rte-control rte-select"
         value={headers.find((h) => h.id === selectedId)?.id ?? ""}
         onChange={(e) => {
           if (e.target.value) {
@@ -108,13 +108,13 @@ export function TableRowPicker({
     return null;
   }
   const activeRow =
-    rows.find((r) => r.nuvioId === selectedId || selectedId.startsWith(`${r.nuvioId}.`))?.nuvioId ??
+    rows.find((r) => r.rteId === selectedId || selectedId.startsWith(`${r.rteId}.`))?.rteId ??
     "";
   return (
-    <label className="nuvio-block nuvio-stack-1">
-      <span className="nuvio-label">Row</span>
+    <label className="rte-block rte-stack-1">
+      <span className="rte-label">Row</span>
       <select
-        className="nuvio-control nuvio-select"
+        className="rte-control rte-select"
         value={activeRow}
         onChange={(e) => {
           if (e.target.value) {
@@ -124,7 +124,7 @@ export function TableRowPicker({
       >
         <option value="">Choose a row…</option>
         {rows.map((r) => (
-          <option key={r.nuvioId} value={r.nuvioId}>
+          <option key={r.rteId} value={r.rteId}>
             {r.label}
           </option>
         ))}
@@ -173,13 +173,13 @@ export function TablePanel({
   const titleEntry = indexEntries.find((e) => e.id === `${prefix}.title`);
 
   return (
-    <section className="nuvio-card nuvio-stack-2">
-      <h3 className="nuvio-section-title">
+    <section className="rte-card rte-stack-2">
+      <h3 className="rte-section-title">
         {developerDetails
           ? "Table mode"
           : `Editing: ${formatFriendlyId(prefix, titleEntry ?? sectionEntry)} table`}
       </h3>
-      <div className="nuvio-row-wrap">
+      <div className="rte-row-wrap">
         {(
           [
             ["section", developerDetails ? "Section" : "Table Style"],
@@ -190,7 +190,7 @@ export function TablePanel({
           <button
             key={value}
             type="button"
-            className={`nuvio-button-chip ${subTarget === value ? "nuvio-button-chip--active" : ""}`}
+            className={`rte-button-chip ${subTarget === value ? "rte-button-chip--active" : ""}`}
             onClick={() => {
               setSubTarget(value);
               if (value === "section") {
@@ -204,10 +204,10 @@ export function TablePanel({
       </div>
 
       {subTarget === "section" ? (
-        <div className="nuvio-row-wrap">
+        <div className="rte-row-wrap">
           <button
             type="button"
-            className={`nuvio-button-chip ${selectedId === sectionEntry.id ? "nuvio-button-chip--active" : ""}`}
+            className={`rte-button-chip ${selectedId === sectionEntry.id ? "rte-button-chip--active" : ""}`}
             onClick={() => onSelectId(sectionEntry.id)}
           >
             Card Style
@@ -215,7 +215,7 @@ export function TablePanel({
           {titleEntry ? (
             <button
               type="button"
-              className={`nuvio-button-chip ${selectedId === titleEntry.id ? "nuvio-button-chip--active" : ""}`}
+              className={`rte-button-chip ${selectedId === titleEntry.id ? "rte-button-chip--active" : ""}`}
               onClick={() => onSelectId(titleEntry.id)}
             >
               {formatFriendlyId(titleEntry.id, titleEntry)}
@@ -237,7 +237,7 @@ export function TablePanel({
         <>
           <TableRowPicker rows={rows} selectedId={selectedId} onSelectId={onSelectId} />
           {selectedId.includes(".nameText") || selectedId.includes(".name") ? (
-            <p className="nuvio-text-2xs nuvio-text-muted">Edit the product name below.</p>
+            <p className="rte-text-2xs rte-text-muted">Edit the product name below.</p>
           ) : null}
         </>
       ) : null}

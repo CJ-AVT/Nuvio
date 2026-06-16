@@ -12,15 +12,15 @@ export default function Badges() {
       />
       <PageBreadcrumb pageTitle="Badges" />
       <h1
-        data-nuvio-id="badges.page.title"
+        data-rte-id="badges.page.title"
         className="sr-only text-base font-medium text-rose-600"
       >
         Badges
       </h1>
       <div className="space-y-5 sm:space-y-6">
         <div
-          data-nuvio-id="badges.light.card"
-          className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+          data-rte-id="badges.light.card"
+          className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
         >
           <div className="px-6 py-5">
             <h3 className="text-base font-medium text-gray-800">
@@ -30,13 +30,13 @@ export default function Badges() {
           <div className="border-t border-gray-100 p-4 sm:p-6">
             <div className="flex flex-wrap gap-4 sm:items-center sm:justify-center">
               <span
-                data-nuvio-id="badges.demo.primary"
+                data-rte-id="badges.demo.primary"
                 className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-rose-100 text-rose-700"
               >
                 Primary
               </span>
               <span
-                data-nuvio-id="badges.demo.success"
+                data-rte-id="badges.demo.success"
                 className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-rose-100 text-rose-700"
               >
                 Success

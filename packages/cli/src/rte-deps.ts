@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-export type NuvioPackageName = "@nuvio/vite-plugin" | "@nuvio/overlay";
+export type RtePackageName = "@rte/vite-plugin" | "@rte/overlay";
 
 export function readPackageJson(
   packageJsonPath: string,
@@ -13,24 +13,24 @@ export function readPackageJson(
 
 export function getDependencyVersion(
   pkg: Record<string, unknown>,
-  name: NuvioPackageName,
+  name: RtePackageName,
 ): string | undefined {
   const deps = pkg.dependencies as Record<string, string> | undefined;
   const devDeps = pkg.devDependencies as Record<string, string> | undefined;
   return deps?.[name] ?? devDeps?.[name];
 }
 
-export function hasNuvioDependency(
+export function hasRteDependency(
   pkg: Record<string, unknown>,
-  name: NuvioPackageName,
+  name: RtePackageName,
 ): boolean {
   return Boolean(getDependencyVersion(pkg, name));
 }
 
-export function hasNuvioPackages(pkg: Record<string, unknown>): boolean {
+export function hasRtePackages(pkg: Record<string, unknown>): boolean {
   return (
-    hasNuvioDependency(pkg, "@nuvio/vite-plugin") &&
-    hasNuvioDependency(pkg, "@nuvio/overlay")
+    hasRteDependency(pkg, "@rte/vite-plugin") &&
+    hasRteDependency(pkg, "@rte/overlay")
   );
 }
 
@@ -43,10 +43,10 @@ export function isWorkspaceLinkedVersion(version: string | undefined): boolean {
   );
 }
 
-export function nuvioOverlayLinkKind(
+export function rteOverlayLinkKind(
   pkg: Record<string, unknown>,
 ): "npm" | "workspace" | "missing" {
-  const raw = getDependencyVersion(pkg, "@nuvio/overlay");
+  const raw = getDependencyVersion(pkg, "@rte/overlay");
   if (!raw) return "missing";
   return isWorkspaceLinkedVersion(raw) ? "workspace" : "npm";
 }

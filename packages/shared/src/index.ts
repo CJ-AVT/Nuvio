@@ -1,14 +1,14 @@
 export {
-  NUVIO_BRAND_PATH,
-  NUVIO_DEV_TOKEN_PATH,
-  NUVIO_PCC_PATH,
-  NUVIO_WS_PATH,
+  RTE_BRAND_PATH,
+  RTE_DEV_TOKEN_PATH,
+  RTE_PCC_PATH,
+  RTE_WS_PATH,
 } from "./constants.js";
 export {
-  NUVIO_DEV_TOKEN_QUERY,
+  RTE_DEV_TOKEN_QUERY,
   bearerTokenFromHeader,
   devTokenFromUpgradeUrl,
-  isAllowedNuvioOrigin,
+  isAllowedRteOrigin,
   isValidDevToken,
 } from "./dev-auth.js";
 export {
@@ -222,7 +222,7 @@ export {
   resolveEntryLibraryHint,
 } from "./library-registry.js";
 export {
-  isValidNuvioId,
-  NUVIO_ID_PATTERN,
-  suggestNuvioId,
-} from "./suggest-nuvio-id.js";
+  isValidRteId,
+  RTE_ID_PATTERN,
+  suggestRteId,
+} from "./suggest-rte-id.js";

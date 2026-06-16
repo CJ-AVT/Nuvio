@@ -1,14 +1,14 @@
 import { relative } from "node:path";
-import type { IndexWireEntry, LibraryId } from "@nuvio/shared";
+import type { IndexWireEntry, LibraryId } from "@rte/shared";
 import {
   buildSourceIndex,
   detectProjectLibraries,
-  NUVIO_DEFAULT_SCAN_GLOBS,
+  RTE_DEFAULT_SCAN_GLOBS,
   type BuildSourceIndexResult,
-} from "@nuvio/vite-plugin/scan";
+} from "@rte/vite-plugin/scan";
 import { detectProject, type ProjectContext } from "./detect-project.js";
 
-const SCAN_GLOBS = [...NUVIO_DEFAULT_SCAN_GLOBS, "app/**/*.{tsx,jsx}"];
+const SCAN_GLOBS = [...RTE_DEFAULT_SCAN_GLOBS, "app/**/*.{tsx,jsx}"];
 
 export type ProjectScanResult = {
   ctx: ProjectContext;

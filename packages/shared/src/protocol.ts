@@ -9,7 +9,7 @@ export type RiskLevel = z.infer<typeof riskLevelSchema>;
 
 /** Index v3: editable text node under an instrumented host (Step 1). */
 export const textTargetSchema = z.object({
-  /** Stable within host: `data-nuvio-id` or `loc:line:column`. */
+  /** Stable within host: `data-rte-id` or `loc:line:column`. */
   key: z.string(),
   label: z.string(),
   file: z.string(),
@@ -18,8 +18,8 @@ export const textTargetSchema = z.object({
   tagName: z.string(),
   textEditable: z.boolean(),
   textPreview: z.string().optional(),
-  /** Present when the text node has its own `data-nuvio-id`. */
-  nuvioId: z.string().optional(),
+  /** Present when the text node has its own `data-rte-id`. */
+  rteId: z.string().optional(),
   /** Host id used for `mergeTailwindClassName` when patching styles for this target. */
   patchHostId: z.string(),
   insideMap: z.boolean().optional(),
@@ -29,14 +29,14 @@ export type TextWireTarget = z.infer<typeof textTargetSchema>;
 
 /** Index v3: explicit style patch target under an instrumented host. */
 export const styleTargetSchema = z.object({
-  /** Stable key within host: `data-nuvio-id` or `host` for selected container. */
+  /** Stable key within host: `data-rte-id` or `host` for selected container. */
   key: z.string(),
   label: z.string(),
   file: z.string(),
   line: z.number().int(),
   column: z.number().int(),
   tagName: z.string(),
-  nuvioId: z.string(),
+  rteId: z.string(),
   patchHostId: z.string(),
   classNamePatchable: z.boolean(),
   riskLevel: riskLevelSchema.optional(),
@@ -61,7 +61,7 @@ export const hierarchyRoleSchema = z.enum([
 /** Index v4: row host under a table section (`orders.row.{key}`). */
 export const rowTargetSchema = z.object({
   rowKey: z.string(),
-  nuvioId: z.string(),
+  rteId: z.string(),
   label: z.string(),
   file: z.string(),
   line: z.number().int(),
@@ -218,7 +218,7 @@ export const patchOpSetHiddenSchema = z.object({
   hidden: z.boolean(),
 });
 
-/** Clone the host JSX element with a new unique `data-nuvio-id` (Phase 4 toolbar). */
+/** Clone the host JSX element with a new unique `data-rte-id` (Phase 4 toolbar). */
 export const patchOpDuplicateHostSchema = z.object({
   kind: z.literal("duplicateHost"),
 });
@@ -268,7 +268,7 @@ export const clientPatchUndoSchema = z.object({
 
 export type ClientPatchUndo = z.infer<typeof clientPatchUndoSchema>;
 
-/** v0.6: insert data-nuvio-id at a dev-time source location (click-to-tag). */
+/** v0.6: insert data-rte-id at a dev-time source location (click-to-tag). */
 export const clientTagElementSchema = z.object({
   type: z.literal("tagElement"),
   protocolVersion: z.number().int(),
@@ -276,10 +276,20 @@ export const clientTagElementSchema = z.object({
   file: z.string().min(1),
   line: z.number().int().positive(),
   column: z.number().int().nonnegative(),
-  nuvioId: z.string().min(1),
+  rteId: z.string().min(1),
 });
 
 export type ClientTagElement = z.infer<typeof clientTagElementSchema>;
+
+/** v1.1: remove data-rte-id from an indexed host. */
+export const clientUntagElementSchema = z.object({
+  type: z.literal("untagElement"),
+  protocolVersion: z.number().int(),
+  requestId: z.string().min(1),
+  id: z.string().min(1),
+});
+
+export type ClientUntagElement = z.infer<typeof clientUntagElementSchema>;
 
 export const clientMessageSchema = z.discriminatedUnion("type", [
   clientPingSchema,
@@ -287,6 +297,7 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   clientPatchApplySchema,
   clientPatchUndoSchema,
   clientTagElementSchema,
+  clientUntagElementSchema,
 ]);
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
@@ -387,6 +398,18 @@ export const serverTagElementAckSchema = z.object({
 
 export type ServerTagElementAck = z.infer<typeof serverTagElementAckSchema>;
 
+export const serverUntagElementAckSchema = z.object({
+  type: z.literal("untagElementAck"),
+  protocolVersion: z.number().int(),
+  requestId: z.string(),
+  ok: z.boolean(),
+  id: z.string().optional(),
+  errorCode: z.string().optional(),
+  errorMessage: z.string().optional(),
+});
+
+export type ServerUntagElementAck = z.infer<typeof serverUntagElementAckSchema>;
+
 export const serverMessageSchema = z.discriminatedUnion("type", [
   serverPongSchema,
   serverErrorSchema,
@@ -395,6 +418,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   serverPatchAckSchema,
   serverPatchUndoAckSchema,
   serverTagElementAckSchema,
+  serverUntagElementAckSchema,
 ]);
 
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

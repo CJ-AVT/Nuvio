@@ -3,8 +3,8 @@ import type { IncomingMessage } from "node:http";
 import {
   bearerTokenFromHeader,
   devTokenFromUpgradeUrl,
-  isAllowedNuvioOrigin,
-} from "@nuvio/shared/dev-auth";
+  isAllowedRteOrigin,
+} from "@rte/shared/dev-auth";
 
 export function timingSafeTokenEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
@@ -13,11 +13,11 @@ export function timingSafeTokenEqual(a: string, b: string): boolean {
   return timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
-export function validateNuvioUpgrade(
+export function validateRteUpgrade(
   request: IncomingMessage,
   expectedToken: string,
 ): boolean {
-  if (!isAllowedNuvioOrigin(request.headers.origin)) {
+  if (!isAllowedRteOrigin(request.headers.origin)) {
     return false;
   }
   const provided = devTokenFromUpgradeUrl(request.url);
@@ -27,7 +27,7 @@ export function validateNuvioUpgrade(
   return timingSafeTokenEqual(provided, expectedToken);
 }
 
-export function validateNuvioBearer(
+export function validateRteBearer(
   request: IncomingMessage,
   expectedToken: string,
 ): boolean {
@@ -44,7 +44,7 @@ export function warnIfWideDevServerHost(
 ): void {
   if (host === true || host === "0.0.0.0") {
     warn(
-      "[Nuvio] Dev server is bound to all network interfaces. " +
+      "[Rte] Dev server is bound to all network interfaces. " +
         "Write APIs require a dev token, but are still reachable on your LAN.",
     );
   }

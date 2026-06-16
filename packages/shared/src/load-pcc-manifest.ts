@@ -8,7 +8,7 @@ import {
   type PccManifestParseError,
 } from "./coverage-contract.js";
 
-export const PCC_PAGES_DIR = "nuvio/pages" as const;
+export const PCC_PAGES_DIR = "rte/pages" as const;
 
 export function listPccManifestFiles(projectRoot: string): string[] {
   const dir = join(projectRoot.replace(/\/$/, ""), PCC_PAGES_DIR);

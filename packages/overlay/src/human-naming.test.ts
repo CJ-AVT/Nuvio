@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import {
   containsSimpleModeNamingLeak,
   formatColumnHeaderTitle,
@@ -28,7 +28,7 @@ function ordersFixture(): IndexWireEntry[] {
           tagName: "h3",
           textEditable: true,
           textPreview: "Recent Orders",
-          nuvioId: "orders.title",
+          rteId: "orders.title",
           patchHostId: "orders.title",
         },
       ],
@@ -40,8 +40,8 @@ function ordersFixture(): IndexWireEntry[] {
       column: 1,
       hierarchyRole: "table",
       rowTargets: [
-        { rowKey: "1", nuvioId: "orders.row.1", label: "Row 1", file: "a.tsx", line: 1 },
-        { rowKey: "2", nuvioId: "orders.row.2", label: "Row 2", file: "a.tsx", line: 1 },
+        { rowKey: "1", rteId: "orders.row.1", label: "Row 1", file: "a.tsx", line: 1 },
+        { rowKey: "2", rteId: "orders.row.2", label: "Row 2", file: "a.tsx", line: 1 },
       ],
     },
     {
@@ -59,7 +59,7 @@ function ordersFixture(): IndexWireEntry[] {
           tagName: "th",
           textEditable: true,
           textPreview: "Products",
-          nuvioId: "orders.header.products",
+          rteId: "orders.header.products",
           patchHostId: "orders.header.products",
         },
       ],
@@ -79,7 +79,7 @@ function ordersFixture(): IndexWireEntry[] {
           tagName: "th",
           textEditable: true,
           textPreview: "Category101",
-          nuvioId: "orders.header.category",
+          rteId: "orders.header.category",
           patchHostId: "orders.header.category",
         },
       ],
@@ -99,7 +99,7 @@ function ordersFixture(): IndexWireEntry[] {
           tagName: "p",
           textEditable: true,
           textPreview: 'MacBook Pro 13"',
-          nuvioId: "orders.row.1.nameText",
+          rteId: "orders.row.1.nameText",
           patchHostId: "orders.row.1.nameText",
         },
       ],
@@ -119,7 +119,7 @@ function ordersFixture(): IndexWireEntry[] {
           tagName: "p",
           textEditable: true,
           textPreview: "Apple Watch Ultra Test",
-          nuvioId: "orders.row.2.nameText",
+          rteId: "orders.row.2.nameText",
           patchHostId: "orders.row.2.nameText",
         },
       ],

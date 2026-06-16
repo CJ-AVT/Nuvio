@@ -21,7 +21,7 @@ export function packagesNeedInstall(
     string,
     unknown
   >;
-  for (const name of ["@nuvio/vite-plugin", "@nuvio/overlay"]) {
+  for (const name of ["@rte/vite-plugin", "@rte/overlay"]) {
     const v = parseInstalledVersion(pkg, name);
     if (v !== targetVersion) return true;
   }
@@ -32,7 +32,7 @@ function installArgv(
   pm: PackageManager,
   version: string,
 ): { command: string; args: string[]; display: string } {
-  const pkgs = [`@nuvio/vite-plugin@${version}`, `@nuvio/overlay@${version}`];
+  const pkgs = [`@rte/vite-plugin@${version}`, `@rte/overlay@${version}`];
   switch (pm) {
     case "pnpm":
       return {

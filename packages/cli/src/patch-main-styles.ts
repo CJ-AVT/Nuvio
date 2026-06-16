@@ -1,15 +1,15 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { nuvioOverlayLinkKind, readPackageJson } from "./nuvio-deps.js";
+import { rteOverlayLinkKind, readPackageJson } from "./rte-deps.js";
 import type { PatchOutcome } from "./patch-vite-config.js";
 
 const MAIN_CANDIDATES = ["src/main.tsx", "src/main.jsx", "main.tsx", "main.jsx"] as const;
-const STYLE_IMPORT = 'import "@nuvio/overlay/style.css";';
+const STYLE_IMPORT = 'import "@rte/overlay/style.css";';
 
-/** `import "@nuvio/overlay/style.css"` only resolves for npm installs, not workspace/file/link. */
+/** `import "@rte/overlay/style.css"` only resolves for npm installs, not workspace/file/link. */
 export function overlayInstalledFromNpm(packageJsonPath: string): boolean {
   const pkg = readPackageJson(packageJsonPath);
-  return nuvioOverlayLinkKind(pkg) === "npm";
+  return rteOverlayLinkKind(pkg) === "npm";
 }
 
 export function resolveMainEntry(root: string): string | null {
@@ -20,20 +20,20 @@ export function resolveMainEntry(root: string): string | null {
   return null;
 }
 
-/** Vite prebundles @nuvio/overlay; dynamic style.css injection then 404s. Import in main fixes it. */
+/** Vite prebundles @rte/overlay; dynamic style.css injection then 404s. Import in main fixes it. */
 export function mainHasOverlayStyles(mainPath: string): boolean {
   const text = readFileSync(mainPath, "utf8");
   return (
-    text.includes("@nuvio/overlay/style.css") ||
-    text.includes("@nuvio/overlay/dist/style.css")
+    text.includes("@rte/overlay/style.css") ||
+    text.includes("@rte/overlay/dist/style.css")
   );
 }
 
 export function patchMainOverlayStyles(mainPath: string): PatchOutcome {
   const text = readFileSync(mainPath, "utf8");
   if (
-    text.includes("@nuvio/overlay/style.css") ||
-    text.includes("@nuvio/overlay/dist/style.css")
+    text.includes("@rte/overlay/style.css") ||
+    text.includes("@rte/overlay/dist/style.css")
   ) {
     return { ok: true, skipped: true };
   }

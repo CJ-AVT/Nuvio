@@ -6,14 +6,14 @@ interface LabelProps {
   htmlFor?: string;
   children: ReactNode;
   className?: string;
-  "data-nuvio-id"?: string;
+  "data-rte-id"?: string;
 }
 
-const Label: FC<LabelProps> = ({ htmlFor, children, className, "data-nuvio-id": dataNuvioId }) => {
+const Label: FC<LabelProps> = ({ htmlFor, children, className, "data-rte-id": dataRteId }) => {
   return (
     <label
       htmlFor={htmlFor}
-      data-nuvio-id={dataNuvioId}
+      data-rte-id={dataRteId}
       className={clsx(
         twMerge(
           "mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400",

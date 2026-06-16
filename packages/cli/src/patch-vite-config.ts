@@ -10,27 +10,27 @@ export type PatchOutcome = {
   error?: string;
 };
 
-function hasNuvioImport(ast: t.File): boolean {
+function hasRteImport(ast: t.File): boolean {
   let found = false;
   traverse(ast, {
     ImportDeclaration(path: NodePath<t.ImportDeclaration>) {
-      if (path.node.source.value === "@nuvio/vite-plugin") found = true;
+      if (path.node.source.value === "@rte/vite-plugin") found = true;
     },
   });
   return found;
 }
 
-function hasNuvioPluginCall(ast: t.File): boolean {
+function hasRtePluginCall(ast: t.File): boolean {
   let found = false;
   traverse(ast, {
     CallExpression(path: NodePath<t.CallExpression>) {
-      if (t.isIdentifier(path.node.callee, { name: "nuvio" })) found = true;
+      if (t.isIdentifier(path.node.callee, { name: "rte" })) found = true;
     },
   });
   return found;
 }
 
-const OVERLAY_DEP = "@nuvio/overlay";
+const OVERLAY_DEP = "@rte/overlay";
 
 function excludeListsOverlay(expr: t.Expression | null | undefined): boolean {
   if (!expr || !t.isArrayExpression(expr)) return false;
@@ -109,19 +109,19 @@ function ensureOptimizeDepsExclude(ast: t.File): boolean {
 export function viteConfigHasOverlayOptimizeExclude(filePath: string): boolean {
   const source = readFileSync(filePath, "utf8");
   return (
-    /optimizeDeps\s*:\s*\{[^}]*exclude\s*:\s*\[[^\]]*@nuvio\/overlay/.test(
+    /optimizeDeps\s*:\s*\{[^}]*exclude\s*:\s*\[[^\]]*@rte\/overlay/.test(
       source,
-    ) || /exclude\s*:\s*\[[^\]]*["']@nuvio\/overlay["']/.test(source)
+    ) || /exclude\s*:\s*\[[^\]]*["']@rte\/overlay["']/.test(source)
   );
 }
 
-function appendNuvioPlugin(ast: t.File): boolean {
+function appendRtePlugin(ast: t.File): boolean {
   let patched = false;
   traverse(ast, {
     ObjectProperty(path: NodePath<t.ObjectProperty>) {
       if (!t.isIdentifier(path.node.key, { name: "plugins" })) return;
       if (!t.isArrayExpression(path.node.value)) return;
-      path.node.value.elements.push(t.callExpression(t.identifier("nuvio"), []));
+      path.node.value.elements.push(t.callExpression(t.identifier("rte"), []));
       patched = true;
     },
   });
@@ -138,23 +138,23 @@ export function patchViteConfigFile(filePath: string): PatchOutcome {
   }
 
   const depsPatched = ensureOptimizeDepsExclude(ast);
-  const alreadyPlugin = hasNuvioImport(ast) && hasNuvioPluginCall(ast);
+  const alreadyPlugin = hasRteImport(ast) && hasRtePluginCall(ast);
 
   if (alreadyPlugin && !depsPatched) {
     return { ok: true, skipped: true };
   }
 
-  if (!hasNuvioImport(ast)) {
+  if (!hasRteImport(ast)) {
     ast.program.body.unshift(
       t.importDeclaration(
-        [t.importSpecifier(t.identifier("nuvio"), t.identifier("nuvio"))],
-        t.stringLiteral("@nuvio/vite-plugin"),
+        [t.importSpecifier(t.identifier("rte"), t.identifier("rte"))],
+        t.stringLiteral("@rte/vite-plugin"),
       ),
     );
   }
 
-  if (!hasNuvioPluginCall(ast)) {
-    if (!appendNuvioPlugin(ast)) {
+  if (!hasRtePluginCall(ast)) {
+    if (!appendRtePlugin(ast)) {
       return { ok: false, error: "no static plugins array" };
     }
   }
@@ -163,12 +163,12 @@ export function patchViteConfigFile(filePath: string): PatchOutcome {
   return { ok: true, skipped: alreadyPlugin && depsPatched };
 }
 
-export function viteConfigHasNuvio(filePath: string): boolean {
+export function viteConfigHasRte(filePath: string): boolean {
   const source = readFileSync(filePath, "utf8");
   try {
     const ast = parseTs(source, filePath);
-    return hasNuvioImport(ast) && hasNuvioPluginCall(ast);
+    return hasRteImport(ast) && hasRtePluginCall(ast);
   } catch {
-    return /nuvio\s*\(/.test(source);
+    return /rte\s*\(/.test(source);
   }
 }

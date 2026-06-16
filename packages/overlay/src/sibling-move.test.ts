@@ -16,8 +16,8 @@ describe("getIndexedSiblingMoveAvailability", () => {
   it("detects first and last among indexed siblings", () => {
     document.body.innerHTML = `
       <div id="row">
-        <div data-nuvio-id="a">A</div>
-        <div data-nuvio-id="b">B</div>
+        <div data-rte-id="a">A</div>
+        <div data-rte-id="b">B</div>
       </div>
     `;
     expect(getIndexedSiblingMoveAvailability("a")).toEqual({

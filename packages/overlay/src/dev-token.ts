@@ -1,10 +1,10 @@
-import { NUVIO_DEV_TOKEN_PATH, NUVIO_DEV_TOKEN_QUERY } from "@nuvio/shared";
+import { RTE_DEV_TOKEN_PATH, RTE_DEV_TOKEN_QUERY } from "@rte/shared";
 
 export function readOverlayDevTokenFromEnv(): string {
   const env = import.meta as ImportMeta & {
-    env?: { VITE_NUVIO_DEV_TOKEN?: string };
+    env?: { VITE_RTE_DEV_TOKEN?: string };
   };
-  return env.env?.VITE_NUVIO_DEV_TOKEN ?? "";
+  return env.env?.VITE_RTE_DEV_TOKEN ?? "";
 }
 
 export async function resolveOverlayDevToken(): Promise<string> {
@@ -13,7 +13,7 @@ export async function resolveOverlayDevToken(): Promise<string> {
     return fromEnv;
   }
   try {
-    const res = await fetch(NUVIO_DEV_TOKEN_PATH);
+    const res = await fetch(RTE_DEV_TOKEN_PATH);
     if (!res.ok) {
       return "";
     }
@@ -24,14 +24,14 @@ export async function resolveOverlayDevToken(): Promise<string> {
   }
 }
 
-export function nuvioDevAuthHeaders(token: string): Record<string, string> {
+export function rteDevAuthHeaders(token: string): Record<string, string> {
   if (!token) {
     return {};
   }
   return { Authorization: `Bearer ${token}` };
 }
 
-export function nuvioWebSocketUrl(
+export function rteWebSocketUrl(
   proto: "ws:" | "wss:",
   host: string,
   wsPath: string,
@@ -39,7 +39,7 @@ export function nuvioWebSocketUrl(
 ): string {
   const url = new URL(`${proto}//${host}${wsPath}`);
   if (token) {
-    url.searchParams.set(NUVIO_DEV_TOKEN_QUERY, token);
+    url.searchParams.set(RTE_DEV_TOKEN_QUERY, token);
   }
   return url.toString();
 }

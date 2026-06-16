@@ -3,7 +3,7 @@ import {
   type BrandConfig,
   type BrandPresetDimension,
   type Breakpoint,
-} from "@nuvio/shared";
+} from "@rte/shared";
 export function brandPresetContextKey(
   hostId: string,
   inferenceCategory: BrandApplyAction,

@@ -1,44 +1,112 @@
-# nuvio
+# Real-Time Editor
 
 **v1.1.0** — visual editor for **React + Vite + Tailwind** (dev-only; nothing runs in production).
 
-[![npm @nuvio/cli](https://img.shields.io/npm/v/@nuvio/cli?label=%40nuvio%2Fcli%201.1.0)](https://www.npmjs.com/package/@nuvio/cli)
+[![npm @rte/cli](https://img.shields.io/npm/v/@rte/cli?label=%40rte%2Fcli%201.1.0)](https://www.npmjs.com/package/@rte/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
 
-**Published packages:** `@nuvio/cli` · `@nuvio/vite-plugin` · `@nuvio/overlay` · `@nuvio/shared` · `@nuvio/ast-engine`
+**Published packages:** `@rte/cli` · `@rte/vite-plugin` · `@rte/overlay` · `@rte/shared` · `@rte/ast-engine`
 
 ---
 
 ## Purpose
 
-nuvio lets you edit a React + Vite + Tailwind app visually in the browser and write changes back to real source files.
+Real-Time Editor is a **drop-in dev overlay** for React + Vite + Tailwind apps. Add the Vite plugin and mount `<RteDevShell />` once — in dev, a floating editor appears over your app. In production builds, it renders nothing.
 
-- **Brand Kit** — define project branding once (`nuvio/brand.json`), then bulk-apply styles by category (card, heading, text, button, table, form, badge) across pages.
-- **Element editing** — click a tagged element, preview Tailwind and text changes, then apply to code.
+1. **Turn Edit on** — click elements in the running app.
+2. **Make Editable** — untagged elements get a `data-rte-id` written into your **source files** (not browser storage). That survives dev-server restarts, refactors, and future sessions — it is normal code in git.
+3. **Edit** — change Tailwind classes and text, **Validate Changes**, then **Apply to Code**.
 
-Preview before apply. Undo after apply. The overlay and Vite plugin run only in dev (`import.meta.env.DEV`).
+You can also tag hosts by hand with `data-rte-id` in JSX. To stop editing an element, remove its `data-rte-id` from source (there is no in-overlay “Make not editable” yet).
+
+**Brand Kit** — define project branding once (`rte/brand.json`), then bulk-apply styles by category (card, heading, text, button, table, form, badge) across pages.
+
+Preview before apply. Undo after apply.
 
 ---
 
-## Setup
+## Apply to another project
 
-### Use nuvio in your app
+**Mental model:** one Vite plugin + one React shell → dev-only overlay → click to tag → edits live in source forever.
 
-**Requirements:** Node 20+, React, Vite, Tailwind.
+rte is **dev-only** — the Vite plugin and overlay run during `vite dev` and are stripped from production bundles.
 
-From your app folder (where `package.json` and `vite.config` live):
+**Stack:** Node 20+, React, Vite, Tailwind.
+
+### Drop in the plugin
+
+| Piece | Role |
+| ----- | ---- |
+| `@rte/vite-plugin` | Dev server: source index, patch writes, `data-rte-loc` on untagged JSX (so you can click-to-tag) |
+| `@rte/overlay` + `<RteDevShell />` | Floating chip + editor UI over your app (`import.meta.env.DEV` only) |
+
+**Fastest path** — from the app folder that has `package.json` and `vite.config.*`:
 
 ```bash
-bunx @nuvio/cli init --yes
+bunx @rte/cli init --yes   # wires both pieces + a starter editable element
 bun run dev
 ```
 
-Open localhost → click the nuvio chip → **Edit on**.
+Open localhost → rte chip → **Edit on**.
 
-After init, see `nuvio/START_HERE.md` and `nuvio/AGENT.md` in your project.
+### Day-to-day workflow
+
+| Step | What happens |
+| ---- | ------------ |
+| **Click untagged UI** | Overlay opens **Make Editable** → confirm → `data-rte-id` is inserted in the matching `.tsx` file |
+| **Click tagged UI** | Property panel opens → tweak classes/text → **Validate Changes** → **Apply to Code** |
+| **Restart dev / come back later** | Tagged elements stay editable — ids are in source, not session storage |
+| **Stop editing an element** | Remove `data-rte-id` from that JSX host in source |
+
+Verify wiring anytime: `bunx @rte/cli doctor` · `bunx @rte/cli scan`
+
+**What `init` creates:** installs packages, patches `vite.config`, mounts `<RteDevShell />`, tags starter `page.title`, and adds `rte/` (`START_HERE.md`, `AGENT.md`, `brand.json`).
+
+**Beyond click-to-tag**
+
+- **Brand Kit** — bulk-apply category styles per page using `rte/brand.json` (needs literal `data-rte-id` + patchable `className` on native DOM).
+- **Monorepos** — run `init` **per Vite app**; do **not** add `@rte/overlay` to Tailwind `content` (overlay CSS is self-contained).
+
+After init, read `rte/START_HERE.md`. For dashboard id patterns (cards, tables, nav), see `rte/AGENT.md`.
 
 **Tip:** When `bun create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
+
+### Manual wiring (skip CLI)
+
+```bash
+bun add -d @rte/vite-plugin @rte/overlay
+```
+
+```ts
+// vite.config.ts
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { rte } from "@rte/vite-plugin";
+
+export default defineConfig({
+  plugins: [react(), rte()],
+  resolve: { dedupe: ["react", "react-dom"] },
+});
+```
+
+```tsx
+// e.g. App.tsx
+import { RteDevShell } from "@rte/overlay";
+
+export default function App() {
+  return (
+    <>
+      {/* your app */}
+      <RteDevShell />
+    </>
+  );
+}
+```
+
+Then use **Make Editable** in the browser (or add `data-rte-id` by hand) and run `bunx @rte/cli doctor`.
+
+**Reference app:** [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · **Full guide:** [docs/rteUser.md](https://github.com/ehah/Rte/blob/main/docs/rteUser.md)
 
 ### Develop this monorepo
 
@@ -60,71 +128,8 @@ bun run dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
 | Context | Command |
 | ------- | ------- |
 | **This monorepo** | `bun run build` — builds all `packages/*` |
-| **Your app** | No separate nuvio build; `nuvio init` wires the dev plugin and overlay. Run your normal `bun run dev` / `vite dev`. |
-| **Production app build** | Unchanged — nuvio is not included in production bundles. |
-
----
-
-## Add to an existing project or monorepo
-
-### Recommended: CLI init
-
-Run from the **app package** that has Vite + React (not necessarily the monorepo root):
-
-```bash
-cd apps/your-app
-bunx @nuvio/cli init --yes
-```
-
-`init` installs `@nuvio/vite-plugin` and `@nuvio/overlay`, registers the Vite plugin, mounts the dev shell, and adds starter instrumentation.
-
-### Manual wiring
-
-If you skip the CLI or need to wire by hand:
-
-```bash
-bun add -d @nuvio/vite-plugin @nuvio/overlay
-```
-
-```ts
-// vite.config.ts
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
-import { nuvio } from "@nuvio/vite-plugin";
-
-export default defineConfig({
-  plugins: [react(), nuvio()],
-  resolve: { dedupe: ["react", "react-dom"] },
-});
-```
-
-```tsx
-// e.g. App.tsx
-import { NuvioDevShell } from "@nuvio/overlay";
-
-export default function App() {
-  return (
-    <>
-      {/* your app */}
-      <NuvioDevShell />
-    </>
-  );
-}
-```
-
-### Instrument hosts
-
-Add stable `data-nuvio-id="your.region.id"` on JSX you want to edit or brand. For Brand Kit bulk apply, use a **literal** `className` on the same native element.
-
-Optional: add `nuvio/pages/<page>.pcc.yaml` and run `nuvio coverage verify --page <page>`.
-
-### Monorepo notes
-
-- Run `nuvio init` (or manual wiring) **per app** that should have the editor.
-- `nuvio doctor` recognizes workspace-linked monorepo apps.
-- Overlay CSS is self-contained — do **not** add `@nuvio/overlay` to Tailwind `content`.
-
-More: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · [docs/nuvioUser.md](docs/nuvioUser.md)
+| **Your app** | No separate rte build; `rte init` wires the dev plugin and overlay. Run your normal `bun run dev` / `vite dev`. |
+| **Production app build** | Unchanged — rte is not included in production bundles. |
 
 ---
 
@@ -154,23 +159,24 @@ More: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · [d
 
 **Editing constraints**
 
-- Each `data-nuvio-id` must be unique (`nuvio scan` lists duplicates)
-- Brand Kit bulk apply requires literal `data-nuvio-id` + patchable `className` on native DOM
+- Each `data-rte-id` must be unique (`rte scan` lists duplicates)
+- Brand Kit bulk apply requires literal `data-rte-id` + patchable `className` on native DOM
 - Wrapper-only props without a patchable native `className` are not indexed
 
 **On the roadmap**
 
-- Next.js `nuvio init` (experimental `@nuvio/next` in this monorepo)
+- Next.js `rte init` (experimental `@rte/next` in this monorepo)
 - Apply brand to all pages in one action
+- In-overlay **Make not editable** (remove `data-rte-id` from source via UI)
 
 **Not planned near-term**
 
 - Vue, Angular, or non-React frameworks
 - Production or hosted editing
 
-nuvio is a **local dev tool**. The Vite plugin exposes write APIs on the dev server. See [SECURITY.md](SECURITY.md).
+rte is a **local dev tool**. The Vite plugin exposes write APIs on the dev server. See [SECURITY.md](SECURITY.md).
 
-Full detail: [docs/LIMITATIONS.md](docs/LIMITATIONS.md) · [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
+Full detail: [LIMITATIONS.md](https://github.com/ehah/Rte/blob/main/docs/LIMITATIONS.md) · [COMPATIBILITY.md](https://github.com/ehah/Rte/blob/main/docs/COMPATIBILITY.md)
 
 ---
 
@@ -190,7 +196,7 @@ Root `package.json` scripts for this monorepo:
 | `bun run coverage:dogfood` | PCC verify all tailadmin pages |
 | `bun run brand:dogfood` | Brand scan all tailadmin pages |
 | `bun run brand:apply:dogfood` | CLI brand apply (dogfood) |
-| `bun run publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
+| `bun run publish:stable` | Publish five `@rte/*` packages to npm `latest` |
 | `bun run publish:alpha` | Publish packages to npm `alpha` tag |
 
 ---
@@ -202,4 +208,4 @@ Root `package.json` scripts for this monorepo:
 | [CHANGELOG.md](CHANGELOG.md) | Releases and notable changes |
 | [SECURITY.md](SECURITY.md) | Threat model |
 
-**Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT
+**Repository:** [github.com/ehah/Rte](https://github.com/ehah/Rte) · **License:** MIT

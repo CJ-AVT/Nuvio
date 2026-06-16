@@ -2,7 +2,7 @@
 
 ## Releases (npm)
 
-**Full MVP:** **`@nuvio/*` `0.1.0`** on npm **`latest`**. **Alpha line:** `0.1.0-alpha.x` on **`alpha`**.
+**Full MVP:** **`@rte/*` `0.1.0`** on npm **`latest`**. **Alpha line:** `0.1.0-alpha.x` on **`alpha`**.
 
 Before publishing stable: `bun run dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md). Maintainer flow: [docs/npmPublish.md](./docs/npmPublish.md). DoD checklist: [docs/FULL_MVP_DOD.md](./docs/FULL_MVP_DOD.md). Limits: [docs/LIMITATIONS.md](./docs/LIMITATIONS.md), [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md). [CHANGELOG.md](./CHANGELOG.md) tracks releases.
 
@@ -17,8 +17,8 @@ Before publishing stable: `bun run dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD
 ## Dev loop
 
 1. `bun install` — from the **repo root**.
-2. `bun run build` — required after changing `packages/*` before running the demo (or use package-level `bun run --filter '@nuvio/vite-plugin' build` watch while iterating).
-3. `bun run dev:tailadmin` — Vite dev server with Nuvio plugin (port 5173).
+2. `bun run build` — required after changing `packages/*` before running the demo (or use package-level `bun run --filter '@rte/vite-plugin' build` watch while iterating).
+3. `bun run dev:tailadmin` — Vite dev server with Rte plugin (port 5173).
 
 ## Tests and types
 
@@ -27,7 +27,7 @@ bun run typecheck
 bun run test
 ```
 
-File writes from the plugin go through `@nuvio/ast-engine` and `assertPathWithinRoot` from `@nuvio/shared/secure-path` (Node-only; not included in the browser-safe `@nuvio/shared` entry).
+File writes from the plugin go through `@rte/ast-engine` and `assertPathWithinRoot` from `@rte/shared/secure-path` (Node-only; not included in the browser-safe `@rte/shared` entry).
 
 ## Dev-time source index (Phase 1)
 

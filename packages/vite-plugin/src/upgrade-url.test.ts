@@ -3,11 +3,11 @@ import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
 
 describe("pathnameFromUpgradeUrl", () => {
   it("parses bare path", () => {
-    expect(pathnameFromUpgradeUrl("/__nuvio/ws")).toBe("/__nuvio/ws");
+    expect(pathnameFromUpgradeUrl("/__rte/ws")).toBe("/__rte/ws");
   });
 
   it("strips query string", () => {
-    expect(pathnameFromUpgradeUrl("/__nuvio/ws?x=1")).toBe("/__nuvio/ws");
+    expect(pathnameFromUpgradeUrl("/__rte/ws?x=1")).toBe("/__rte/ws");
   });
 
   it("handles missing url", () => {

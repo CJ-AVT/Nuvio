@@ -1,5 +1,5 @@
 {
-  "name": "nuvio",
+  "name": "real-time-editor",
   "private": true,
   "packageManager": "bun@1.3.14",
   "workspaces": [
@@ -10,7 +10,7 @@
     "build": "bun run --filter './packages/**' build",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
-    "dev": "bun run build && bun run --filter '@nuvio/tailadmin-dogfood' dev"
+    "dev": "bun run build && bun run --filter '@rte/tailadmin-dogfood' dev"
   },
   "engines": {
     "node": ">=20"

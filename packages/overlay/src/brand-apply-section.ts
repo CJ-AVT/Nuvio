@@ -1,5 +1,5 @@
-import type { BrandApplyAction, BrandConfig } from "@nuvio/shared";
-import { brandConfigsEqual } from "@nuvio/shared";
+import type { BrandApplyAction, BrandConfig } from "@rte/shared";
+import { brandConfigsEqual } from "@rte/shared";
 import {
   isBrandBulkCategoryLocked,
   isBrandBulkCategoryValidationReady,

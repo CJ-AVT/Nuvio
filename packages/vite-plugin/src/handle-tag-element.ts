@@ -1,15 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { WebSocket } from "ws";
-import { insertDataNuvioIdAtLocation, isValidNuvioId } from "@nuvio/ast-engine";
+import { insertDataRteIdAtLocation, isValidRteId } from "@rte/ast-engine";
 import {
   PROTOCOL_VERSION,
   serializeServerMessage,
   type ClientTagElement,
   type DuplicateIdError,
   type IndexWireEntry,
-} from "@nuvio/shared";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+} from "@rte/shared";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
 
 export type TagElementContext = {
   writeGuardRoot: string;
@@ -37,12 +37,12 @@ export async function handleTagElementMessage(
     );
   };
 
-  if (!isValidNuvioId(msg.nuvioId)) {
+  if (!isValidRteId(msg.rteId)) {
     ackFail("invalid_id", "Id must be segmented lowercase (e.g. page.title)");
     return;
   }
 
-  if (ctx.idToEntry.has(msg.nuvioId) || ctx.duplicateIds.some((d) => d.id === msg.nuvioId)) {
+  if (ctx.idToEntry.has(msg.rteId) || ctx.duplicateIds.some((d) => d.id === msg.rteId)) {
     ackFail("duplicate_id", "That id is already used — pick another name");
     return;
   }
@@ -66,12 +66,12 @@ export async function handleTagElementMessage(
     return;
   }
 
-  const result = await insertDataNuvioIdAtLocation(
+  const result = await insertDataRteIdAtLocation(
     source,
     fileAbs,
     msg.line,
     msg.column,
-    msg.nuvioId,
+    msg.rteId,
   );
 
   if (!result.ok) {

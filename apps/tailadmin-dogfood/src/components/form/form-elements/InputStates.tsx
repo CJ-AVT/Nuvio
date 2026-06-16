@@ -23,18 +23,18 @@ export default function InputStates() {
   };
   return (
     <div
-      data-nuvio-id="forms.states.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.states.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.states.title"
+          data-rte-id="forms.states.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Input States
         </h3>
         <p
-          data-nuvio-id="forms.states.desc"
+          data-rte-id="forms.states.desc"
           className="mt-1 text-sm font-normal text-rose-600 dark:text-gray-400"
         >
           Validation styles for error, success and disabled states on form
@@ -44,7 +44,7 @@ export default function InputStates() {
       <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
         <div className="space-y-5 sm:space-y-6">
           <div>
-            <Label data-nuvio-id="forms.states.label">Email</Label>
+            <Label data-rte-id="forms.states.label">Email</Label>
             <Input
               type="email"
               value={email}
@@ -52,7 +52,7 @@ export default function InputStates() {
               onChange={handleEmailChange}
               placeholder="Enter your email"
               hint={error ? "This is an invalid email address." : ""}
-              data-nuvio-id="forms.states.input"
+              data-rte-id="forms.states.input"
             />
           </div>
           <div>

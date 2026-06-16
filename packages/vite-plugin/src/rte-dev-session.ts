@@ -5,29 +5,29 @@ import path from "node:path";
 import type { Duplex } from "node:stream";
 import { watch } from "node:fs";
 import { WebSocket, WebSocketServer } from "ws";
-import { applyPatchToSource } from "@nuvio/ast-engine";
+import { applyPatchToSource } from "@rte/ast-engine";
 import { handleTagElementMessage } from "./handle-tag-element.js";
 import { resolvePatchClassNameMode } from "./resolve-classname-mode.js";
 import { detectProjectLibraries } from "./detect-libraries.js";
 import {
-  NUVIO_BRAND_PATH,
-  NUVIO_DEV_TOKEN_PATH,
-  NUVIO_PCC_PATH,
-  NUVIO_WS_PATH,
+  RTE_BRAND_PATH,
+  RTE_DEV_TOKEN_PATH,
+  RTE_PCC_PATH,
+  RTE_WS_PATH,
   PROTOCOL_VERSION,
   type DuplicateIdError,
   type IndexWireEntry,
   type RuntimeDiagnostics,
   parseClientMessage,
   serializeServerMessage,
-} from "@nuvio/shared";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+} from "@rte/shared";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
 import { readRuntimeVersions } from "./read-dep-version.js";
 import { pathnameFromUpgradeUrl } from "./upgrade-url.js";
 import { handleBrandConfigHttp } from "./handle-brand-config.js";
 import { handleDevTokenHttp } from "./handle-dev-token.js";
 import { handlePccConfigHttp } from "./handle-pcc-config.js";
-import { validateNuvioUpgrade } from "./dev-auth-guard.js";
+import { validateRteUpgrade } from "./dev-auth-guard.js";
 import {
   buildSourceIndex,
   extractIdsFromSource,
@@ -43,7 +43,7 @@ const DEFAULT_GLOBS = [
   "packages/**/src/**/*.{tsx,jsx}",
 ];
 
-export type NuvioDevSessionOptions = {
+export type RteDevSessionOptions = {
   enabled?: boolean;
   root: string;
   configDir?: string;
@@ -55,12 +55,12 @@ export type NuvioDevSessionOptions = {
   devAuthToken?: string;
 };
 
-export type NuvioDevSessionHandle = {
+export type RteDevSessionHandle = {
   rebuildIndex: () => void;
   close: () => void;
 };
 
-function nuvioWsMessageToText(data: unknown): string {
+function rteWsMessageToText(data: unknown): string {
   if (typeof data === "string") {
     return data;
   }
@@ -98,7 +98,7 @@ function supplementIndexFromAppTsx(
         continue;
       }
       emitWarn(
-        `[Nuvio] Source index had 0 ids; supplemented from ${appTsx} (${hits.length} id(s)).`,
+        `[Rte] Source index had 0 ids; supplemented from ${appTsx} (${hits.length} id(s)).`,
       );
       return {
         ...built,
@@ -112,13 +112,13 @@ function supplementIndexFromAppTsx(
   return built;
 }
 
-/** Attach Nuvio dev WebSocket + source index to any Node HTTP server (Vite or Next custom server). */
-export function attachNuvioDevSession(
+/** Attach Rte dev WebSocket + source index to any Node HTTP server (Vite or Next custom server). */
+export function attachRteDevSession(
   httpServer: HttpServer,
-  options: NuvioDevSessionOptions,
-): NuvioDevSessionHandle {
+  options: RteDevSessionOptions,
+): RteDevSessionHandle {
   const log = options.log ?? console;
-  const enabled = options.enabled ?? process.env.NUVIO !== "0";
+  const enabled = options.enabled ?? process.env.RTE !== "0";
   const scanGlobs = options.scanGlobs ?? DEFAULT_GLOBS;
   const verbose = options.verbose ?? false;
   const classNameMode = options.classNameMode ?? "literal-only";
@@ -159,7 +159,7 @@ export function attachNuvioDevSession(
       const fallback = buildSourceIndex(serverRoot, ["src/**/*.{tsx,jsx}"], indexOptions);
       if (fallback.entries.length > 0) {
         log.warn(
-          `[Nuvio] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)).`,
+          `[Rte] Multi-root scan yielded 0 ids; using serverRoot-only index (${fallback.entries.length} id(s)).`,
         );
         built = fallback;
       }
@@ -188,10 +188,10 @@ export function attachNuvioDevSession(
 
     if (verbose) {
       log.info(
-        `[Nuvio] index roots=${rootsLabel} matchedFiles=${built.scannedFileCount} uniqueIds=${built.entries.length}`,
+        `[Rte] index roots=${rootsLabel} matchedFiles=${built.scannedFileCount} uniqueIds=${built.entries.length}`,
       );
     } else {
-      log.info(`[Nuvio] index — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`);
+      log.info(`[Rte] index — ${built.entries.length} id(s), ${built.scannedFileCount} file(s)`);
     }
 
     if (cachedIndexPayload && wss.clients.size > 0) {
@@ -236,7 +236,7 @@ export function attachNuvioDevSession(
     }
 
     ws.on("message", async (data) => {
-      const text = nuvioWsMessageToText(data);
+      const text = rteWsMessageToText(data);
       const msg = parseClientMessage(text);
       if (!msg) {
         ws.send(
@@ -500,10 +500,10 @@ export function attachNuvioDevSession(
       return;
     }
     const pathname = pathnameFromUpgradeUrl(request.url);
-    if (pathname !== NUVIO_WS_PATH) {
+    if (pathname !== RTE_WS_PATH) {
       return;
     }
-    if (!validateNuvioUpgrade(request, devAuthToken)) {
+    if (!validateRteUpgrade(request, devAuthToken)) {
       socket.destroy();
       return;
     }
@@ -512,20 +512,20 @@ export function attachNuvioDevSession(
     });
   };
 
-  const onNuvioHttp = (req: IncomingMessage, res: ServerResponse): boolean => {
+  const onRteHttp = (req: IncomingMessage, res: ServerResponse): boolean => {
     if (!enabled) {
       return false;
     }
     const pathname = (req.url ?? "").split("?")[0] ?? "";
-    if (pathname === NUVIO_DEV_TOKEN_PATH) {
+    if (pathname === RTE_DEV_TOKEN_PATH) {
       handleDevTokenHttp(req, res, devAuthToken);
       return true;
     }
-    if (pathname === NUVIO_PCC_PATH) {
+    if (pathname === RTE_PCC_PATH) {
       void handlePccConfigHttp(req, res, { projectRoot, writeGuardRoot });
       return true;
     }
-    if (pathname === NUVIO_BRAND_PATH) {
+    if (pathname === RTE_BRAND_PATH) {
       void handleBrandConfigHttp(req, res, {
         projectRoot,
         writeGuardRoot,
@@ -542,7 +542,7 @@ export function attachNuvioDevSession(
   if (priorRequestListeners.length > 0) {
     httpServer.removeAllListeners("request");
     httpServer.on("request", (req, res) => {
-      if (onNuvioHttp(req, res)) {
+      if (onRteHttp(req, res)) {
         return;
       }
       for (const listener of priorRequestListeners) {
@@ -554,10 +554,10 @@ export function attachNuvioDevSession(
   httpServer.on("upgrade", onUpgrade);
 
   if (enabled) {
-    log.info("[Nuvio] dev session attached (App Router / custom server mode)");
+    log.info("[Rte] dev session attached (App Router / custom server mode)");
     rebuildIndex();
   } else {
-    log.info("[Nuvio] disabled (set NUVIO=1 to enable)");
+    log.info("[Rte] disabled (set RTE=1 to enable)");
   }
 
   return {
@@ -579,4 +579,4 @@ export function attachNuvioDevSession(
   };
 }
 
-export { DEFAULT_GLOBS as NUVIO_DEFAULT_SCAN_GLOBS };
+export { DEFAULT_GLOBS as RTE_DEFAULT_SCAN_GLOBS };

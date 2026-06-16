@@ -5,7 +5,7 @@ import type { NodePath, Visitor } from "@babel/traverse";
 import * as t from "@babel/types";
 import prettier from "prettier";
 import { twMerge } from "tailwind-merge";
-import type { PatchOp } from "@nuvio/shared";
+import type { PatchOp } from "@rte/shared";
 import { validateTailwindFragment } from "./tailwind-whitelist.js";
 import { applySetTableDataField } from "./set-table-data-field.js";
 import { getClassNameBinding } from "./classname-binding.js";
@@ -86,7 +86,7 @@ function findHostOpening(
         if (!t.isJSXAttribute(attr)) {
           continue;
         }
-        if (!t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" })) {
+        if (!t.isJSXIdentifier(attr.name, { name: "data-rte-id" })) {
           continue;
         }
         if (t.isStringLiteral(attr.value) && attr.value.value === hostId) {
@@ -383,12 +383,12 @@ function applySetHidden(
   clsAttr.value = t.stringLiteral(twMerge(tokens.join(" ")));
 }
 
-function collectNuvioIds(ast: t.File): Set<string> {
+function collectRteIds(ast: t.File): Set<string> {
   const ids = new Set<string>();
   traverse(ast, {
     JSXOpeningElement(path: NodePath<t.JSXOpeningElement>) {
       for (const attr of path.node.attributes) {
-        if (!t.isJSXAttribute(attr) || !t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" })) {
+        if (!t.isJSXAttribute(attr) || !t.isJSXIdentifier(attr.name, { name: "data-rte-id" })) {
           continue;
         }
         if (t.isStringLiteral(attr.value)) {
@@ -400,9 +400,9 @@ function collectNuvioIds(ast: t.File): Set<string> {
   return ids;
 }
 
-function setNuvioIdOnOpening(opening: t.JSXOpeningElement, id: string): void {
+function setRteIdOnOpening(opening: t.JSXOpeningElement, id: string): void {
   for (const attr of opening.attributes) {
-    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" })) {
+    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "data-rte-id" })) {
       if (t.isStringLiteral(attr.value)) {
         attr.value.value = id;
         return;
@@ -410,11 +410,11 @@ function setNuvioIdOnOpening(opening: t.JSXOpeningElement, id: string): void {
     }
   }
   opening.attributes.push(
-    t.jsxAttribute(t.jsxIdentifier("data-nuvio-id"), t.stringLiteral(id)),
+    t.jsxAttribute(t.jsxIdentifier("data-rte-id"), t.stringLiteral(id)),
   );
 }
 
-function remapDescendantNuvioIds(element: t.JSXElement, taken: Set<string>): void {
+function remapDescendantRteIds(element: t.JSXElement, taken: Set<string>): void {
   const stack: t.JSXElement[] = [];
   for (const child of element.children) {
     if (t.isJSXElement(child)) {
@@ -426,7 +426,7 @@ function remapDescendantNuvioIds(element: t.JSXElement, taken: Set<string>): voi
     for (const attr of el.openingElement.attributes) {
       if (
         !t.isJSXAttribute(attr) ||
-        !t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" }) ||
+        !t.isJSXIdentifier(attr.name, { name: "data-rte-id" }) ||
         !t.isStringLiteral(attr.value)
       ) {
         continue;
@@ -468,15 +468,15 @@ function applyDuplicateHost(
   if (!parentPath?.isJSXElement()) {
     throw new Error("Duplicate requires a JSX element parent");
   }
-  const taken = collectNuvioIds(ast);
+  const taken = collectRteIds(ast);
   const newId = uniqueDuplicateId(hostId, taken);
   const clone = t.cloneNode(hostPath.node, true);
   if (!t.isJSXElement(clone)) {
     throw new Error("Failed to clone host element");
   }
-  setNuvioIdOnOpening(clone.openingElement, newId);
+  setRteIdOnOpening(clone.openingElement, newId);
   taken.add(newId);
-  remapDescendantNuvioIds(clone, taken);
+  remapDescendantRteIds(clone, taken);
   const parent = parentPath.node;
   const hostIndex = parent.children.indexOf(hostPath.node);
   if (hostIndex < 0) {
@@ -536,7 +536,7 @@ export type ApplyPatchToSourceResult =
   | { ok: false; code: string; message: string };
 
 /**
- * Apply Phase 2 patch operations to TSX/JSX source for a single `data-nuvio-id` host.
+ * Apply Phase 2 patch operations to TSX/JSX source for a single `data-rte-id` host.
  */
 export async function applyPatchToSource(
   source: string,
@@ -565,13 +565,13 @@ export async function applyPatchToSource(
     hostOps.length > 0 ? findHostOpening(ast, hostId) : tableDataOps.length > 0 ? null : findHostOpening(ast, hostId);
 
   if (hostOps.length > 0 && !openingPath) {
-    return { ok: false, code: "host_not_found", message: `No JSX host with data-nuvio-id="${hostId}"` };
+    return { ok: false, code: "host_not_found", message: `No JSX host with data-rte-id="${hostId}"` };
   }
   if (ops.length === 0) {
     return { ok: false, code: "patch_rejected", message: "No patch operations" };
   }
   if (hostOps.length === 0 && tableDataOps.length === 0) {
-    return { ok: false, code: "host_not_found", message: `No JSX host with data-nuvio-id="${hostId}"` };
+    return { ok: false, code: "host_not_found", message: `No JSX host with data-rte-id="${hostId}"` };
   }
 
   let duplicateNewId: string | undefined;

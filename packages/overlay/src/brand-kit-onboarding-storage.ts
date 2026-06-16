@@ -1,4 +1,4 @@
-export const BRAND_KIT_FIRST_RUN_STORAGE_KEY = "nuvio:brand-kit-first-run:v1";
+export const BRAND_KIT_FIRST_RUN_STORAGE_KEY = "rte:brand-kit-first-run:v1";
 
 export function isBrandKitFirstRunDismissed(): boolean {
   if (typeof localStorage === "undefined") {

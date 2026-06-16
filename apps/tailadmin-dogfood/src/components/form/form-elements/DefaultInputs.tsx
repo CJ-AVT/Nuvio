@@ -25,12 +25,12 @@ export default function DefaultInputs() {
   };
   return (
     <div
-      data-nuvio-id="forms.default.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.default.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.default.title"
+          data-rte-id="forms.default.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Default Inputs
@@ -39,15 +39,15 @@ export default function DefaultInputs() {
       <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
         <div className="space-y-6">
           <div>
-            <Label htmlFor="input" data-nuvio-id="forms.default.input.label">
+            <Label htmlFor="input" data-rte-id="forms.default.input.label">
               Input
             </Label>
-            <Input type="text" id="input" data-nuvio-id="forms.default.input" />
+            <Input type="text" id="input" data-rte-id="forms.default.input" />
           </div>
           <div>
             <label
               htmlFor="inputTwo"
-              data-nuvio-id="form.email.label"
+              data-rte-id="form.email.label"
               className="mb-1.5 block text-sm font-medium text-gray-700 xl:text-sm xl:font-normal xl:text-blue-600 dark:text-gray-400"
             >
               Input with Placeholder
@@ -55,7 +55,7 @@ export default function DefaultInputs() {
             <input
               type="text"
               id="inputTwo"
-              data-nuvio-id="form.email.input"
+              data-rte-id="form.email.input"
               placeholder="info@gmail.com"
               className="h-11 w-full text-sm text-gray-800 shadow-theme-xs bg-slate-50 border border-rose-300 rounded-xl px-4 py-2 xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:px-4 xl:py-2 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
             />

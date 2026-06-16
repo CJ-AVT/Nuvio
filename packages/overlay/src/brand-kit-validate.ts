@@ -1,4 +1,4 @@
-import { validateTailwindFragment } from "@nuvio/ast-engine";
+import { validateTailwindFragment } from "@rte/ast-engine";
 import {
   BRAND_APPLY_ACTIONS,
   BRAND_BUTTON_HOVERS,
@@ -12,7 +12,7 @@ import {
   brandColorsForAction,
   buildBrandClassFragment,
   DEFAULT_BRAND_CONFIG,
-} from "@nuvio/shared";
+} from "@rte/shared";
 
 export function validateBrandClassFragment(fragment: string): void {
   validateTailwindFragment(fragment);

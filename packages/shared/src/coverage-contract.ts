@@ -154,7 +154,7 @@ export function parsePccManifest(input: unknown):
 }
 
 export function defaultPccManifestPath(projectRoot: string, page: string): string {
-  return `${projectRoot.replace(/\/$/, "")}/nuvio/pages/${page}.pcc.yaml`;
+  return `${projectRoot.replace(/\/$/, "")}/rte/pages/${page}.pcc.yaml`;
 }
 
 export function pccHostsForCategory(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_BRAND_CONFIG, inferBrandPresetsFromTokens } from "@nuvio/shared";
+import { DEFAULT_BRAND_CONFIG, inferBrandPresetsFromTokens } from "@rte/shared";
 import { flattenTokensAtBreakpoint } from "./tailwind-token-read.js";
 import { buildBrandPageBaselineDraft } from "./brand-preset-sync.js";
 

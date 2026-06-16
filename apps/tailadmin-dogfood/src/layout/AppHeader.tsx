@@ -32,7 +32,7 @@ const AppHeader: React.FC = () => {
   }, []);
   return (
     <header
-      data-nuvio-id="app.header"
+      data-rte-id="app.header"
       className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 lg:border-b xl:text-lg xl:font-semibold xl:text-rose-600 dark:border-gray-800 dark:bg-gray-900"
     >
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">

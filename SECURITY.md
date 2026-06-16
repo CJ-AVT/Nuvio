@@ -1,17 +1,17 @@
 # Security
 
-nuvio is a **local development tool**. It is not designed for production runtime and does not make outbound analytics or telemetry calls.
+rte is a **local development tool**. It is not designed for production runtime and does not make outbound analytics or telemetry calls.
 
 ## Dev server threat model
 
-When the `@nuvio/vite-plugin` is enabled during `vite dev`:
+When the `@rte/vite-plugin` is enabled during `vite dev`:
 
 | Surface | Risk |
 |---------|------|
-| `WS /__nuvio/ws` | Can read the source index and **write project source files** (patch, tag, undo) |
-| `PUT/POST /__nuvio/brand` | Can **write** `nuvio/brand.json` |
-| `GET /__nuvio/pcc` | Reads PCC manifests for the current route |
-| `GET /__nuvio/dev-token` | Returns the per-server auth token (localhost `Origin` only) |
+| `WS /__rte/ws` | Can read the source index and **write project source files** (patch, tag, undo) |
+| `PUT/POST /__rte/brand` | Can **write** `rte/brand.json` |
+| `GET /__rte/pcc` | Reads PCC manifests for the current route |
+| `GET /__rte/dev-token` | Returns the per-server auth token (localhost `Origin` only) |
 
 ### Mitigations
 
@@ -28,8 +28,8 @@ When the `@nuvio/vite-plugin` is enabled during `vite dev`:
 
 ## Reporting issues
 
-Open a GitHub issue on [ehah/Nuvio](https://github.com/ehah/Nuvio) with reproduction steps. For sensitive reports, contact the repository maintainer privately.
+Open a GitHub issue on [ehah/Rte](https://github.com/ehah/Rte) with reproduction steps. For sensitive reports, contact the repository maintainer privately.
 
 ## Privacy
 
-nuvio does **not** collect usage telemetry. No third-party analytics SDKs are bundled in `@nuvio/cli` or `@nuvio/overlay`.
+rte does **not** collect usage telemetry. No third-party analytics SDKs are bundled in `@rte/cli` or `@rte/overlay`.

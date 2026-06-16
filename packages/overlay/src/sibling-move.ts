@@ -1,16 +1,16 @@
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { escapeAttrSelector } from "./rte-dom.js";
 
 export type SiblingMoveAvailability = {
   canMoveUp: boolean;
   canMoveDown: boolean;
-  /** Indexed `data-nuvio-id` peers under the same parent (DOM order). */
+  /** Indexed `data-rte-id` peers under the same parent (DOM order). */
   peerCount: number;
 };
 
 /** Uses live DOM order (matches source after HMR for static JSX). */
 export function getIndexedSiblingMoveAvailability(selectedId: string): SiblingMoveAvailability {
   const el = document.querySelector(
-    `[data-nuvio-id="${escapeAttrSelector(selectedId)}"]`,
+    `[data-rte-id="${escapeAttrSelector(selectedId)}"]`,
   );
   if (!(el instanceof HTMLElement)) {
     return { canMoveUp: false, canMoveDown: false, peerCount: 0 };
@@ -20,7 +20,7 @@ export function getIndexedSiblingMoveAvailability(selectedId: string): SiblingMo
     return { canMoveUp: false, canMoveDown: false, peerCount: 0 };
   }
   const peers = [...parent.children].filter(
-    (c): c is HTMLElement => c instanceof HTMLElement && c.hasAttribute("data-nuvio-id"),
+    (c): c is HTMLElement => c instanceof HTMLElement && c.hasAttribute("data-rte-id"),
   );
   const idx = peers.indexOf(el);
   if (idx < 0) {

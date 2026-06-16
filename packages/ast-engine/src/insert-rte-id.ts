@@ -3,7 +3,7 @@ import { parse } from "@babel/parser";
 import type { NodePath, Visitor } from "@babel/traverse";
 import * as t from "@babel/types";
 import prettier from "prettier";
-import { isValidNuvioId } from "./nuvio-id.js";
+import { isValidRteId } from "./rte-id.js";
 
 const require = createRequire(import.meta.url);
 const traverse = require("@babel/traverse").default as (ast: t.File, visitor: Visitor) => void;
@@ -12,15 +12,15 @@ const generate = require("@babel/generator").default as (
   opts?: Record<string, unknown>,
 ) => { code: string };
 
-export type InsertNuvioIdResult =
+export type InsertRteIdResult =
   | { ok: true; source: string; id: string }
   | { ok: false; code: string; message: string };
 
-function hasNuvioIdAttr(opening: t.JSXOpeningElement): boolean {
+function hasRteIdAttr(opening: t.JSXOpeningElement): boolean {
   return opening.attributes.some(
     (attr) =>
       t.isJSXAttribute(attr) &&
-      t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" }),
+      t.isJSXIdentifier(attr.name, { name: "data-rte-id" }),
   );
 }
 
@@ -67,16 +67,16 @@ async function formatSource(source: string, filePath: string): Promise<string> {
 }
 
 /**
- * Insert `data-nuvio-id` on the JSX opening element at the given 1-based line / 0-based column.
+ * Insert `data-rte-id` on the JSX opening element at the given 1-based line / 0-based column.
  */
-export async function insertDataNuvioIdAtLocation(
+export async function insertDataRteIdAtLocation(
   source: string,
   filePath: string,
   line: number,
   column: number,
   id: string,
-): Promise<InsertNuvioIdResult> {
-  if (!isValidNuvioId(id)) {
+): Promise<InsertRteIdResult> {
+  if (!isValidRteId(id)) {
     return {
       ok: false,
       code: "invalid_id",
@@ -105,11 +105,11 @@ export async function insertDataNuvioIdAtLocation(
   }
 
   const opening = openingPath.node;
-  if (hasNuvioIdAttr(opening)) {
+  if (hasRteIdAttr(opening)) {
     return {
       ok: false,
       code: "already_tagged",
-      message: "Element already has data-nuvio-id",
+      message: "Element already has data-rte-id",
     };
   }
 
@@ -122,7 +122,7 @@ export async function insertDataNuvioIdAtLocation(
   }
 
   opening.attributes.push(
-    t.jsxAttribute(t.jsxIdentifier("data-nuvio-id"), t.stringLiteral(id)),
+    t.jsxAttribute(t.jsxIdentifier("data-rte-id"), t.stringLiteral(id)),
   );
 
   const generated = generate(ast, { retainLines: true }).code;

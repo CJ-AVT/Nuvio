@@ -9,7 +9,7 @@ const overlaySrc = dirname(fileURLToPath(import.meta.url));
 
 /** Rule 0 — must not appear in Simple Mode user-facing copy. */
 const FORBIDDEN_SIMPLE_PATTERNS: RegExp[] = [
-  /\bdata-nuvio-id\b/i,
+  /\bdata-rte-id\b/i,
   /\bclassName\b/,
   /\bmergeTailwind\b/,
   /\bsetText\b/,
@@ -60,8 +60,8 @@ describe("Simple Mode visibility audit (Rule 0)", () => {
     expect(shell).toContain("displayPreviewError && !structuralPreviewActive && developerDetails");
     expect(shell).toContain("displayPatchBlockedReason && developerDetails");
     expect(shell).toContain("{developerDetails ? (");
-    expect(shell).toContain('nuvio-more-styles');
-    expect(shell).not.toMatch(/nuvio-device-compact/);
+    expect(shell).toContain('rte-more-styles');
+    expect(shell).not.toMatch(/rte-device-compact/);
   });
 
   it("handoff bar hides Open in editor in simple mode", () => {
@@ -97,7 +97,7 @@ describe("Simple Mode visibility audit (Rule 0)", () => {
   it("PropertyPanelShell defaults to Brand Kit when edit mode turns on", () => {
     const shell = readOverlayFile("PropertyPanelShell.tsx");
     expect(shell).toContain('useState<EditorPanelTab>("brand")');
-    expect(shell).toContain("if (editMode && !prevEditMode)");
+    expect(shell).toContain("if (editMode && !prevEditMode && !makeEditableMode)");
     expect(shell).toContain('setEditorTab("brand")');
   });
 
@@ -110,5 +110,33 @@ describe("Simple Mode visibility audit (Rule 0)", () => {
     expect(jsxText).toContain("Validate");
     expect(jsxText).toContain("Apply Brand");
     expect(jsxText).not.toMatch(/dryRun|mergeTailwind/);
+  });
+
+  it("Make Editable mode banner has no engine leaks", () => {
+    const banner = readOverlayFile("MakeEditableModeBanner.tsx");
+    const jsxText = [...banner.matchAll(/>([^<>{}\n]+)</g)]
+      .map((match) => match[1]!.trim())
+      .filter(Boolean)
+      .join("\n");
+    for (const pattern of FORBIDDEN_SIMPLE_PATTERNS) {
+      expect(pattern.test(jsxText), `MakeEditableModeBanner matched ${pattern}`).toBe(false);
+    }
+  });
+
+  it("UnlocatableElementPanel simple copy has no engine leaks", () => {
+    const panel = readOverlayFile("UnlocatableElementPanel.tsx");
+    const simpleBlob = [
+      "rte isn't connected to your project files yet.",
+      "Run rte init or add the dev plugin to your Vite config, then restart the dev server.",
+      "It looks like a component wrapper — the inner HTML element needs to receive rte's tracking attributes.",
+      "Can't tag elements inside a navigation link.",
+      "Pick a child element instead, or temporarily disable the link while tagging.",
+    ].join("\n");
+    for (const pattern of FORBIDDEN_SIMPLE_PATTERNS) {
+      expect(pattern.test(simpleBlob), `UnlocatableElementPanel simple matched ${pattern}`).toBe(
+        false,
+      );
+    }
+    expect(panel).toContain("Copy Fix Prompt");
   });
 });

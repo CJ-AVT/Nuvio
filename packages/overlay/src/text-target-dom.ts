@@ -1,5 +1,5 @@
-import type { TextWireTarget } from "@nuvio/shared";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import type { TextWireTarget } from "@rte/shared";
+import { escapeAttrSelector } from "./rte-dom.js";
 
 /**
  * Resolve a live DOM node for an index v3 text target under the instrumented host.
@@ -8,19 +8,19 @@ export function resolveTextTargetElement(
   hostId: string,
   target: TextWireTarget,
 ): HTMLElement | null {
-  const host = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+  const host = document.querySelector(`[data-rte-id="${escapeAttrSelector(hostId)}"]`);
 
-  if (target.nuvioId) {
+  if (target.rteId) {
     if (host instanceof HTMLElement) {
       const scoped = host.querySelector(
-        `[data-nuvio-id="${escapeAttrSelector(target.nuvioId)}"]`,
+        `[data-rte-id="${escapeAttrSelector(target.rteId)}"]`,
       );
       if (scoped instanceof HTMLElement) {
         return scoped;
       }
     }
     const byId = document.querySelector(
-      `[data-nuvio-id="${escapeAttrSelector(target.nuvioId)}"]`,
+      `[data-rte-id="${escapeAttrSelector(target.rteId)}"]`,
     );
     return byId instanceof HTMLElement ? byId : null;
   }

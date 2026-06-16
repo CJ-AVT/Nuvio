@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_BRAND_CONFIG, serializeBrandConfig } from "@nuvio/shared";
+import { DEFAULT_BRAND_CONFIG, serializeBrandConfig } from "@rte/shared";
 
 /** Package root (works from `src/` in dev and `dist/` when published). */
 const CLI_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,13 +26,13 @@ export type WriteFolderOptions = {
   forceAgent?: boolean;
 };
 
-export function writeNuvioFolder(opts: WriteFolderOptions): string[] {
-  const dir = join(opts.root, "nuvio");
+export function writeRteFolder(opts: WriteFolderOptions): string[] {
+  const dir = join(opts.root, "rte");
   const created: string[] = [];
   mkdirSync(dir, { recursive: true });
 
   const vars = {
-    NUVIO_VERSION: opts.version,
+    RTE_VERSION: opts.version,
     PM_RUN: opts.pmRun,
     FAILED_STEPS: opts.failedSteps.join(", ") || "(none)",
   };
@@ -43,7 +43,7 @@ export function writeNuvioFolder(opts: WriteFolderOptions): string[] {
     render(loadTemplate("START_HERE.md.tpl"), vars),
     "utf8",
   );
-  created.push("nuvio/START_HERE.md");
+  created.push("rte/START_HERE.md");
 
   const readme = join(dir, "README.md");
   writeFileSync(
@@ -51,12 +51,12 @@ export function writeNuvioFolder(opts: WriteFolderOptions): string[] {
     render(loadTemplate("README.pointer.md.tpl"), vars),
     "utf8",
   );
-  created.push("nuvio/README.md");
+  created.push("rte/README.md");
 
   const agent = join(dir, "AGENT.md");
   if (!existsSync(agent) || opts.forceAgent) {
     writeFileSync(agent, render(loadTemplate("AGENT.md.tpl"), vars), "utf8");
-    created.push("nuvio/AGENT.md");
+    created.push("rte/AGENT.md");
   }
 
   if (opts.failedSteps.length > 0) {
@@ -66,13 +66,13 @@ export function writeNuvioFolder(opts: WriteFolderOptions): string[] {
       render(loadTemplate("SETUP_TODO.md.tpl"), vars),
       "utf8",
     );
-    created.push("nuvio/SETUP_TODO.md");
+    created.push("rte/SETUP_TODO.md");
   }
 
   const brand = join(dir, "brand.json");
   if (!existsSync(brand)) {
     writeFileSync(brand, `${JSON.stringify(serializeBrandConfig(DEFAULT_BRAND_CONFIG), null, 2)}\n`, "utf8");
-    created.push("nuvio/brand.json");
+    created.push("rte/brand.json");
   }
 
   return created;

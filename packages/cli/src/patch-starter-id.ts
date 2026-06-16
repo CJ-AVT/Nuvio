@@ -25,14 +25,14 @@ function patchFirstHeading(filePath: string): PatchOutcome {
       for (const attr of path.node.attributes) {
         if (
           t.isJSXAttribute(attr) &&
-          t.isJSXIdentifier(attr.name, { name: "data-nuvio-id" })
+          t.isJSXIdentifier(attr.name, { name: "data-rte-id" })
         ) {
           return;
         }
       }
       path.node.attributes.push(
         t.jsxAttribute(
-          t.jsxIdentifier("data-nuvio-id"),
+          t.jsxIdentifier("data-rte-id"),
           t.stringLiteral("page.title"),
         ),
       );

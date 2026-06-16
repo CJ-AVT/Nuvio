@@ -1,4 +1,4 @@
-/** Escape `data-nuvio-id` values for use inside `[data-nuvio-id="…"]` selectors. */
+/** Escape `data-rte-id` values for use inside `[data-rte-id="…"]` selectors. */
 export function escapeAttrSelector(id: string): string {
   if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
     return CSS.escape(id);

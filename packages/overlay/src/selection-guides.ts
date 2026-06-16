@@ -1,4 +1,4 @@
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import type { OnboardingGuideId } from "./onboarding-storage.js";
 import { detectTableMode } from "./table-panel.js";
 
@@ -9,8 +9,8 @@ export type GuideContent = {
 
 export const GUIDE_CONTENT: Record<OnboardingGuideId, GuideContent> = {
   welcome: {
-    title: "Welcome to nuvio",
-    body: "Click something on the page → choose what to change → Validate Changes → Apply to Code. Changes save to your source files. Undo anytime. If an area isn't editable, use Copy Fix Prompt.",
+    title: "Welcome to rte",
+    body: "Turn on Make Editable, click an element on the page, confirm the suggested name, then edit text and styles. Changes save to your source files. Undo anytime.",
   },
   "first-selection": {
     title: "You're editing this area",

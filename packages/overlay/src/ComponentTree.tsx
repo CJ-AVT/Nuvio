@@ -1,4 +1,4 @@
-import type { DuplicateIdError, IndexWireEntry } from "@nuvio/shared";
+import type { DuplicateIdError, IndexWireEntry } from "@rte/shared";
 import { useMemo, useState, type ReactElement } from "react";
 import { formatFriendlyId } from "./selection-summary.js";
 
@@ -19,12 +19,12 @@ function shortPath(file: string): string {
 
 function riskDotClass(level: IndexWireEntry["riskLevel"]): string {
   if (level === "unsupported") {
-    return "nuvio-tree-risk nuvio-tree-risk--unsupported";
+    return "rte-tree-risk rte-tree-risk--unsupported";
   }
   if (level === "caution") {
-    return "nuvio-tree-risk nuvio-tree-risk--caution";
+    return "rte-tree-risk rte-tree-risk--caution";
   }
-  return "nuvio-tree-risk nuvio-tree-risk--safe";
+  return "rte-tree-risk rte-tree-risk--safe";
 }
 
 export function ComponentTree({
@@ -103,13 +103,13 @@ export function ComponentTree({
 
   return (
     <section>
-      {!friendlyLabels ? <h3 className="nuvio-tree-title">Indexed elements</h3> : null}
+      {!friendlyLabels ? <h3 className="rte-tree-title">Indexed elements</h3> : null}
       {friendlyLabels ? (
-        <label className="nuvio-block nuvio-stack-1 nuvio-mb-2">
-          <span className="nuvio-label">Search outline</span>
+        <label className="rte-block rte-stack-1 rte-mb-2">
+          <span className="rte-label">Search outline</span>
           <input
             type="search"
-            className="nuvio-control"
+            className="rte-control"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Title, row, column…"
@@ -117,12 +117,12 @@ export function ComponentTree({
         </label>
       ) : null}
       {!friendlyLabels ? (
-      <div className="nuvio-tree-filters">
+      <div className="rte-tree-filters">
         {(["all", "text", "style", "structure", "unsupported", "duplicates"] as const).map((key) => (
           <button
             key={key}
             type="button"
-            className={`nuvio-tree-filter ${filter === key ? "nuvio-tree-filter--active" : ""}`}
+            className={`rte-tree-filter ${filter === key ? "rte-tree-filter--active" : ""}`}
             onClick={() => setFilter(key)}
           >
             {key}
@@ -132,14 +132,14 @@ export function ComponentTree({
       ) : null}
       {filter === "duplicates" ? (
         duplicateErrors.length === 0 ? (
-          <p className="nuvio-text-xs nuvio-text-muted-dim">No duplicate ids reported.</p>
+          <p className="rte-text-xs rte-text-muted-dim">No duplicate ids reported.</p>
         ) : (
-          <ul className="nuvio-tree-list">
+          <ul className="rte-tree-list">
             {duplicateErrors.map((dup) => (
-              <li key={dup.id} className="nuvio-tree-item">
-                <p className="nuvio-tree-dup-title">{dup.id}</p>
+              <li key={dup.id} className="rte-tree-item">
+                <p className="rte-tree-dup-title">{dup.id}</p>
                 {dup.occurrences.map((occ, i) => (
-                  <p key={`${dup.id}-${i}`} className="nuvio-tree-btn-path">
+                  <p key={`${dup.id}-${i}`} className="rte-tree-btn-path">
                     {shortPath(occ.file)}:{occ.line}
                   </p>
                 ))}
@@ -148,26 +148,26 @@ export function ComponentTree({
           </ul>
         )
       ) : filtered.length === 0 ? (
-        <p className="nuvio-text-xs nuvio-text-muted-dim">No ids in dev index.</p>
+        <p className="rte-text-xs rte-text-muted-dim">No ids in dev index.</p>
       ) : (
         groups.map(([groupKey, group]) => (
-          <div key={groupKey} className="nuvio-tree-group">
+          <div key={groupKey} className="rte-tree-group">
             {!friendlyLabels ? (
-              <p className="nuvio-tree-group-title">
+              <p className="rte-tree-group-title">
                 {groupKey === "__root__" ? "Top-level hosts" : `Host: ${groupKey}`}
               </p>
             ) : null}
-            <ul className="nuvio-tree-list">
+            <ul className="rte-tree-list">
               {group.map((e) => {
                 const active = e.id === selectedId;
                 return (
-                  <li key={e.id} className="nuvio-tree-item">
+                  <li key={e.id} className="rte-tree-item">
                     <button
                       type="button"
-                      className={`nuvio-tree-btn ${active ? "nuvio-tree-btn--active" : ""}`}
+                      className={`rte-tree-btn ${active ? "rte-tree-btn--active" : ""}`}
                       onClick={() => onSelectId(e.id)}
                     >
-                      <span className="nuvio-tree-btn-row">
+                      <span className="rte-tree-btn-row">
                         {!friendlyLabels && e.riskLevel ? (
                           <span
                             className={riskDotClass(e.riskLevel)}
@@ -176,14 +176,14 @@ export function ComponentTree({
                           />
                         ) : null}
                         {!friendlyLabels ? (
-                          <span className="nuvio-tree-role">{e.hierarchyRole ?? "unknown"}</span>
+                          <span className="rte-tree-role">{e.hierarchyRole ?? "unknown"}</span>
                         ) : null}
-                        <span className={friendlyLabels ? "nuvio-break-all" : "nuvio-break-all nuvio-text-mono"}>
+                        <span className={friendlyLabels ? "rte-break-all" : "rte-break-all rte-text-mono"}>
                           {friendlyLabels ? formatFriendlyId(e.id, e) : e.id}
                         </span>
                       </span>
                       {!friendlyLabels ? (
-                        <span className="nuvio-tree-btn-path">
+                        <span className="rte-tree-btn-path">
                           {e.tagName ? `${e.tagName} · ` : ""}
                           {shortPath(e.file)}:{e.line}
                         </span>

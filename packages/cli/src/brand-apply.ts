@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { applyPatchToSource } from "@nuvio/ast-engine";
+import { applyPatchToSource } from "@rte/ast-engine";
 import {
   buildBrandPatchOps,
   brandFragmentHostHint,
@@ -14,15 +14,15 @@ import {
   type IndexWireEntry,
   type PccCategory,
   type PccManifest,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import {
   listPccManifestFiles,
   loadPccManifestFromFile,
   resolvePccManifestPath,
-} from "@nuvio/shared/load-pcc-manifest";
+} from "@rte/shared/load-pcc-manifest";
 import { PreflightError } from "./detect-project.js";
 import { scanProject } from "./project-scan.js";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
 
 export type BrandApplyOptions = {
   cwd: string;
@@ -33,7 +33,7 @@ export type BrandApplyOptions = {
   json?: boolean;
 };
 
-const BRAND_RELATIVE = "nuvio/brand.json";
+const BRAND_RELATIVE = "rte/brand.json";
 
 type ApplyTarget = {
   hostId: string;
@@ -216,7 +216,7 @@ async function applyLoadedManifest(
 export async function runBrandApplyAll(opts: BrandApplyOptions): Promise<number> {
   const manifestPaths = listPccManifestFiles(opts.cwd);
   if (manifestPaths.length === 0) {
-    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/nuvio/pages`);
+    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/rte/pages`);
     return 2;
   }
 
@@ -262,7 +262,7 @@ export async function runBrandApplyAll(opts: BrandApplyOptions): Promise<number>
     return pass ? 0 : 1;
   }
 
-  console.log(`Nuvio Brand Apply${opts.dryRun ? " (dry run)" : ""}\n`);
+  console.log(`Rte Brand Apply${opts.dryRun ? " (dry run)" : ""}\n`);
   for (const page of pages) {
     printHumanReport(page);
     console.log("");
@@ -323,7 +323,7 @@ export async function runBrandApply(opts: BrandApplyOptions): Promise<number> {
     return pass ? 0 : 1;
   }
 
-  console.log(`Nuvio Brand Apply${opts.dryRun ? " (dry run)" : ""}\n`);
+  console.log(`Rte Brand Apply${opts.dryRun ? " (dry run)" : ""}\n`);
   printHumanReport(result);
   console.log(`\nResult: ${pass ? "PASS" : "FAIL"}`);
   return pass ? 0 : 1;

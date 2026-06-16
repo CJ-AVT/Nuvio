@@ -1,15 +1,15 @@
 {
-  "name": "@nuvio/overlay",
+  "name": "@rte/overlay",
   "version": "1.1.0",
-  "description": "Nuvio overlay 1.0 — dev-only visual editor for React + Vite + Tailwind (Simple Mode, click-to-tag, apply/undo).",
+  "description": "Rte overlay 1.0 — dev-only visual editor for React + Vite + Tailwind (Simple Mode, click-to-tag, apply/undo).",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ehah/Nuvio.git",
+    "url": "https://github.com/ehah/Rte.git",
     "directory": "packages/overlay"
   },
   "keywords": [
-    "nuvio",
+    "rte",
     "vite",
     "overlay",
     "devtools",
@@ -50,11 +50,11 @@
     "react-dom": "^18.3.1 || ^19.0.0"
   },
   "dependencies": {
-    "@nuvio/shared": "workspace:*",
+    "@rte/shared": "workspace:*",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
-    "@nuvio/ast-engine": "workspace:*",
+    "@rte/ast-engine": "workspace:*",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "jsdom": "^26.0.0",

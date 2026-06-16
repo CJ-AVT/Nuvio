@@ -20,7 +20,7 @@ export function installCommand(
   pm: PackageManager,
   version: string,
 ): string {
-  const pkgs = `@nuvio/vite-plugin@${version} @nuvio/overlay@${version}`;
+  const pkgs = `@rte/vite-plugin@${version} @rte/overlay@${version}`;
   switch (pm) {
     case "pnpm":
       return `pnpm add -D ${pkgs}`;

@@ -500,7 +500,7 @@ export function normalizeBrandConfig(input: unknown): BrandConfig {
   return { ...DEFAULT_BRAND_CONFIG };
 }
 
-/** On-disk `nuvio/brand.json` shape (v2). */
+/** On-disk `rte/brand.json` shape (v2). */
 export function serializeBrandConfig(config: BrandConfig): BrandConfigFileV2 {
   return {
     version: 2,

@@ -50,10 +50,10 @@ describe("buildSourceIndex (tailadmin-dogfood fixture)", () => {
 });
 
 describe("extractIdsFromSource", () => {
-  it("finds data-nuvio-id", () => {
+  it("finds data-rte-id", () => {
     const code = `
       export function X() {
-        return <div data-nuvio-id="hero.title">Hi</div>;
+        return <div data-rte-id="hero.title">Hi</div>;
       }
     `;
     const hits = extractIdsFromSource("/proj/A.tsx", code);

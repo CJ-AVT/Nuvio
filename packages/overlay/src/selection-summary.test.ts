@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import {
   formatFriendlyId,
   formatSelectionTitle,
@@ -112,10 +112,10 @@ describe("mapUnsupportedReasonToSimple", () => {
 describe("getSimpleBlockedEditFallback", () => {
   it("uses text copy for label and cell ids", () => {
     expect(getSimpleBlockedEditFallback("orders.row.1.nameText", null)).toBe(
-      "nuvio can't safely edit this text yet.",
+      "rte can't safely edit this text yet.",
     );
     expect(getSimpleBlockedEditFallback("metric.orders.label", null)).toBe(
-      "nuvio can't safely edit this text yet.",
+      "rte can't safely edit this text yet.",
     );
   });
 
@@ -128,7 +128,7 @@ describe("getSimpleBlockedEditFallback", () => {
         column: 1,
         textEditable: false,
       }),
-    ).toBe("nuvio can't safely edit this element.");
+    ).toBe("rte can't safely edit this element.");
   });
 });
 
@@ -151,7 +151,7 @@ describe("formatSelectionTitle", () => {
             tagName: "span",
             textPreview: "Orders101",
             textEditable: true,
-            nuvioId: "metric.orders.label",
+            rteId: "metric.orders.label",
             patchHostId: "metric.orders.label",
           },
         ],
@@ -190,11 +190,18 @@ describe("formatSelectionTitle", () => {
           tagName: "th",
           textEditable: true,
           textPreview: "Products",
-          nuvioId: "orders.header.products",
+          rteId: "orders.header.products",
           patchHostId: "orders.header.products",
         },
       ],
     };
     expect(formatSelectionTitle("orders.header.products", entry, [])).toBe("Products Header");
+  });
+});
+
+describe("getSimpleIndexEmptyMessage", () => {
+  it("points to Make Editable", async () => {
+    const { getSimpleIndexEmptyMessage } = await import("./selection-summary.js");
+    expect(getSimpleIndexEmptyMessage()).toContain("Make Editable");
   });
 });

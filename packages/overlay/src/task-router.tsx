@@ -1,4 +1,4 @@
-import type { IndexWireEntry, RowWireTarget } from "@nuvio/shared";
+import type { IndexWireEntry, RowWireTarget } from "@rte/shared";
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { buildSimpleBackNav, isTableCellId } from "./simple-mode-nav.js";
 import type { SimpleBackNav } from "./simple-mode-nav.js";
@@ -93,7 +93,7 @@ export function inferTableTask(
   selectedId: string,
   prefix: string,
   headers: readonly IndexWireEntry[],
-  rows: readonly { nuvioId: string }[],
+  rows: readonly { rteId: string }[],
 ): TableTask {
   if (selectedId === `${prefix}.title`) {
     return "tableTitle";
@@ -107,7 +107,7 @@ export function inferTableTask(
   if (headers.some((h) => h.id === selectedId)) {
     return "columnHeaders";
   }
-  if (rows.some((r) => r.nuvioId === selectedId || selectedId.startsWith(`${r.nuvioId}.`))) {
+  if (rows.some((r) => r.rteId === selectedId || selectedId.startsWith(`${r.rteId}.`))) {
     return "rows";
   }
   if (selectedId === `${prefix}.section` || selectedId === `${prefix}.table`) {
@@ -135,7 +135,7 @@ export function tableTargetIdForTask(
   task: TableTask,
   indexEntries: readonly IndexWireEntry[],
   headers: readonly IndexWireEntry[],
-  rows: readonly { nuvioId: string }[],
+  rows: readonly { rteId: string }[],
 ): string | null {
   if (task === "tableTitle") {
     return indexEntries.find((e) => e.id === `${prefix}.title`)?.id ?? null;
@@ -147,7 +147,7 @@ export function tableTargetIdForTask(
     return headers[0]?.id ?? null;
   }
   if (task === "rows") {
-    return rows[0]?.nuvioId ?? null;
+    return rows[0]?.rteId ?? null;
   }
   return null;
 }
@@ -234,7 +234,7 @@ type TaskMenuItem = { task: string; label: string; icon?: string; hint?: string 
 function previewForTargetId(id: string, indexEntries: readonly IndexWireEntry[]): string | undefined {
   const entry = indexEntries.find((e) => e.id === id);
   return (
-    entry?.textTargets?.find((t) => t.nuvioId === id)?.textPreview ??
+    entry?.textTargets?.find((t) => t.rteId === id)?.textPreview ??
     entry?.textTargets?.[0]?.textPreview
   );
 }
@@ -349,13 +349,13 @@ export function TaskMenu({
     const activeItem = items.find((i) => i.task === activeTask);
     const activeLabel = activeItem?.label ?? title;
     return (
-      <section className="nuvio-card nuvio-stack-2">
-        <div className="nuvio-row-wrap nuvio-row-wrap--between">
-          <h3 className="nuvio-section-title">
+      <section className="rte-card rte-stack-2">
+        <div className="rte-row-wrap rte-row-wrap--between">
+          <h3 className="rte-section-title">
             {simpleMode && activeItem?.icon ? `${activeItem.icon} ${activeLabel}` : activeLabel}
           </h3>
           {onBack ? (
-            <button type="button" className="nuvio-button-chip" onClick={onBack}>
+            <button type="button" className="rte-button-chip" onClick={onBack}>
               ← Back
             </button>
           ) : null}
@@ -365,31 +365,31 @@ export function TaskMenu({
   }
 
   return (
-    <section className="nuvio-card nuvio-stack-2">
-      <h3 className="nuvio-section-title">{title}</h3>
-      <p className="nuvio-text-2xs nuvio-text-muted">What would you like to change?</p>
-      <div className="nuvio-stack-1">
+    <section className="rte-card rte-stack-2">
+      <h3 className="rte-section-title">{title}</h3>
+      <p className="rte-text-2xs rte-text-muted">What would you like to change?</p>
+      <div className="rte-stack-1">
         {items.map((item) =>
           simpleMode ? (
             <button
               key={item.task}
               type="button"
-              className="nuvio-task-card"
+              className="rte-task-card"
               onClick={() => onPick(item.task)}
             >
-              <span className="nuvio-task-card-icon" aria-hidden="true">
+              <span className="rte-task-card-icon" aria-hidden="true">
                 {item.icon ?? "✏️"}
               </span>
-              <span className="nuvio-task-card-body">
-                <span className="nuvio-task-card-title">{item.label}</span>
-                {item.hint ? <span className="nuvio-task-card-hint">{item.hint}</span> : null}
+              <span className="rte-task-card-body">
+                <span className="rte-task-card-title">{item.label}</span>
+                {item.hint ? <span className="rte-task-card-hint">{item.hint}</span> : null}
               </span>
             </button>
           ) : (
             <button
               key={item.task}
               type="button"
-              className="nuvio-button nuvio-button--block"
+              className="rte-button rte-button--block"
               onClick={() => onPick(item.task)}
             >
               {item.label}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IndexWireEntry, TextWireTarget } from "@nuvio/shared";
+import type { IndexWireEntry, TextWireTarget } from "@rte/shared";
 import { ContainerGuidance } from "./container-guidance.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
@@ -23,7 +23,7 @@ describe("ContainerGuidance", () => {
       tagName: "h1",
       textEditable: true,
       textPreview: "Welcome",
-      nuvioId: "hero.title",
+      rteId: "hero.title",
       patchHostId: "hero.title",
     },
   ];

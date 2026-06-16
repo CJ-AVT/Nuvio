@@ -12,12 +12,12 @@ import {
   normalizeBrandConfig,
   pccCategoryLabel,
   type BrandPageScanResult,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import {
   listPccManifestFiles,
   loadPccManifestFromFile,
   resolvePccManifestPath,
-} from "@nuvio/shared/load-pcc-manifest";
+} from "@rte/shared/load-pcc-manifest";
 
 export type BrandScanOptions = {
   cwd: string;
@@ -27,7 +27,7 @@ export type BrandScanOptions = {
   json?: boolean;
 };
 
-const BRAND_RELATIVE = "nuvio/brand.json";
+const BRAND_RELATIVE = "rte/brand.json";
 
 function readProjectBrandConfig(cwd: string) {
   const filePath = join(resolve(cwd), BRAND_RELATIVE);
@@ -52,7 +52,7 @@ function formatBrandSummary(brand: BrandPageScanResult["brand"]): string {
 }
 
 function printHumanReport(result: BrandPageScanResult, manifestPath: string): void {
-  console.log("Nuvio Brand Scan\n");
+  console.log("Rte Brand Scan\n");
   console.log(`Page: ${result.page}`);
   console.log(`Route: ${result.route}`);
   console.log(`Manifest: ${manifestPath}`);
@@ -91,7 +91,7 @@ function printHumanReport(result: BrandPageScanResult, manifestPath: string): vo
 function printAllHumanReport(
   pages: Array<{ manifestPath: string; result: BrandPageScanResult }>,
 ): void {
-  console.log("Nuvio Brand Scan (all pages)\n");
+  console.log("Rte Brand Scan (all pages)\n");
   for (const page of pages) {
     const status = page.result.pass ? "PASS" : "FAIL";
     const summary = `${page.result.onBrandCount} on-brand · ${page.result.offBrandCount} off-brand`;
@@ -125,7 +125,7 @@ function scanLoadedManifest(
 export function runBrandScanAll(opts: BrandScanOptions): number {
   const manifestPaths = listPccManifestFiles(opts.cwd);
   if (manifestPaths.length === 0) {
-    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/nuvio/pages`);
+    console.error(`No PCC manifests found under ${resolve(opts.cwd)}/rte/pages`);
     return 2;
   }
 

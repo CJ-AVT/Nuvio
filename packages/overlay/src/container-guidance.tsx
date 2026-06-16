@@ -1,4 +1,4 @@
-import type { IndexWireEntry, TextWireTarget } from "@nuvio/shared";
+import type { IndexWireEntry, TextWireTarget } from "@rte/shared";
 import type { ReactElement } from "react";
 import { detectSimpleRouterMode } from "./task-router-modes.js";
 import { formatFriendlyId } from "./selection-summary.js";
@@ -10,14 +10,14 @@ export type ContainerGuidanceProps = {
   indexEntries: readonly IndexWireEntry[];
   developerDetails: boolean;
   taskRouterActive: boolean;
-  onSwitchToTarget: (target: { nuvioId?: string; key: string }) => void;
+  onSwitchToTarget: (target: { rteId?: string; key: string }) => void;
   onSelectId: (id: string) => void;
   onCopyFixPrompt?: () => void;
 };
 
 type GuidanceChoice = {
   label: string;
-  nuvioId?: string;
+  rteId?: string;
   key?: string;
 };
 
@@ -41,7 +41,7 @@ export function shouldShowContainerGuidance(
 }
 
 function categorizeTarget(target: TextWireTarget, entry: IndexWireEntry): string {
-  const id = (target.nuvioId ?? target.label).toLowerCase();
+  const id = (target.rteId ?? target.label).toLowerCase();
   if (id.includes("button") || id.includes(".cta") || id.includes(".filter") || id.includes(".seeall")) {
     return "Edit button";
   }
@@ -70,14 +70,14 @@ function buildGuidanceChoices(
 
   for (const target of editable) {
     const label = categorizeTarget(target, entry);
-    const dedupeKey = target.nuvioId ?? target.key;
+    const dedupeKey = target.rteId ?? target.key;
     if (seen.has(`${label}:${dedupeKey}`)) {
       continue;
     }
     seen.add(`${label}:${dedupeKey}`);
     fromTargets.push({
       label,
-      nuvioId: target.nuvioId,
+      rteId: target.rteId,
       key: target.key,
     });
   }
@@ -86,14 +86,14 @@ function buildGuidanceChoices(
     (e) => e.parentHostId === entry.id && (e.id.endsWith(".card") || e.hierarchyRole === "card"),
   );
   if (cardChild && !seen.has(`Edit card:${cardChild.id}`)) {
-    fromTargets.push({ label: "Edit card", nuvioId: cardChild.id });
+    fromTargets.push({ label: "Edit card", rteId: cardChild.id });
   }
 
   const navChild = indexEntries.find(
     (e) => e.id.startsWith("nav.") && (e.parentHostId === entry.id || entry.id.includes("sidebar")),
   );
   if (navChild && !fromTargets.some((c) => c.label === "Edit button")) {
-    fromTargets.push({ label: "Edit button", nuvioId: navChild.id });
+    fromTargets.push({ label: "Edit button", rteId: navChild.id });
   }
 
   const uniqueLabels = new Map<string, GuidanceChoice>();
@@ -130,23 +130,23 @@ export function ContainerGuidance({
 
   if (developerDetails && choices.length === 1) {
     const target = choices[0];
-    const label = target.nuvioId
-      ? formatFriendlyId(target.nuvioId, entry)
+    const label = target.rteId
+      ? formatFriendlyId(target.rteId, entry)
       : (textTargets.find((t) => t.key === target.key)?.textPreview ?? target.label);
     return (
-      <div className="nuvio-banner nuvio-banner--info nuvio-stack-2">
-        <p className="nuvio-text-2xs nuvio-leading-snug">
+      <div className="rte-banner rte-banner--info rte-stack-2">
+        <p className="rte-text-2xs rte-leading-snug">
           This area is a layout container. Edit the{" "}
-          <span className="nuvio-font-medium">{label}</span> instead?
+          <span className="rte-font-medium">{label}</span> instead?
         </p>
         <button
           type="button"
-          className="nuvio-button nuvio-button-primary"
+          className="rte-button rte-button-primary"
           onClick={() => {
-            if (target.nuvioId) {
-              onSelectId(target.nuvioId);
+            if (target.rteId) {
+              onSelectId(target.rteId);
             } else if (target.key) {
-              onSwitchToTarget({ key: target.key, nuvioId: target.nuvioId });
+              onSwitchToTarget({ key: target.key, rteId: target.rteId });
             }
           }}
         >
@@ -157,19 +157,19 @@ export function ContainerGuidance({
   }
 
   return (
-    <div className="nuvio-banner nuvio-banner--info nuvio-stack-2">
-      <p className="nuvio-text-2xs nuvio-leading-snug">This area has editable parts.</p>
-      <div className="nuvio-stack-1">
+    <div className="rte-banner rte-banner--info rte-stack-2">
+      <p className="rte-text-2xs rte-leading-snug">This area has editable parts.</p>
+      <div className="rte-stack-1">
         {choices.map((choice) => (
           <button
-            key={`${choice.label}-${choice.nuvioId ?? choice.key}`}
+            key={`${choice.label}-${choice.rteId ?? choice.key}`}
             type="button"
-            className="nuvio-button nuvio-button--block"
+            className="rte-button rte-button--block"
             onClick={() => {
-              if (choice.nuvioId) {
-                onSelectId(choice.nuvioId);
+              if (choice.rteId) {
+                onSelectId(choice.rteId);
               } else if (choice.key) {
-                onSwitchToTarget({ key: choice.key, nuvioId: choice.nuvioId });
+                onSwitchToTarget({ key: choice.key, rteId: choice.rteId });
               }
             }}
           >
@@ -177,7 +177,7 @@ export function ContainerGuidance({
           </button>
         ))}
         {onCopyFixPrompt ? (
-          <button type="button" className="nuvio-button nuvio-button-ghost nuvio-button--block" onClick={onCopyFixPrompt}>
+          <button type="button" className="rte-button rte-button-ghost rte-button--block" onClick={onCopyFixPrompt}>
             Copy Fix Prompt
           </button>
         ) : null}

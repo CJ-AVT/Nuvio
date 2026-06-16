@@ -7,7 +7,7 @@ import type {
   BrandRadius,
   BrandSurface,
   BrandTypography,
-} from "@nuvio/shared";
+} from "@rte/shared";
 
 const SAMPLE_COLORS: Record<
   BrandColor,
@@ -98,14 +98,14 @@ export function BrandCategorySample({
   const title = mode === "preview" ? "Preview" : "Sample";
 
   return (
-    <div className="nuvio-brand-preview">
-      <p className="nuvio-brand-field-label">{title}</p>
-      <p className="nuvio-brand-preview-lead">{sampleLeadCopy(action, mode, categoryCount)}</p>
-      <div className="nuvio-brand-preview-canvas">
-        <div className="nuvio-brand-preview-samples">
+    <div className="rte-brand-preview">
+      <p className="rte-brand-field-label">{title}</p>
+      <p className="rte-brand-preview-lead">{sampleLeadCopy(action, mode, categoryCount)}</p>
+      <div className="rte-brand-preview-canvas">
+        <div className="rte-brand-preview-samples">
           {action === "button" ? (
             <span
-              className="nuvio-brand-preview-button"
+              className="rte-brand-preview-button"
               style={{
                 backgroundColor:
                   draft.buttonVariant === "outline" ? "transparent" : palette.bg,
@@ -122,7 +122,7 @@ export function BrandCategorySample({
           ) : null}
           {action === "card" ? (
             <div
-              className="nuvio-brand-preview-card"
+              className="rte-brand-preview-card"
               style={{
                 backgroundColor: SAMPLE_SURFACE_BG[draft.surface],
                 border: draft.color === "none" ? "1px solid transparent" : `1px solid ${palette.border}`,
@@ -138,17 +138,17 @@ export function BrandCategorySample({
               title={draft.cardHover === "border" ? "Hover darkens border" : undefined}
             >
               <span
-                className="nuvio-brand-preview-heading"
+                className="rte-brand-preview-heading"
                 style={{ color: palette.text, fontSize: "15px", fontWeight: 600 }}
               >
                 Card title
               </span>
-              <span className="nuvio-brand-preview-body">Card content uses your border and padding.</span>
+              <span className="rte-brand-preview-body">Card content uses your border and padding.</span>
             </div>
           ) : null}
           {action === "heading" ? (
             <span
-              className="nuvio-brand-preview-heading"
+              className="rte-brand-preview-heading"
               style={{
                 color: palette.text,
                 fontSize: headingType.fontSize,
@@ -160,7 +160,7 @@ export function BrandCategorySample({
           ) : null}
           {action === "text" ? (
             <span
-              className="nuvio-brand-preview-body nuvio-brand-sample-text"
+              className="rte-brand-preview-body rte-brand-sample-text"
               style={{ color: palette.text, fontSize: "14px", fontWeight: 400 }}
             >
               Sample body text at a fixed readable size.
@@ -168,27 +168,27 @@ export function BrandCategorySample({
           ) : null}
           {action === "table" ? (
             <div
-              className="nuvio-brand-sample-table"
+              className="rte-brand-sample-table"
               style={{
                 border: `1px solid ${palette.border}`,
                 borderRadius: radiusPx,
               }}
             >
-              <div className="nuvio-brand-sample-table-row nuvio-brand-sample-table-row--head">
+              <div className="rte-brand-sample-table-row rte-brand-sample-table-row--head">
                 <span>Product</span>
                 <span>Status</span>
               </div>
-              <div className="nuvio-brand-sample-table-row">
+              <div className="rte-brand-sample-table-row">
                 <span>Sample row</span>
                 <span>Active</span>
               </div>
             </div>
           ) : null}
           {action === "form" ? (
-            <div className="nuvio-brand-sample-form">
-              <span className="nuvio-brand-sample-form-label">Email</span>
+            <div className="rte-brand-sample-form">
+              <span className="rte-brand-sample-form-label">Email</span>
               <span
-                className="nuvio-brand-sample-form-input"
+                className="rte-brand-sample-form-input"
                 style={{
                   backgroundColor: SAMPLE_SURFACE_BG[draft.surface],
                   border: `1px solid ${palette.border}`,
@@ -202,7 +202,7 @@ export function BrandCategorySample({
           ) : null}
           {action === "badge" ? (
             <span
-              className="nuvio-brand-sample-badge"
+              className="rte-brand-sample-badge"
               style={{
                 backgroundColor: palette.badgeBg,
                 color: palette.badgeText,

@@ -1,7 +1,7 @@
 import { parse } from "@babel/parser";
 import traverseImport, { type NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import type { IndexWireEntry, RowWireTarget, TableMeta } from "@nuvio/shared";
+import type { IndexWireEntry, RowWireTarget, TableMeta } from "@rte/shared";
 
 function getTraverseFn(): (ast: t.File, visitor: object) => void {
   if (typeof traverseImport === "function") {
@@ -11,7 +11,7 @@ function getTraverseFn(): (ast: t.File, visitor: object) => void {
   if (typeof d === "function") {
     return d as (ast: t.File, visitor: object) => void;
   }
-  throw new Error("[Nuvio] @babel/traverse did not resolve to a callable export");
+  throw new Error("[Rte] @babel/traverse did not resolve to a callable export");
 }
 
 type ArrayRow = { rowKey: string; fields: Record<string, string> };
@@ -116,7 +116,7 @@ function enrichRowTargets(entries: IndexWireEntry[]): void {
       formatFriendlyRowLabel(rowKey);
     const row: RowWireTarget = {
       rowKey,
-      nuvioId: e.id,
+      rteId: e.id,
       label,
       file: e.file,
       line: e.line,

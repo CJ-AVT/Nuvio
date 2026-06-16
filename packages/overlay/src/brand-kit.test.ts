@@ -4,7 +4,7 @@ import {
   brandPresetDimensionsForAction,
   buildBrandPreviewSummary,
   DEFAULT_BRAND_CONFIG,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import { isBrandBulkCategoryLocked, isBrandBulkCategoryValidationReady } from "./brand-bulk-session.js";
 
 describe("brandPresetDimensionsForAction", () => {

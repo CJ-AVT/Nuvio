@@ -12,8 +12,8 @@ export type OnboardingGuideProps = {
 function GuideBody({ content }: { content: GuideContent }): ReactElement {
   return (
     <>
-      <p className="nuvio-font-medium nuvio-text-xs">{content.title}</p>
-      <p className="nuvio-text-2xs nuvio-leading-snug nuvio-text-muted">{content.body}</p>
+      <p className="rte-font-medium rte-text-xs">{content.title}</p>
+      <p className="rte-text-2xs rte-leading-snug rte-text-muted">{content.body}</p>
     </>
   );
 }
@@ -27,14 +27,14 @@ export function OnboardingGuide({
 
   if (variant === "welcome") {
     return (
-      <section className="nuvio-card nuvio-stack-2 nuvio-onboarding-welcome">
+      <section className="rte-card rte-stack-2 rte-onboarding-welcome">
         <GuideBody content={content} />
-        <ol className="nuvio-onboarding-steps nuvio-text-2xs nuvio-text-muted">
+        <ol className="rte-onboarding-steps rte-text-2xs rte-text-muted">
+          <li>Turn on Make Editable</li>
           <li>Click an element on the page</li>
-          <li>Choose what to change</li>
-          <li>Validate Changes, then Apply to Code</li>
+          <li>Confirm the name, then edit and Apply to Code</li>
         </ol>
-        <button type="button" className="nuvio-button nuvio-button-primary" onClick={onDismiss}>
+        <button type="button" className="rte-button rte-button-primary" onClick={onDismiss}>
           Got it
         </button>
       </section>
@@ -42,9 +42,9 @@ export function OnboardingGuide({
   }
 
   return (
-    <div className="nuvio-banner nuvio-banner--info nuvio-stack-2 nuvio-onboarding-contextual">
+    <div className="rte-banner rte-banner--info rte-stack-2 rte-onboarding-contextual">
       <GuideBody content={content} />
-      <button type="button" className="nuvio-button" onClick={onDismiss}>
+      <button type="button" className="rte-button" onClick={onDismiss}>
         Got it
       </button>
     </div>

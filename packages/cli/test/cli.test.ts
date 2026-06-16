@@ -1,5 +1,5 @@
-import { evaluateBrandPageScan, normalizeBrandConfig } from "@nuvio/shared";
-import { loadPccManifestFromFile } from "@nuvio/shared/load-pcc-manifest";
+import { evaluateBrandPageScan, normalizeBrandConfig } from "@rte/shared";
+import { loadPccManifestFromFile } from "@rte/shared/load-pcc-manifest";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -42,19 +42,19 @@ describe("detectPackageManager", () => {
 });
 
 describe("patch vite config", () => {
-  it("adds nuvio import and plugin", () => {
+  it("adds rte import and plugin", () => {
     const root = fixture("vite-react-ts-minimal");
     const vitePath = join(root, "vite.config.ts");
     const before = readFileSync(vitePath, "utf8");
-    expect(before).not.toContain("nuvio");
+    expect(before).not.toContain("rte");
 
     const result = patchViteConfigFile(vitePath);
     expect(result.ok).toBe(true);
 
     const after = readFileSync(vitePath, "utf8");
-    expect(after).toContain('@nuvio/vite-plugin');
-    expect(after).toContain("nuvio()");
-    expect(after).toContain("@nuvio/overlay");
+    expect(after).toContain('@rte/vite-plugin');
+    expect(after).toContain("rte()");
+    expect(after).toContain("@rte/overlay");
     expect(after).toContain("optimizeDeps");
   });
 
@@ -83,7 +83,7 @@ describe("patch main overlay styles", () => {
     const result = patchMainOverlayStyles(mainPath);
     expect(result.ok).toBe(true);
     expect(readFileSync(mainPath, "utf8")).toContain(
-      '@nuvio/overlay/style.css',
+      '@rte/overlay/style.css',
     );
   });
 
@@ -98,14 +98,14 @@ describe("patch main overlay styles", () => {
 });
 
 describe("patch app root", () => {
-  it("adds NuvioDevShell", () => {
+  it("adds RteDevShell", () => {
     const root = fixture("vite-react-ts-minimal");
     const appPath = resolveAppFile(root)!;
     const result = patchAppRootFile(appPath);
     expect(result.ok).toBe(true);
     const text = readFileSync(appPath, "utf8");
-    expect(text).toContain("NuvioDevShell");
-    expect(text).toContain("@nuvio/overlay");
+    expect(text).toContain("RteDevShell");
+    expect(text).toContain("@rte/overlay");
   });
 });
 
@@ -119,7 +119,7 @@ describe("starter id", () => {
   });
 
   it("skips when page.title exists", () => {
-    const root = fixture("vite-already-nuvio");
+    const root = fixture("vite-already-rte");
     expect(projectHasPageTitleId(root)).toBe(true);
     const { outcome } = patchStarterId(root);
     expect(outcome.ok).toBe(false);
@@ -138,7 +138,7 @@ describe("runInit", () => {
     });
     expect(code).toBe(0);
     expect(readFileSync(join(root, "vite.config.ts"), "utf8")).toBe(viteBefore);
-    expect(existsSync(join(root, "nuvio"))).toBe(false);
+    expect(existsSync(join(root, "rte"))).toBe(false);
   });
 
   it("wires minimal fixture with --no-install", async () => {
@@ -149,20 +149,20 @@ describe("runInit", () => {
       noInstall: true,
     });
     expect(code).toBe(0);
-    expect(readFileSync(join(root, "vite.config.ts"), "utf8")).toContain("nuvio()");
+    expect(readFileSync(join(root, "vite.config.ts"), "utf8")).toContain("rte()");
     expect(readFileSync(join(root, "src/App.tsx"), "utf8")).toContain(
-      "NuvioDevShell",
+      "RteDevShell",
     );
     expect(projectHasPageTitleId(root)).toBe(true);
-    expect(existsSync(join(root, "nuvio/START_HERE.md"))).toBe(true);
-    expect(existsSync(join(root, "nuvio/AGENT.md"))).toBe(true);
-    expect(existsSync(join(root, "nuvio/brand.json"))).toBe(true);
-    expect(readFileSync(join(root, "nuvio/brand.json"), "utf8")).toContain('"accent": "blue"');
+    expect(existsSync(join(root, "rte/START_HERE.md"))).toBe(true);
+    expect(existsSync(join(root, "rte/AGENT.md"))).toBe(true);
+    expect(existsSync(join(root, "rte/brand.json"))).toBe(true);
+    expect(readFileSync(join(root, "rte/brand.json"), "utf8")).toContain('"accent": "blue"');
     const main = readFileSync(join(root, "src/main.tsx"), "utf8");
     const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
-    expect(main).toContain("@nuvio/overlay/style.css");
+    expect(main).toContain("@rte/overlay/style.css");
     expect(vite).toContain("optimizeDeps");
-    expect(vite).toContain("@nuvio/overlay");
+    expect(vite).toContain("@rte/overlay");
   });
 
   it("second init is idempotent", async () => {
@@ -186,9 +186,9 @@ describe("runInit", () => {
       skipTailwindCheck: true,
     });
     expect(code).toBe(0);
-    expect(existsSync(join(root, "nuvio/SETUP_TODO.md"))).toBe(false);
+    expect(existsSync(join(root, "rte/SETUP_TODO.md"))).toBe(false);
     expect(readFileSync(join(root, "src/App.tsx"), "utf8")).toContain(
-      "NuvioDevShell",
+      "RteDevShell",
     );
   });
 });
@@ -226,7 +226,7 @@ describe("brand scan", () => {
   const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
 
   function readDogfoodBrand() {
-    const brandPath = join(dogfoodRoot, "nuvio/brand.json");
+    const brandPath = join(dogfoodRoot, "rte/brand.json");
     return normalizeBrandConfig(JSON.parse(readFileSync(brandPath, "utf8")) as unknown);
   }
 
@@ -234,7 +234,7 @@ describe("brand scan", () => {
     await runBrandApply({ cwd: dogfoodRoot, page: "dashboard" });
     const scan = scanProject(dogfoodRoot);
     const loaded = loadPccManifestFromFile(
-      join(dogfoodRoot, "nuvio/pages/dashboard.pcc.yaml"),
+      join(dogfoodRoot, "rte/pages/dashboard.pcc.yaml"),
     );
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) {
@@ -249,7 +249,7 @@ describe("brand scan", () => {
   it("reports on-brand hosts across tailadmin PCC manifests after brand apply", async () => {
     await runBrandApply({ cwd: dogfoodRoot, all: true });
     const scan = scanProject(dogfoodRoot);
-    const manifestDir = join(dogfoodRoot, "nuvio/pages");
+    const manifestDir = join(dogfoodRoot, "rte/pages");
     let totalOnBrand = 0;
     for (const file of ["dashboard.pcc.yaml", "form-elements.pcc.yaml", "basic-tables.pcc.yaml", "badges.pcc.yaml"]) {
       const loaded = loadPccManifestFromFile(join(manifestDir, file));

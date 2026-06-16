@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { isAllowedNuvioOrigin } from "@nuvio/shared/dev-auth";
+import { isAllowedRteOrigin } from "@rte/shared/dev-auth";
 
 /** Same-origin `fetch` to the dev token endpoint often omits `Origin`; allow loopback Host. */
 export function isLocalDevHttpRequest(req: IncomingMessage): boolean {
-  if (isAllowedNuvioOrigin(req.headers.origin)) {
+  if (isAllowedRteOrigin(req.headers.origin)) {
     return true;
   }
   const host = (req.headers.host ?? "").split(":")[0]?.toLowerCase() ?? "";

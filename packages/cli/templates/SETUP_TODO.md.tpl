@@ -1,27 +1,27 @@
-<!-- nuvio-cli-template: 1 -->
-# nuvio setup — manual steps
+<!-- rte-cli-template: 1 -->
+# rte setup — manual steps
 
-@nuvio/cli could not safely patch: {{FAILED_STEPS}}
+@rte/cli could not safely patch: {{FAILED_STEPS}}
 
 ## Vite (if needed)
 
 Add to `vite.config.ts`:
 
 ```ts
-import { nuvio } from "@nuvio/vite-plugin";
+import { rte } from "@rte/vite-plugin";
 // inside defineConfig:
-plugins: [react(), nuvio()],
+plugins: [react(), rte()],
 resolve: { dedupe: ["react", "react-dom"] },
 ```
 
 ## App shell (if needed)
 
 ```tsx
-import { NuvioDevShell } from "@nuvio/overlay";
+import { RteDevShell } from "@rte/overlay";
 // inside root component return:
-<NuvioDevShell />
+<RteDevShell />
 ```
 
 ## Starter id (if needed)
 
-Add to one visible heading: `data-nuvio-id="page.title"`
+Add to one visible heading: `data-rte-id="page.title"`

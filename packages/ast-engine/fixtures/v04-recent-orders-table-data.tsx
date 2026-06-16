@@ -5,7 +5,7 @@ const tableData = [
 
 export function RecentOrdersFixture() {
   return (
-    <div data-nuvio-id="orders.row.1.nameText">
+    <div data-rte-id="orders.row.1.nameText">
       {tableData[0]?.name}
     </div>
   );

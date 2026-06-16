@@ -5,9 +5,9 @@ export default defineConfig({
   format: ["esm"],
   dts: true,
   clean: true,
-  external: ["react", "react-dom", "@nuvio/shared"],
+  external: ["react", "react-dom", "@rte/shared"],
   define: {
-    "import.meta.env.VITE_NUVIO_DEV_TOKEN": JSON.stringify(""),
+    "import.meta.env.VITE_RTE_DEV_TOKEN": JSON.stringify(""),
   },
   esbuildOptions(options) {
     options.loader = { ...options.loader, ".css": "empty" };

@@ -2,31 +2,31 @@ import { describe, expect, it } from "vitest";
 import {
   bearerTokenFromHeader,
   devTokenFromUpgradeUrl,
-  isAllowedNuvioOrigin,
+  isAllowedRteOrigin,
   isValidDevToken,
-  NUVIO_DEV_TOKEN_QUERY,
+  RTE_DEV_TOKEN_QUERY,
 } from "./dev-auth.js";
 
-describe("isAllowedNuvioOrigin", () => {
+describe("isAllowedRteOrigin", () => {
   it("rejects missing origin", () => {
-    expect(isAllowedNuvioOrigin(undefined)).toBe(false);
-    expect(isAllowedNuvioOrigin("")).toBe(false);
+    expect(isAllowedRteOrigin(undefined)).toBe(false);
+    expect(isAllowedRteOrigin("")).toBe(false);
   });
 
   it("allows localhost and 127.0.0.1", () => {
-    expect(isAllowedNuvioOrigin("http://localhost:5173")).toBe(true);
-    expect(isAllowedNuvioOrigin("http://127.0.0.1:5173")).toBe(true);
+    expect(isAllowedRteOrigin("http://localhost:5173")).toBe(true);
+    expect(isAllowedRteOrigin("http://127.0.0.1:5173")).toBe(true);
   });
 
   it("rejects remote origins", () => {
-    expect(isAllowedNuvioOrigin("http://evil.example")).toBe(false);
+    expect(isAllowedRteOrigin("http://evil.example")).toBe(false);
   });
 });
 
 describe("devTokenFromUpgradeUrl", () => {
   it("reads token query param", () => {
     expect(
-      devTokenFromUpgradeUrl(`/__nuvio/ws?${NUVIO_DEV_TOKEN_QUERY}=abc-123`),
+      devTokenFromUpgradeUrl(`/__rte/ws?${RTE_DEV_TOKEN_QUERY}=abc-123`),
     ).toBe("abc-123");
   });
 });

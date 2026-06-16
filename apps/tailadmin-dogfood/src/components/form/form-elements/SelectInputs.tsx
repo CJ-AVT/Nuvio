@@ -50,12 +50,12 @@ export default function SelectInputs() {
   ];
   return (
     <div
-      data-nuvio-id="forms.select.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.select.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.select.title"
+          data-rte-id="forms.select.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Select Inputs
@@ -64,13 +64,13 @@ export default function SelectInputs() {
       <div className="p-4 border-t border-gray-100 dark:border-gray-800 sm:p-6">
         <div className="space-y-6">
           <div>
-            <Label data-nuvio-id="forms.select.label">Select Input</Label>
+            <Label data-rte-id="forms.select.label">Select Input</Label>
             <Select
               options={options}
               placeholder="Select Option"
               onChange={handleSelectChange}
               className="dark:bg-dark-900"
-              data-nuvio-id="forms.select.input"
+              data-rte-id="forms.select.input"
             />
           </div>
           <div>

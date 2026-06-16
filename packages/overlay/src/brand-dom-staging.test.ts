@@ -27,7 +27,7 @@ describe("stageBrandHostsOnPage", () => {
 
   it("paints validated hosts and reverts on cancel", () => {
     const card = document.createElement("div");
-    card.setAttribute("data-nuvio-id", "metric.orders.card");
+    card.setAttribute("data-rte-id", "metric.orders.card");
     card.className = "bg-white border border-rose-300 rounded-md p-4";
     document.body.appendChild(card);
 
@@ -55,7 +55,7 @@ describe("stageBrandHostsOnPage", () => {
 
   it("replaces prior staging when run again", () => {
     const button = document.createElement("button");
-    button.setAttribute("data-nuvio-id", "filter.btn");
+    button.setAttribute("data-rte-id", "filter.btn");
     button.className = "bg-rose-600 rounded-md px-4 py-2";
     document.body.appendChild(button);
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BRAND_APPLY_ACTIONS, DEFAULT_BRAND_CONFIG } from "@nuvio/shared";
+import { BRAND_APPLY_ACTIONS, DEFAULT_BRAND_CONFIG } from "@rte/shared";
 import {
   applyBrandButtonTitle,
   formatApplyBrandSectionLead,

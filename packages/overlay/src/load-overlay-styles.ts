@@ -1,4 +1,4 @@
-const STYLE_LINK_ID = "nuvio-overlay-styles";
+const STYLE_LINK_ID = "rte-overlay-styles";
 
 export type OverlayCssMode = "source" | "dist";
 
@@ -30,6 +30,6 @@ export function loadOverlayStyles(): void {
   // Published `dist/index.js` ships `style.css` sibling; monorepo dev resolves `src/index.tsx`.
   const mode = getOverlayCssMode();
   link.href = getOverlayCssHref();
-  link.setAttribute("data-nuvio-overlay-css-mode", mode);
+  link.setAttribute("data-rte-overlay-css-mode", mode);
   document.head.appendChild(link);
 }

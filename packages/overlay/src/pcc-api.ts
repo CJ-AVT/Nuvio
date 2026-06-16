@@ -1,4 +1,4 @@
-import { NUVIO_PCC_PATH, type PccManifest } from "@nuvio/shared";
+import { RTE_PCC_PATH, type PccManifest } from "@rte/shared";
 
 type PagePccResponse =
   | { ok: true; manifest: PccManifest; path?: string }
@@ -6,7 +6,7 @@ type PagePccResponse =
 
 export async function fetchPagePcc(route: string): Promise<PccManifest | null> {
   try {
-    const res = await fetch(`${NUVIO_PCC_PATH}?route=${encodeURIComponent(route)}`);
+    const res = await fetch(`${RTE_PCC_PATH}?route=${encodeURIComponent(route)}`);
     if (!res.ok) {
       return null;
     }

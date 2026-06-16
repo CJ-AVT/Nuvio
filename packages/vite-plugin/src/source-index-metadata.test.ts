@@ -5,7 +5,7 @@ describe("source index v2 metadata", () => {
   it("marks literal className as safe", () => {
     const code = `
       function Hero() {
-        return <h1 data-nuvio-id="hero.title" className="text-2xl font-bold">Hi</h1>;
+        return <h1 data-rte-id="hero.title" className="text-2xl font-bold">Hi</h1>;
       }
     `;
     const hits = extractIdsFromSource("/proj/Hero.tsx", code);
@@ -22,7 +22,7 @@ describe("source index v2 metadata", () => {
     const code = `
       function Card() {
         const cn = "p-4";
-        return <div data-nuvio-id="card.root" className={cn}>x</div>;
+        return <div data-rte-id="card.root" className={cn}>x</div>;
       }
     `;
     const hits = extractIdsFromSource("/proj/Card.tsx", code);
@@ -36,7 +36,7 @@ describe("source index v2 metadata", () => {
     const code = `
       import { cn } from "./u";
       function Card() {
-        return <div data-nuvio-id="card.root" className={cn("p-4", "rounded-xl")}>x</div>;
+        return <div data-rte-id="card.root" className={cn("p-4", "rounded-xl")}>x</div>;
       }
     `;
     const hits = extractIdsFromSource("/proj/Card.tsx", code);
@@ -49,7 +49,7 @@ describe("source index v2 metadata", () => {
   it("tags tailadmin hosts with libraryHint", () => {
     const code = `
       function Metrics() {
-        return <div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">x</div>;
+        return <div data-rte-id="metric.orders.card" className="rounded-xl p-4">x</div>;
       }
     `;
     const hits = extractIdsFromSource("/proj/src/components/ecommerce/Metrics.tsx", code, {
@@ -62,7 +62,7 @@ describe("source index v2 metadata", () => {
     const code = `
       import { cn } from "./u";
       function Card({ active }: { active: boolean }) {
-        return <div data-nuvio-id="card.root" className={cn("p-4", active && "bg-blue-500")}>x</div>;
+        return <div data-rte-id="card.root" className={cn("p-4", active && "bg-blue-500")}>x</div>;
       }
     `;
     const hits = extractIdsFromSource("/proj/Card.tsx", code);
@@ -75,7 +75,7 @@ describe("source index v2 metadata", () => {
     const code = `
       function List() {
         return items.map((item) => (
-          <p key={item.id} data-nuvio-id="list.item">{item.label}</p>
+          <p key={item.id} data-rte-id="list.item">{item.label}</p>
         ));
       }
     `;
@@ -89,7 +89,7 @@ describe("source index v2 metadata", () => {
     const code = `
       function Card() {
         return (
-          <div data-nuvio-id="card.root" className="rounded-lg">
+          <div data-rte-id="card.root" className="rounded-lg">
             <span>Title</span>
           </div>
         );
@@ -104,9 +104,9 @@ describe("source index v2 metadata", () => {
     const code = `
       function Metrics() {
         return (
-          <div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">
-            <h3 data-nuvio-id="metric.orders.label" className="text-sm text-gray-500">Orders</h3>
-            <p data-nuvio-id="metric.orders.value" className="text-3xl font-bold">5,359</p>
+          <div data-rte-id="metric.orders.card" className="rounded-xl p-4">
+            <h3 data-rte-id="metric.orders.label" className="text-sm text-gray-500">Orders</h3>
+            <p data-rte-id="metric.orders.value" className="text-3xl font-bold">5,359</p>
           </div>
         );
       }
@@ -115,15 +115,15 @@ describe("source index v2 metadata", () => {
     const card = hits.find((h) => h.id === "metric.orders.card");
     expect(card?.textEditable).toBe(false);
     expect(card?.textTargets).toHaveLength(2);
-    expect(card?.textTargets?.map((t) => t.nuvioId)).toEqual([
+    expect(card?.textTargets?.map((t) => t.rteId)).toEqual([
       "metric.orders.label",
       "metric.orders.value",
     ]);
     expect(card?.primaryTextTargetKey).toBe("metric.orders.label");
     expect(card?.patchHostId).toBe("metric.orders.card");
     expect(card?.hierarchyRole).toBe("card");
-    expect(card?.styleTargets?.some((t) => t.nuvioId === "metric.orders.card")).toBe(true);
-    expect(card?.styleTargets?.some((t) => t.nuvioId === "metric.orders.value")).toBe(true);
+    expect(card?.styleTargets?.some((t) => t.rteId === "metric.orders.card")).toBe(true);
+    expect(card?.styleTargets?.some((t) => t.rteId === "metric.orders.value")).toBe(true);
     expect(card?.childTargetIds).toContain("metric.orders.label");
     expect(card?.childTargetIds).toContain("metric.orders.value");
   });
@@ -132,7 +132,7 @@ describe("source index v2 metadata", () => {
     const code = `
       function Card() {
         return (
-          <div data-nuvio-id="card.root" className="p-4">
+          <div data-rte-id="card.root" className="p-4">
             <span className="text-sm">Orders</span>
             <p className="text-3xl">5,359</p>
           </div>
@@ -146,18 +146,18 @@ describe("source index v2 metadata", () => {
     expect(card?.textTargets?.some((t) => t.textPreview === "Orders")).toBe(true);
     expect(card?.textTargets?.some((t) => t.textPreview === "5,359")).toBe(true);
     expect(card?.primaryTextTargetKey).toMatch(/^loc:/);
-    expect(card?.styleTargets?.[0]?.nuvioId).toBe("card.root");
+    expect(card?.styleTargets?.[0]?.rteId).toBe("card.root");
   });
 
   it("index v3: leaf host includes self in textTargets", () => {
     const code = `
       function Hero() {
-        return <h1 data-nuvio-id="hero.title" className="text-2xl">Welcome</h1>;
+        return <h1 data-rte-id="hero.title" className="text-2xl">Welcome</h1>;
       }
     `;
     const hits = extractIdsFromSource("/proj/Hero.tsx", code);
     expect(hits[0]?.textTargets).toHaveLength(1);
-    expect(hits[0]?.textTargets?.[0]?.nuvioId).toBe("hero.title");
+    expect(hits[0]?.textTargets?.[0]?.rteId).toBe("hero.title");
     expect(hits[0]?.primaryTextTargetKey).toBe("hero.title");
     expect(hits[0]?.hierarchyRole).toBe("text");
   });
@@ -166,9 +166,9 @@ describe("source index v2 metadata", () => {
     const code = `
       function Layout() {
         return (
-          <div data-nuvio-id="dashboard.section" className="grid gap-4">
-            <div data-nuvio-id="metric.orders.card" className="rounded-xl p-4">
-              <h3 data-nuvio-id="metric.orders.label">Orders</h3>
+          <div data-rte-id="dashboard.section" className="grid gap-4">
+            <div data-rte-id="metric.orders.card" className="rounded-xl p-4">
+              <h3 data-rte-id="metric.orders.label">Orders</h3>
             </div>
           </div>
         );

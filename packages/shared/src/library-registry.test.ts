@@ -4,7 +4,7 @@ import {
   librarySegmentForTag,
   resolveEntryLibraryHint,
 } from "./library-registry.js";
-import { suggestNuvioId } from "./suggest-nuvio-id.js";
+import { suggestRteId } from "./suggest-rte-id.js";
 
 describe("library-registry", () => {
   it("detects shadcn from components/ui path", () => {
@@ -21,7 +21,7 @@ describe("library-registry", () => {
 
   it("suggests library-aware ids for shadcn Button", () => {
     expect(
-      suggestNuvioId({
+      suggestRteId({
         tagName: "Button",
         existingIds: new Set(),
         libraryHint: "shadcn",

@@ -1,4 +1,4 @@
-import { readRuntimeVersions } from "@nuvio/vite-plugin/scan";
+import { readRuntimeVersions } from "@rte/vite-plugin/scan";
 import { PreflightError } from "./detect-project.js";
 import {
   aggregateClassNameModes,
@@ -62,7 +62,7 @@ export function runStats(opts: StatsOptions): number {
     return 0;
   }
 
-  console.log("nuvio stats\n");
+  console.log("rte stats\n");
   console.log(`  Editable hosts:     ${result.editableHosts}`);
   console.log(`  Tagged files:       ${result.taggedFiles}`);
   console.log(`  Files scanned:      ${result.scannedFiles}`);

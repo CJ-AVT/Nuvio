@@ -291,21 +291,21 @@ const AppSidebar: React.FC = () => {
                     >
                       {subItem.path === "/" ? (
                         <span
-                          data-nuvio-id="nav.dashboard"
+                          data-rte-id="nav.dashboard"
                           className="inline-block xl:text-sm xl:font-normal xl:text-blue-600"
                         >
                           {subItem.name}
                         </span>
                       ) : subItem.path === "/form-elements" ? (
                         <span
-                          data-nuvio-id="nav.form-elements"
+                          data-rte-id="nav.form-elements"
                           className="inline-block xl:text-sm xl:font-normal xl:text-blue-600"
                         >
                           {subItem.name}
                         </span>
                       ) : subItem.path === "/basic-tables" ? (
                         <span
-                          data-nuvio-id="nav.basic-tables"
+                          data-rte-id="nav.basic-tables"
                           className="inline-block xl:text-sm xl:font-normal xl:text-blue-600"
                         >
                           {subItem.name}
@@ -349,7 +349,7 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        data-nuvio-id="app.sidebar"
+        data-rte-id="app.sidebar"
         className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}
       >
         <Link to="/">

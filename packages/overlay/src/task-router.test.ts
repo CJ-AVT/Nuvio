@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IndexWireEntry } from "@nuvio/shared";
+import type { IndexWireEntry } from "@rte/shared";
 import {
   cardTaskControls,
   detectSimpleRouterMode,

@@ -4,7 +4,7 @@ import {
   classifyHostClassNameMode,
   readFlattenedClassName,
   type ClassNameMode,
-} from "@nuvio/ast-engine";
+} from "@rte/ast-engine";
 import {
   libraryGuidanceForEntry,
   resolveEntryLibraryHint,
@@ -12,7 +12,7 @@ import {
   type LibraryId,
   type RiskLevel,
   type WireClassNameMode,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import type { JSXElement, JSXOpeningElement } from "@babel/types";
 import {
   collectStyleTargets,
@@ -154,12 +154,12 @@ function jsxElementHasElementChildren(el: JSXElement): boolean {
   return false;
 }
 
-function readNuvioId(opening: JSXOpeningElement): string | undefined {
+function readRteId(opening: JSXOpeningElement): string | undefined {
   for (const attr of opening.attributes) {
     if (
       attr.type === "JSXAttribute" &&
       attr.name.type === "JSXIdentifier" &&
-      attr.name.name === "data-nuvio-id" &&
+      attr.name.name === "data-rte-id" &&
       attr.value?.type === "StringLiteral"
     ) {
       const id = attr.value.value.trim();
@@ -173,7 +173,7 @@ function findParentHostId(openingPath: NodePath<JSXOpeningElement>, id: string):
   let p: NodePath | null = openingPath.parentPath;
   while (p) {
     if (p.isJSXElement() && p.node.openingElement) {
-      const parentId = readNuvioId(p.node.openingElement);
+      const parentId = readRteId(p.node.openingElement);
       if (parentId && parentId !== id) {
         return parentId;
       }
@@ -194,7 +194,7 @@ function collectChildHostIds(openingPath: NodePath<JSXOpeningElement>, id: strin
       if (innerPath === openingPath) {
         return;
       }
-      const childId = readNuvioId(innerPath.node);
+      const childId = readRteId(innerPath.node);
       if (childId && childId !== id) {
         childIds.add(childId);
       }
@@ -301,7 +301,7 @@ export function computeRiskMetadata(
     setRisk("unsupported");
     unsupportedReasons.push(
       ctx.classNameMode === "unsupported"
-        ? "className uses a dynamic pattern nuvio cannot patch safely yet (e.g. variables, template literals, or complex cn() args)."
+        ? "className uses a dynamic pattern rte cannot patch safely yet (e.g. variables, template literals, or complex cn() args)."
         : "className is not patchable for this element.",
     );
   }

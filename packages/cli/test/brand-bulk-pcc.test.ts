@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   filterBrandBulkCandidates,
   pccHostsForBrandAction,
-} from "@nuvio/shared";
-import { loadPccManifestFromFile } from "@nuvio/shared/load-pcc-manifest";
+} from "@rte/shared";
+import { loadPccManifestFromFile } from "@rte/shared/load-pcc-manifest";
 import { scanProject } from "../src/project-scan.js";
 
 describe("dashboard PCC bulk counts", () => {
   it("matches PCC card host count for tailadmin dogfood", () => {
     const dogfoodRoot = resolve(import.meta.dirname, "../../../apps/tailadmin-dogfood");
     const loaded = loadPccManifestFromFile(
-      resolve(dogfoodRoot, "nuvio/pages/dashboard.pcc.yaml"),
+      resolve(dogfoodRoot, "rte/pages/dashboard.pcc.yaml"),
     );
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) {

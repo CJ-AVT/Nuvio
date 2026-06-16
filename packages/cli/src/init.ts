@@ -17,8 +17,8 @@ import { patchStarterId } from "./patch-starter-id.js";
 import { projectHasPageTitleId } from "./scan-ids.js";
 import { createPlan, type InitPlan, type ResultTier } from "./plan.js";
 import { MSG } from "./messages.js";
-import { NUVIO_VERSION } from "./version.js";
-import { writeNuvioFolder } from "./write-nuvio-folder.js";
+import { RTE_VERSION } from "./version.js";
+import { writeRteFolder } from "./write-rte-folder.js";
 import { printVerification, verifyProject } from "./verify.js";
 
 export type InitOptions = {
@@ -81,15 +81,15 @@ function printSuccess(
 ): void {
   if (checks.install) {
     console.log(
-      `✅ nuvio packages targeted (@nuvio/vite-plugin@${NUVIO_VERSION}, @nuvio/overlay@${NUVIO_VERSION})`,
+      `✅ rte packages targeted (@rte/vite-plugin@${RTE_VERSION}, @rte/overlay@${RTE_VERSION})`,
     );
   }
   if (checks.vite) console.log("✅ Vite plugin added");
   else if (plan.failedSteps.some((s) => s.includes("vite"))) {
-    console.log("⚠ Vite plugin — see nuvio/SETUP_TODO.md");
+    console.log("⚠ Vite plugin — see rte/SETUP_TODO.md");
   }
-  if (checks.app) console.log("✅ nuvio editor mounted");
-  else console.log("⚠ App shell — see nuvio/SETUP_TODO.md");
+  if (checks.app) console.log("✅ rte editor mounted");
+  else console.log("⚠ App shell — see rte/SETUP_TODO.md");
   if (checks.starter) {
     console.log(
       `✅ Starter editable area: page.title${checks.starterFile ? ` (${checks.starterFile})` : ""}`,
@@ -97,15 +97,15 @@ function printSuccess(
   } else {
     console.log(`⚠ ${MSG.noHeading}`);
   }
-  console.log("✅ Start here: nuvio/START_HERE.md");
-  console.log("✅ Agent guide: nuvio/AGENT.md");
+  console.log("✅ Start here: rte/START_HERE.md");
+  console.log("✅ Agent guide: rte/AGENT.md");
   console.log(`\nNext:\n  ${plan.pmRun}\n`);
   console.log("Open localhost → Edit on → click the starter element.");
   if (plan.tier === "partial" && plan.failedSteps.length > 0) {
     console.log(`\n${MSG.partialHelp}`);
   } else if (plan.tier === "partial") {
     console.log(
-      "\nnuvio helped you as far as it safely could. See warnings above.",
+      "\nrte helped you as far as it safely could. See warnings above.",
     );
   }
 }
@@ -130,7 +130,7 @@ export async function runInit(opts: InitOptions): Promise<number> {
   const plan = createPlan(root, pm);
   plan.installCommand = opts.noInstall
     ? "(skipped — --no-install)"
-    : installCommand(pm, NUVIO_VERSION);
+    : installCommand(pm, RTE_VERSION);
 
   if (project.tailwindWarn && !opts.skipTailwindCheck) {
     const msg =
@@ -150,9 +150,9 @@ export async function runInit(opts: InitOptions): Promise<number> {
   }
   plan.modify.push(project.viteConfigName);
   plan.create.push(
-    "nuvio/START_HERE.md",
-    "nuvio/README.md",
-    "nuvio/AGENT.md",
+    "rte/START_HERE.md",
+    "rte/README.md",
+    "rte/AGENT.md",
   );
 
   if (opts.dryRun) {
@@ -176,14 +176,14 @@ export async function runInit(opts: InitOptions): Promise<number> {
 
   let installOk = true;
   if (!opts.noInstall) {
-    if (packagesNeedInstall(project.packageJsonPath, NUVIO_VERSION)) {
-      const result = runInstall(root, pm, NUVIO_VERSION);
+    if (packagesNeedInstall(project.packageJsonPath, RTE_VERSION)) {
+      const result = runInstall(root, pm, RTE_VERSION);
       if (!result.ok) {
         console.error(result.message ?? "Install failed.");
         return 1;
       }
     } else {
-      console.log("✅ nuvio packages already installed");
+      console.log("✅ rte packages already installed");
     }
   } else {
     console.log("(skipped install — --no-install)");
@@ -235,9 +235,9 @@ export async function runInit(opts: InitOptions): Promise<number> {
     console.log("✅ Starter id page.title already present");
   }
 
-  writeNuvioFolder({
+  writeRteFolder({
     root,
-    version: NUVIO_VERSION,
+    version: RTE_VERSION,
     pmRun: plan.pmRun,
     failedSteps: plan.failedSteps,
     forceAgent: opts.forceAgent,

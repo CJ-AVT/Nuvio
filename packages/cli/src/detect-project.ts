@@ -60,11 +60,11 @@ export function detectProject(root: string): ProjectContext {
     readFileSync(packageJsonPath, "utf8"),
   ) as Record<string, unknown>;
 
-  if (packageJson.name === "@nuvio/cli") {
+  if (packageJson.name === "@rte/cli") {
     throw new PreflightError(MSG.cliPackage);
   }
 
-  if (packageJson.name === "nuvio" && packageJson.private === true) {
+  if (packageJson.name === "rte" && packageJson.private === true) {
     throw new PreflightError(MSG.monorepoRoot);
   }
 

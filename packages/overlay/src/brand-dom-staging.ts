@@ -1,6 +1,6 @@
-import type { PatchOp } from "@nuvio/shared";
+import type { PatchOp } from "@rte/shared";
 import { twMerge } from "tailwind-merge";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { escapeAttrSelector } from "./rte-dom.js";
 
 export type BrandDomStagedHost = {
   hostId: string;
@@ -32,7 +32,7 @@ export function applyBrandPatchOpsToClassName(
 }
 
 function resolveHostElement(hostId: string): HTMLElement | null {
-  const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+  const el = document.querySelector(`[data-rte-id="${escapeAttrSelector(hostId)}"]`);
   return el instanceof HTMLElement ? el : null;
 }
 

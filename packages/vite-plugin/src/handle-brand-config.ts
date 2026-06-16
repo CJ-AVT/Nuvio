@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { DEFAULT_BRAND_CONFIG, normalizeBrandConfig, serializeBrandConfig, type BrandConfig } from "@nuvio/shared";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
-import { validateNuvioBearer } from "./dev-auth-guard.js";
+import { DEFAULT_BRAND_CONFIG, normalizeBrandConfig, serializeBrandConfig, type BrandConfig } from "@rte/shared";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
+import { validateRteBearer } from "./dev-auth-guard.js";
 
-export const BRAND_CONFIG_RELATIVE = "nuvio/brand.json" as const;
+export const BRAND_CONFIG_RELATIVE = "rte/brand.json" as const;
 
 export function brandConfigPath(projectRoot: string): string {
   return path.join(projectRoot, BRAND_CONFIG_RELATIVE);
@@ -82,7 +82,7 @@ export async function handleBrandConfigHttp(
       return;
     }
     if (req.method === "PUT" || req.method === "POST") {
-      if (!validateNuvioBearer(req, ctx.devAuthToken)) {
+      if (!validateRteBearer(req, ctx.devAuthToken)) {
         unauthorized(res);
         return;
       }

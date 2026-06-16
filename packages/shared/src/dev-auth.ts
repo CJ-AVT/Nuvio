@@ -1,11 +1,11 @@
 /** Query param on WebSocket upgrade URL carrying the per-dev-server secret. */
-export const NUVIO_DEV_TOKEN_QUERY = "token" as const;
+export const RTE_DEV_TOKEN_QUERY = "token" as const;
 
 /** Dev-only HTTP path that returns `{ token }` for overlay bootstrap (localhost only). */
-export const NUVIO_DEV_TOKEN_PATH = "/__nuvio/dev-token" as const;
+export const RTE_DEV_TOKEN_PATH = "/__rte/dev-token" as const;
 
 /** Returns false when Origin is missing — browsers always send Origin on WS upgrades. */
-export function isAllowedNuvioOrigin(origin: string | undefined): boolean {
+export function isAllowedRteOrigin(origin: string | undefined): boolean {
   if (!origin) {
     return false;
   }
@@ -26,7 +26,7 @@ export function devTokenFromUpgradeUrl(url: string | undefined): string | null {
   }
   try {
     const u = new URL(url, "http://localhost");
-    return u.searchParams.get(NUVIO_DEV_TOKEN_QUERY);
+    return u.searchParams.get(RTE_DEV_TOKEN_QUERY);
   } catch {
     return null;
   }

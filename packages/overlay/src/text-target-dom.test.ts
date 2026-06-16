@@ -60,11 +60,11 @@ describe("pickDefaultTextTargetKey", () => {
 describe("resolveTextTargetElement", () => {
   it("prefers descendant under host when the same id appears on multiple hosts", () => {
     document.body.innerHTML = `
-      <div data-nuvio-id="card.copy">
-        <span data-nuvio-id="shared.value">A</span>
+      <div data-rte-id="card.copy">
+        <span data-rte-id="shared.value">A</span>
       </div>
-      <div data-nuvio-id="card">
-        <span data-nuvio-id="shared.value">B</span>
+      <div data-rte-id="card">
+        <span data-rte-id="shared.value">B</span>
       </div>
     `;
     const el = resolveTextTargetElement("card.copy", {
@@ -75,17 +75,17 @@ describe("resolveTextTargetElement", () => {
       column: 0,
       tagName: "span",
       textEditable: true,
-      nuvioId: "shared.value",
+      rteId: "shared.value",
       patchHostId: "card.copy",
     });
     expect(el?.textContent?.trim()).toBe("A");
     document.body.innerHTML = "";
   });
 
-  it("resolves by data-nuvio-id when set", () => {
+  it("resolves by data-rte-id when set", () => {
     document.body.innerHTML = `
-      <div data-nuvio-id="card">
-        <span data-nuvio-id="card.label">Orders</span>
+      <div data-rte-id="card">
+        <span data-rte-id="card.label">Orders</span>
       </div>
     `;
     const el = resolveTextTargetElement("card", {
@@ -96,16 +96,16 @@ describe("resolveTextTargetElement", () => {
       column: 0,
       tagName: "span",
       textEditable: true,
-      nuvioId: "card.label",
+      rteId: "card.label",
       patchHostId: "card",
     });
-    expect(el?.getAttribute("data-nuvio-id")).toBe("card.label");
+    expect(el?.getAttribute("data-rte-id")).toBe("card.label");
     document.body.innerHTML = "";
   });
 
-  it("matches by textPreview under host when no nuvioId", () => {
+  it("matches by textPreview under host when no rteId", () => {
     document.body.innerHTML = `
-      <div data-nuvio-id="card">
+      <div data-rte-id="card">
         <span>5,359</span>
       </div>
     `;

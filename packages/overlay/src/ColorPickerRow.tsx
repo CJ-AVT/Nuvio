@@ -8,7 +8,7 @@ import {
   type ReactElement,
 } from "react";
 import { createPortal } from "react-dom";
-import { NUVIO_SHADOW_HOST_ID } from "./nuvio-chrome-hit.js";
+import { RTE_SHADOW_HOST_ID } from "./rte-chrome-hit.js";
 import type { ColorOption } from "./tailwind-color-options.js";
 import {
   TAILWIND_COLOR_FAMILIES,
@@ -47,8 +47,8 @@ function familyLabel(family: string): string {
 }
 
 function getOverlayPortalRoot(): HTMLElement | null {
-  const host = document.getElementById(NUVIO_SHADOW_HOST_ID);
-  const mount = host?.shadowRoot?.querySelector(".nuvio-shadow-mount");
+  const host = document.getElementById(RTE_SHADOW_HOST_ID);
+  const mount = host?.shadowRoot?.querySelector(".rte-shadow-mount");
   return mount instanceof HTMLElement ? mount : null;
 }
 
@@ -110,7 +110,7 @@ export function ColorPickerRow({
     if (!row) {
       return;
     }
-    const trigger = row.querySelector(".nuvio-color-trigger");
+    const trigger = row.querySelector(".rte-color-trigger");
     if (!(trigger instanceof HTMLElement)) {
       return;
     }
@@ -124,7 +124,7 @@ export function ColorPickerRow({
     }
     updatePopoverBox();
     window.addEventListener("resize", updatePopoverBox);
-    const panelBody = rootRef.current?.closest(".nuvio-panel-body");
+    const panelBody = rootRef.current?.closest(".rte-panel-body");
     panelBody?.addEventListener("scroll", updatePopoverBox, { passive: true });
     return () => {
       window.removeEventListener("resize", updatePopoverBox);
@@ -148,7 +148,7 @@ export function ColorPickerRow({
         path.some(
           (node) =>
             node instanceof HTMLElement &&
-            (node.id === listId || node.classList.contains("nuvio-color-popover")),
+            (node.id === listId || node.classList.contains("rte-color-popover")),
         );
       if (!clickedInside) {
         setOpen(false);
@@ -188,19 +188,19 @@ export function ColorPickerRow({
         id={listId}
         role="listbox"
         aria-label={`${label} palette`}
-        className="nuvio-color-popover nuvio-color-popover--fixed"
+        className="rte-color-popover rte-color-popover--fixed"
         style={popoverStyle}
       >
         {!simpleMode ? (
           <p
-            className="nuvio-text-3xs nuvio-leading-snug nuvio-text-muted"
+            className="rte-text-3xs rte-leading-snug rte-text-muted"
             style={{ marginBottom: 8 }}
           >
             Tailwind palette — picks a utility class (e.g. {utilityPrefix}-sky-500), not a custom
             hex value.
           </p>
         ) : null}
-        <div className="nuvio-color-specials">
+        <div className="rte-color-specials">
           {specials.map((o) => (
             <button
               key={o.value || "__none"}
@@ -208,31 +208,31 @@ export function ColorPickerRow({
               role="option"
               aria-selected={value === o.value}
               title={o.label}
-              className={`nuvio-color-special-btn ${
-                value === o.value ? "nuvio-color-special-btn--active" : ""
+              className={`rte-color-special-btn ${
+                value === o.value ? "rte-color-special-btn--active" : ""
               }`}
               onClick={() => pick(o.value)}
             >
-              <span className="nuvio-color-swatch--sm" style={{ backgroundColor: o.hex }} />
+              <span className="rte-color-swatch--sm" style={{ backgroundColor: o.hex }} />
               {o.label}
             </button>
           ))}
         </div>
         <div
-          className="nuvio-palette-grid"
+          className="rte-palette-grid"
           style={{
             gridTemplateColumns: `3.25rem repeat(${TAILWIND_COLOR_SHADES.length}, minmax(0, 1fr))`,
           }}
         >
           <span />
           {TAILWIND_COLOR_SHADES.map((s) => (
-            <span key={s} className="nuvio-palette-shade">
+            <span key={s} className="rte-palette-shade">
               {s}
             </span>
           ))}
           {TAILWIND_COLOR_FAMILIES.map((family) => (
-            <div key={family} className="nuvio-palette-contents">
-              <span className="nuvio-palette-family">{familyLabel(family)}</span>
+            <div key={family} className="rte-palette-contents">
+              <span className="rte-palette-family">{familyLabel(family)}</span>
               {TAILWIND_COLOR_SHADES.map((shade) => {
                 const util = `${utilityPrefix}-${family}-${shade}`;
                 const hex = TAILWIND_PALETTE_HEX[family][String(shade)];
@@ -245,8 +245,8 @@ export function ColorPickerRow({
                     role="option"
                     aria-selected={selected}
                     title={simpleMode ? `${familyLabel(family)} ${shade}` : util}
-                    className={`nuvio-palette-swatch ${
-                      selected ? "nuvio-palette-swatch--selected" : ""
+                    className={`rte-palette-swatch ${
+                      selected ? "rte-palette-swatch--selected" : ""
                     }`}
                     style={{ backgroundColor: hex }}
                     onClick={() => pick(util)}
@@ -262,19 +262,19 @@ export function ColorPickerRow({
   const portalRoot = open ? getOverlayPortalRoot() : null;
 
   return (
-    <div ref={rootRef} className="nuvio-field-row nuvio-field-row--start">
-      <span className="nuvio-label nuvio-label--pad-top">{label}</span>
-      <div className="nuvio-min-w-0 nuvio-relative">
+    <div ref={rootRef} className="rte-field-row rte-field-row--start">
+      <span className="rte-label rte-label--pad-top">{label}</span>
+      <div className="rte-min-w-0 rte-relative">
         <button
           type="button"
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-controls={open ? listId : undefined}
-          className="nuvio-color-trigger"
+          className="rte-color-trigger"
           onClick={() => setOpen((v) => !v)}
         >
           <span
-            className="nuvio-color-swatch"
+            className="rte-color-swatch"
             style={{
               backgroundColor: swatchHex,
               backgroundImage:
@@ -289,7 +289,7 @@ export function ColorPickerRow({
             }}
             aria-hidden="true"
           />
-          <span className="nuvio-min-w-0 nuvio-truncate nuvio-text-2xs">{displayValue}</span>
+          <span className="rte-min-w-0 rte-truncate rte-text-2xs">{displayValue}</span>
         </button>
         {portalRoot && popover ? createPortal(popover, portalRoot) : null}
       </div>

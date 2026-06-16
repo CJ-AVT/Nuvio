@@ -53,7 +53,7 @@ import {
   type IndexWireEntry,
   type PatchOp,
   type PccManifest,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import { BrandCategorySample } from "./brand-category-sample.js";
 import { BrandKitFirstRunChecklist } from "./brand-kit-first-run.js";
 import {
@@ -81,7 +81,7 @@ import {
   validateBrandButtonTitle,
   type BrandApplySectionInput,
 } from "./brand-apply-section.js";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { escapeAttrSelector } from "./rte-dom.js";
 import {
   flattenTokensAtBreakpoint,
   readBreakpointForCardInference,
@@ -139,7 +139,7 @@ function readHostClassTokens(
   if (typeof document === "undefined") {
     return { tokens: [], readBreakpoint: activeBreakpoint };
   }
-  const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+  const el = document.querySelector(`[data-rte-id="${escapeAttrSelector(hostId)}"]`);
   if (!(el instanceof HTMLElement)) {
     return { tokens: [], readBreakpoint: activeBreakpoint };
   }
@@ -214,14 +214,14 @@ function PresetChipGroup<T extends string>({
   onChange,
 }: PresetChipGroupProps<T>): ReactElement {
   return (
-    <div className="nuvio-brand-field">
-      <p className="nuvio-brand-field-label">{label}</p>
-      <div className="nuvio-brand-chip-row">
+    <div className="rte-brand-field">
+      <p className="rte-brand-field-label">{label}</p>
+      <div className="rte-brand-chip-row">
         {options.map((option) => (
           <button
             key={option}
             type="button"
-            className={`nuvio-brand-chip ${value === option ? "nuvio-brand-chip--active" : ""}`}
+            className={`rte-brand-chip ${value === option ? "rte-brand-chip--active" : ""}`}
             onClick={() => onChange(option)}
           >
             {getLabel(option)}
@@ -244,27 +244,27 @@ function ColorPresetGroup({
   onChange: (color: BrandColor) => void;
 }): ReactElement {
   return (
-    <div className="nuvio-brand-field">
-      <p className="nuvio-brand-field-label">{label}</p>
-      <div className="nuvio-brand-color-row">
+    <div className="rte-brand-field">
+      <p className="rte-brand-field-label">{label}</p>
+      <div className="rte-brand-color-row">
         {colors.map((color) => (
           <button
             key={color}
             type="button"
             title={getBrandColorLabel(color)}
             aria-label={getBrandColorLabel(color)}
-            className={`nuvio-brand-color-swatch ${value === color ? "nuvio-brand-color-swatch--active" : ""}`}
+            className={`rte-brand-color-swatch ${value === color ? "rte-brand-color-swatch--active" : ""}`}
             onClick={() => onChange(color)}
           >
             <span
-              className={`nuvio-brand-color-swatch-dot ${color === "none" ? "nuvio-brand-color-swatch-dot--none" : ""}`}
+              className={`rte-brand-color-swatch-dot ${color === "none" ? "rte-brand-color-swatch-dot--none" : ""}`}
               style={
                 color === "none"
                   ? undefined
                   : { backgroundColor: PREVIEW_COLORS[color].swatch }
               }
             />
-            <span className="nuvio-brand-color-swatch-label">{getBrandColorLabel(color)}</span>
+            <span className="rte-brand-color-swatch-label">{getBrandColorLabel(color)}</span>
           </button>
         ))}
       </div>
@@ -611,19 +611,19 @@ export function BrandKitPanel({
             : "Brand saved";
 
   return (
-    <section className={embeddedInTab ? "nuvio-brand-kit" : "nuvio-card nuvio-stack-2 nuvio-brand-kit"}>
-      {!embeddedInTab ? <h3 className="nuvio-section-title">Brand Kit</h3> : null}
+    <section className={embeddedInTab ? "rte-brand-kit" : "rte-card rte-stack-2 rte-brand-kit"}>
+      {!embeddedInTab ? <h3 className="rte-section-title">Brand Kit</h3> : null}
       {embeddedInTab && !brandKitUnlocked && !nonBrandableSelection ? (
-        <p className="nuvio-brand-kit-lead">
+        <p className="rte-brand-kit-lead">
           Select a component on the page to define or review its branding, then validate and
           apply from Apply Brand below.
         </p>
       ) : null}
       {loadState === "loading" ? (
-        <p className="nuvio-text-2xs nuvio-text-muted">Loading brand…</p>
+        <p className="rte-text-2xs rte-text-muted">Loading brand…</p>
       ) : null}
       {loadState === "error" ? (
-        <p className="nuvio-text-2xs nuvio-text-warn">Using default brand — could not load saved brand.</p>
+        <p className="rte-text-2xs rte-text-warn">Using default brand — could not load saved brand.</p>
       ) : null}
 
       {!developerDetails && showFirstRunChecklist && hasBrandableHostsOnPage ? (
@@ -631,7 +631,7 @@ export function BrandKitPanel({
       ) : null}
 
       {nonBrandableSelection ? (
-        <p className="nuvio-banner nuvio-banner--info nuvio-brand-non-brandable">
+        <p className="rte-banner rte-banner--info rte-brand-non-brandable">
           This element isn&apos;t brandable with Brand Kit — use the Edit tab to change it
           directly.
         </p>
@@ -639,9 +639,9 @@ export function BrandKitPanel({
 
       {brandKitUnlocked ? (
         <>
-      <div className="nuvio-brand-section nuvio-brand-category">
-        <p className="nuvio-brand-field-label">Category</p>
-        <div className="nuvio-brand-category-row" role="tablist" aria-label="Brand categories">
+      <div className="rte-brand-section rte-brand-category">
+        <p className="rte-brand-field-label">Category</p>
+        <div className="rte-brand-category-row" role="tablist" aria-label="Brand categories">
           {BRAND_APPLY_ACTIONS.map((action) => {
             const count = bulkTargetsByAction[action]?.length ?? 0;
             const isActive = activeCategory === action;
@@ -651,7 +651,7 @@ export function BrandKitPanel({
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                className={`nuvio-brand-category-chip ${isActive ? "nuvio-brand-category-chip--active" : ""}`}
+                className={`rte-brand-category-chip ${isActive ? "rte-brand-category-chip--active" : ""}`}
                 disabled={count === 0}
                 title={count === 0 ? `No ${BULK_ACTION_LABELS[action].toLowerCase()} on this page` : undefined}
                 onClick={() => {
@@ -667,9 +667,9 @@ export function BrandKitPanel({
         </div>
       </div>
 
-      <div className="nuvio-brand-section nuvio-brand-define">
-        <p className="nuvio-brand-field-label">Define Brand</p>
-      <div className="nuvio-brand-presets">
+      <div className="rte-brand-section rte-brand-define">
+        <p className="rte-brand-field-label">Define Brand</p>
+      <div className="rte-brand-presets">
         {presetDimensions.includes("surface") ? (
           <PresetChipGroup<BrandSurface>
             label={BRAND_SURFACE_FIELD_LABEL}
@@ -724,7 +724,7 @@ export function BrandKitPanel({
           />
         ) : null}
         {presetDimensions.includes("radius") || presetDimensions.includes("density") ? (
-          <div className="nuvio-brand-presets-grid">
+          <div className="rte-brand-presets-grid">
             {presetDimensions.includes("radius") ? (
               <PresetChipGroup<BrandRadius>
                 label={BRAND_RADIUS_FIELD_LABEL}
@@ -755,14 +755,14 @@ export function BrandKitPanel({
           />
         ) : null}
         {activeCategory === "text" ? (
-          <p className="nuvio-brand-fixed-recipe-note">
+          <p className="rte-brand-fixed-recipe-note">
             Body text keeps a fixed readable size and weight; choose the text color above.
           </p>
         ) : null}
       </div>
 
       {showOnPageHint ? (
-        <p className="nuvio-brand-on-page-hint">Current branding is shown on your selection on the page.</p>
+        <p className="rte-brand-on-page-hint">Current branding is shown on your selection on the page.</p>
       ) : null}
       {showCategorySample ? (
         <BrandCategorySample action={activeCategory} draft={draft} mode="sample" />
@@ -776,10 +776,10 @@ export function BrandKitPanel({
         />
       ) : null}
 
-      <div className="nuvio-brand-save-bar">
+      <div className="rte-brand-save-bar">
         <button
           type="button"
-          className="nuvio-button nuvio-button-primary nuvio-brand-save-btn"
+          className="rte-button rte-button-primary rte-brand-save-btn"
           disabled={!channelReady || !dirty || saveState === "saving"}
           onClick={(e) => {
             e.preventDefault();
@@ -789,26 +789,26 @@ export function BrandKitPanel({
           Save Brand
         </button>
         <span
-          className={`nuvio-brand-save-status ${dirty || saveState === "error" ? "nuvio-brand-save-status--warn" : ""}`}
+          className={`rte-brand-save-status ${dirty || saveState === "error" ? "rte-brand-save-status--warn" : ""}`}
         >
           {dirtyLabel}
         </span>
       </div>
       </div>
 
-      <div className="nuvio-brand-section nuvio-brand-apply">
-        <p className="nuvio-brand-field-label">Apply Brand</p>
-        <p className="nuvio-brand-apply-lead">
+      <div className="rte-brand-section rte-brand-apply">
+        <p className="rte-brand-field-label">Apply Brand</p>
+        <p className="rte-brand-apply-lead">
           {formatApplyBrandSectionLead(activeCategory, activeCategoryCount)}
         </p>
         {brandBulkProgress?.phase === "validating" ? (
-          <p className="nuvio-text-2xs nuvio-text-muted">
+          <p className="rte-text-2xs rte-text-muted">
             Validating {Math.min(brandBulkProgress.current + 1, brandBulkProgress.total)} of{" "}
             {brandBulkProgress.total}…
           </p>
         ) : null}
         {brandBulkProgress?.phase === "ready" ? (
-          <p className="nuvio-text-2xs nuvio-text-success">
+          <p className="rte-text-2xs rte-text-success">
             {brandBulkProgress.readyCount} of {brandBulkProgress.total} ready to apply
             {brandBulkProgress.failureCount > 0
               ? ` · ${brandBulkProgress.failureCount} skipped`
@@ -816,14 +816,14 @@ export function BrandKitPanel({
           </p>
         ) : null}
         {brandBulkProgress?.phase === "applying" ? (
-          <p className="nuvio-text-2xs nuvio-text-muted">
+          <p className="rte-text-2xs rte-text-muted">
             Applying {brandBulkProgress.current + 1} of {brandBulkProgress.total}…
           </p>
         ) : null}
-        <div className="nuvio-brand-apply-grid">
+        <div className="rte-brand-apply-grid">
           <button
             type="button"
-            className="nuvio-button nuvio-button-primary nuvio-brand-apply-btn"
+            className="rte-button rte-button-primary rte-brand-apply-btn"
             disabled={!validateBrandEnabled}
             title={validateBrandTitle}
             onClick={onValidateBrand}
@@ -832,7 +832,7 @@ export function BrandKitPanel({
           </button>
           <button
             type="button"
-            className="nuvio-button nuvio-button-primary nuvio-brand-apply-btn"
+            className="rte-button rte-button-primary rte-brand-apply-btn"
             disabled={!applyBrandEnabled}
             title={applyBrandTitle}
             onClick={onApplyBrand}
@@ -840,7 +840,7 @@ export function BrandKitPanel({
             {bulkApplying ? "Applying…" : "Apply"}
           </button>
         </div>
-        {applyError ? <p className="nuvio-text-2xs nuvio-text-error">{applyError}</p> : null}
+        {applyError ? <p className="rte-text-2xs rte-text-error">{applyError}</p> : null}
       </div>
         </>
       ) : null}

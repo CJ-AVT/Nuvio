@@ -7,12 +7,12 @@ export default function RadioButtons() {
   };
   return (
     <div
-      data-nuvio-id="forms.radio.card"
-      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      data-rte-id="forms.radio.card"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-blue-300 xl:rounded-md xl:p-6 xl:shadow-sm dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="px-6 py-5">
         <h3
-          data-nuvio-id="forms.radio.title"
+          data-rte-id="forms.radio.title"
           className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
         >
           Radio Buttons
@@ -27,7 +27,7 @@ export default function RadioButtons() {
             checked={selectedValue === "option1"}
             onChange={handleRadioChange}
             label="Default"
-            data-nuvio-id="forms.radio.label"
+            data-rte-id="forms.radio.label"
           />
           <Radio
             id="radio2"

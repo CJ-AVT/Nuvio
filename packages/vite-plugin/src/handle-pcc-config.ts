@@ -4,13 +4,13 @@ import {
   normalizeAppRoute,
   pccManifestMatchesRoute,
   type PccManifest,
-} from "@nuvio/shared";
+} from "@rte/shared";
 import {
   listPccManifestFiles,
   loadPccManifestFromFile,
   PCC_PAGES_DIR,
-} from "@nuvio/shared/load-pcc-manifest";
-import { assertPathWithinRoot } from "@nuvio/shared/secure-path";
+} from "@rte/shared/load-pcc-manifest";
+import { assertPathWithinRoot } from "@rte/shared/secure-path";
 
 export { PCC_PAGES_DIR as PCC_PAGES_RELATIVE };
 

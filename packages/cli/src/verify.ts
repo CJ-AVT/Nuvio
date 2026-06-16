@@ -1,4 +1,4 @@
-import { hasNuvioPackages, nuvioOverlayLinkKind, readPackageJson } from "./nuvio-deps.js";
+import { hasRtePackages, rteOverlayLinkKind, readPackageJson } from "./rte-deps.js";
 import { projectHasDevShell } from "./patch-app-root.js";
 import {
   mainHasOverlayStyles,
@@ -6,7 +6,7 @@ import {
   resolveMainEntry,
 } from "./patch-main-styles.js";
 import {
-  viteConfigHasNuvio,
+  viteConfigHasRte,
   viteConfigHasOverlayOptimizeExclude,
 } from "./patch-vite-config.js";
 import { projectHasPageTitleId } from "./scan-ids.js";
@@ -26,7 +26,7 @@ function optimizeDepsSatisfied(
 ): boolean {
   if (viteConfigHasOverlayOptimizeExclude(viteConfigPath)) return true;
   const pkg = readPackageJson(packageJsonPath);
-  return nuvioOverlayLinkKind(pkg) === "workspace";
+  return rteOverlayLinkKind(pkg) === "workspace";
 }
 
 export function verifyProject(
@@ -35,12 +35,12 @@ export function verifyProject(
   viteConfigPath: string,
 ): Verification {
   const pkg = readPackageJson(packageJsonPath);
-  const depsOk = hasNuvioPackages(pkg);
+  const depsOk = hasRtePackages(pkg);
   const mainEntry = resolveMainEntry(root);
 
   return {
     deps: depsOk ? "OK" : "MISSING",
-    vite: viteConfigHasNuvio(viteConfigPath) ? "OK" : "TODO",
+    vite: viteConfigHasRte(viteConfigPath) ? "OK" : "TODO",
     overlayCss:
       mainEntry &&
       (mainHasOverlayStyles(mainEntry) ||
@@ -58,11 +58,11 @@ export function verifyProject(
 export function printVerification(v: Verification): void {
   console.log("Verification:");
   console.log(
-    `  dependencies: @nuvio/vite-plugin, @nuvio/overlay — ${v.deps}`,
+    `  dependencies: @rte/vite-plugin, @rte/overlay — ${v.deps}`,
   );
-  console.log(`  vite.config: nuvio() — ${v.vite}`);
-  console.log(`  main.tsx: @nuvio/overlay/style.css — ${v.overlayCss}`);
+  console.log(`  vite.config: rte() — ${v.vite}`);
+  console.log(`  main.tsx: @rte/overlay/style.css — ${v.overlayCss}`);
   console.log(`  vite.config: optimizeDeps exclude overlay — ${v.optimizeDeps}`);
-  console.log(`  App shell: NuvioDevShell — ${v.shell}`);
+  console.log(`  App shell: RteDevShell — ${v.shell}`);
   console.log(`  Starter id page.title — ${v.starterId}`);
 }

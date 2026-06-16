@@ -19,8 +19,8 @@ import type {
   PatchOp,
   RuntimeDiagnostics,
   TextWireTarget,
-} from "@nuvio/shared";
-import { resolveBrandCategoryForEntry } from "@nuvio/shared";
+} from "@rte/shared";
+import { resolveBrandCategoryForEntry } from "@rte/shared";
 import type { Point } from "./overlay-chrome-storage.js";
 import { useChromeDrag } from "./useChromeDrag.js";
 import { usePrevious } from "./use-previous.js";
@@ -34,7 +34,7 @@ import {
   readAlphaPicksFromElement,
 } from "./read-alpha-picks.js";
 import { ComponentTree } from "./ComponentTree.js";
-import { EditorStackVersions, NuvioChipStatus, type NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
+import { EditorStackVersions, RteChipStatus, type RteChannelState } from "./RuntimeDiagnosticsBlock.js";
 import { SelectionMetadata } from "./SelectionMetadata.js";
 import { SelectionSummary } from "./SelectionSummary.js";
 import { TextTargetPicker } from "./TextTargetPicker.js";
@@ -49,13 +49,13 @@ import {
   getSimpleSelectErrorMessage,
   isDuplicateIndexedId,
 } from "./selection-summary.js";
-import { escapeAttrSelector } from "./nuvio-dom.js";
+import { escapeAttrSelector } from "./rte-dom.js";
 import { readEditableTextFromElement } from "./read-editable-text.js";
 import {
-  NUVO_GLASS_CONTENT,
-  NUVO_GLASS_SHELL,
-  NUVO_GLASS_SHELL_INLINE,
-  NUVO_ROOT,
+  RTE_GLASS_CONTENT,
+  RTE_GLASS_SHELL,
+  RTE_GLASS_SHELL_INLINE,
+  RTE_ROOT,
 } from "./overlay-chrome-classes.js";
 import {
   buildHideOp,
@@ -85,6 +85,7 @@ import {
 import type { BrandBulkAppliedByAction, BrandBulkProgress } from "./brand-bulk-session.js";
 import { BrandKitPanel } from "./brand-kit-panel.js";
 import { EditorPanelTabs, type EditorPanelTab } from "./editor-panel-tabs.js";
+import { MakeEditableModeBanner } from "./MakeEditableModeBanner.js";
 import { OnboardingGuide } from "./OnboardingGuide.js";
 import { buildHumanPreviewLines, formatHumanPreviewBlock } from "./human-preview.js";
 import { mapSelectOptionsForSimpleMode, type SimpleOptionCategory } from "./simple-option-labels.js";
@@ -107,10 +108,10 @@ import { BACKGROUND_COLOR_OPTIONS, TEXT_COLOR_OPTIONS } from "./tailwind-color-o
 import { classNameHasResponsiveUtilities } from "./tailwind-token-read.js";
 
 /** Shared action labels — same in Simple Mode and Developer details. */
-/** @deprecated Use {@link NUVO_VALIDATE_CHANGES_LABEL}. Kept for downstream importers. */
-export const NUVO_PREVIEW_CHANGES_LABEL = "Validate Changes";
+/** @deprecated Use {@link RTE_VALIDATE_CHANGES_LABEL}. Kept for downstream importers. */
+export const RTE_PREVIEW_CHANGES_LABEL = "Validate Changes";
 
-export const NUVO_VALIDATE_CHANGES_LABEL = "Validate Changes";
+export const RTE_VALIDATE_CHANGES_LABEL = "Validate Changes";
 
 const BRAND_CATEGORY_STRIP_LABELS: Record<BrandApplyAction, string> = {
   button: "Button",
@@ -121,7 +122,7 @@ const BRAND_CATEGORY_STRIP_LABELS: Record<BrandApplyAction, string> = {
   form: "Form",
   badge: "Badge",
 };
-export const NUVO_APPLY_TO_CODE_LABEL = "Apply to Code";
+export const RTE_APPLY_TO_CODE_LABEL = "Apply to Code";
 
 export type PropertyPanelShellProps = {
   editMode: boolean;
@@ -138,7 +139,7 @@ export type PropertyPanelShellProps = {
   duplicateErrors: readonly DuplicateIdError[];
   selectError: string | null;
   channelReady: boolean;
-  channel: NuvioChannelState;
+  channel: RteChannelState;
   channelLabel: string;
   previewSummary: string | null;
   previewError: string | null;
@@ -190,11 +191,13 @@ export type PropertyPanelShellProps = {
   developerDetails: boolean;
   onDeveloperDetailsChange: (enabled: boolean) => void;
   onToggleEditMode: () => void;
+  makeEditableMode: boolean;
+  onMakeEditableModeChange: (enabled: boolean) => void;
   activeTextTargetKey: string | null;
   onActiveTextTargetKeyChange: (key: string) => void;
   hoverTextTargetKey: string | null;
   onHoverTextTargetKeyChange: (key: string | null) => void;
-  /** When true, header/aside chrome is owned by NuvioDevShell (unified popup). */
+  /** When true, header/aside chrome is owned by RteDevShell (unified popup). */
   embeddedInChrome?: boolean;
 };
 
@@ -249,12 +252,12 @@ function SelectRow({
     });
   }
   return (
-    <label className="nuvio-field-row">
-      <span className="nuvio-label">{label}</span>
+    <label className="rte-field-row">
+      <span className="rte-label">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="nuvio-control nuvio-select"
+        className="rte-control rte-select"
       >
         {resolvedOptions.map((o) => (
           <option key={o.value || "__none"} value={o.value}>
@@ -285,24 +288,24 @@ function DeviceBreakpointPanel({
 }): ReactElement {
   const controls = (
     <>
-      <div className="nuvio-row-wrap">
+      <div className="rte-row-wrap">
         <button
           type="button"
-          className={`nuvio-button-chip ${devicePreset === "desktop" ? "nuvio-button-chip--active" : ""}`}
+          className={`rte-button-chip ${devicePreset === "desktop" ? "rte-button-chip--active" : ""}`}
           onClick={() => onDevicePresetChange("desktop")}
         >
           Desktop
         </button>
         <button
           type="button"
-          className={`nuvio-button-chip ${devicePreset === "tablet" ? "nuvio-button-chip--active" : ""}`}
+          className={`rte-button-chip ${devicePreset === "tablet" ? "rte-button-chip--active" : ""}`}
           onClick={() => onDevicePresetChange("tablet")}
         >
           Tablet
         </button>
         <button
           type="button"
-          className={`nuvio-button-chip ${devicePreset === "mobile" ? "nuvio-button-chip--active" : ""}`}
+          className={`rte-button-chip ${devicePreset === "mobile" ? "rte-button-chip--active" : ""}`}
           onClick={() => onDevicePresetChange("mobile")}
         >
           Mobile
@@ -322,9 +325,9 @@ function DeviceBreakpointPanel({
         developerDetails={developerDetails}
       />
       {!developerDetails ? (
-        <p className="nuvio-text-2xs nuvio-text-muted">
+        <p className="rte-text-2xs rte-text-muted">
           Applies on:{" "}
-          <span className="nuvio-font-medium">{formatPlainBreakpointLabel(activeBreakpoint)}</span>
+          <span className="rte-font-medium">{formatPlainBreakpointLabel(activeBreakpoint)}</span>
         </p>
       ) : null}
     </>
@@ -332,16 +335,16 @@ function DeviceBreakpointPanel({
 
   if (variant === "compact") {
     return (
-      <div className="nuvio-stack-1">
-        <p className="nuvio-label">Responsive preview</p>
+      <div className="rte-stack-1">
+        <p className="rte-label">Responsive preview</p>
         {controls}
       </div>
     );
   }
 
   return (
-    <section className="nuvio-card nuvio-stack-2">
-      <h3 className="nuvio-section-title">Device + breakpoint</h3>
+    <section className="rte-card rte-stack-2">
+      <h3 className="rte-section-title">Device + breakpoint</h3>
       {controls}
     </section>
   );
@@ -405,6 +408,8 @@ export function PropertyPanelShell({
   developerDetails,
   onDeveloperDetailsChange,
   onToggleEditMode,
+  makeEditableMode,
+  onMakeEditableModeChange,
   activeTextTargetKey,
   onActiveTextTargetKeyChange,
   hoverTextTargetKey,
@@ -440,10 +445,16 @@ export function PropertyPanelShell({
 
   const prevEditMode = usePrevious(editMode);
   useEffect(() => {
-    if (editMode && !prevEditMode) {
+    if (editMode && !prevEditMode && !makeEditableMode) {
       setEditorTab("brand");
     }
-  }, [editMode, prevEditMode]);
+  }, [editMode, makeEditableMode, prevEditMode]);
+
+  useEffect(() => {
+    if (makeEditableMode) {
+      setEditorTab("tag");
+    }
+  }, [makeEditableMode]);
 
   const setShellElement = useCallback(
     (el: HTMLElement | null) => {
@@ -512,8 +523,8 @@ export function PropertyPanelShell({
     );
   }, [baselinePicks, baselineText, developerDetails, draftText, picks]);
 
-  const previewButtonLabel = NUVO_VALIDATE_CHANGES_LABEL;
-  const applyButtonLabel = NUVO_APPLY_TO_CODE_LABEL;
+  const previewButtonLabel = RTE_VALIDATE_CHANGES_LABEL;
+  const applyButtonLabel = RTE_APPLY_TO_CODE_LABEL;
   const simpleMode = !developerDetails;
   const selectionTitle =
     selectedId && selectedEntry
@@ -557,8 +568,8 @@ export function PropertyPanelShell({
     if (!selectedId) {
       return null;
     }
-    if (activeTextTarget?.nuvioId) {
-      return activeTextTarget.nuvioId;
+    if (activeTextTarget?.rteId) {
+      return activeTextTarget.rteId;
     }
     if (selectedEntry?.textEditable) {
       return selectedId;
@@ -577,7 +588,7 @@ export function PropertyPanelShell({
     if (!selectedId) {
       return null;
     }
-    return activeTextTarget?.patchHostId ?? activeTextTarget?.nuvioId ?? null;
+    return activeTextTarget?.patchHostId ?? activeTextTarget?.rteId ?? null;
   }, [activeTextTarget, selectedId]);
 
   const hasStyleTargetChoice =
@@ -617,7 +628,7 @@ export function PropertyPanelShell({
       return;
     }
     const styleId = patchStyleId ?? selectedId;
-    const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(styleId)}"]`);
+    const el = document.querySelector(`[data-rte-id="${escapeAttrSelector(styleId)}"]`);
     setStyleHostClassName(el instanceof HTMLElement ? el.className : "");
   }, [selectedId, patchStyleId, stagedVersion]);
 
@@ -631,7 +642,7 @@ export function PropertyPanelShell({
       setMissing(false);
       return;
     }
-    const el = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(selectedId)}"]`);
+    const el = document.querySelector(`[data-rte-id="${escapeAttrSelector(selectedId)}"]`);
     setMissing(!(el instanceof HTMLElement));
   }, [selectedId]);
 
@@ -643,14 +654,14 @@ export function PropertyPanelShell({
     const textEl =
       activeTextTarget && textTargets.length > 0
         ? resolveTextTargetElement(hostId, activeTextTarget)
-        : document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
-    const hostEl = document.querySelector(`[data-nuvio-id="${escapeAttrSelector(hostId)}"]`);
+        : document.querySelector(`[data-rte-id="${escapeAttrSelector(hostId)}"]`);
+    const hostEl = document.querySelector(`[data-rte-id="${escapeAttrSelector(hostId)}"]`);
     const styleEl =
       patchStyleId && hostEl instanceof HTMLElement
-        ? (hostEl.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`) ??
-          document.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`))
+        ? (hostEl.querySelector(`[data-rte-id="${escapeAttrSelector(patchStyleId)}"]`) ??
+          document.querySelector(`[data-rte-id="${escapeAttrSelector(patchStyleId)}"]`))
         : patchStyleId
-          ? document.querySelector(`[data-nuvio-id="${escapeAttrSelector(patchStyleId)}"]`)
+          ? document.querySelector(`[data-rte-id="${escapeAttrSelector(patchStyleId)}"]`)
           : textEl;
 
     if (textEl instanceof HTMLElement) {
@@ -734,7 +745,7 @@ export function PropertyPanelShell({
     (id: string): string | null => {
       if (isDuplicateIndexedId(id, duplicateErrors)) {
         return developerDetails
-          ? `Id "${id}" is duplicated in the project and was removed from the dev index. Use a unique data-nuvio-id per element.`
+          ? `Id "${id}" is duplicated in the project and was removed from the dev index. Use a unique data-rte-id per element.`
           : getSimpleDuplicateIdPatchMessage(id);
       }
       if (!knownIds.has(id)) {
@@ -763,15 +774,15 @@ export function PropertyPanelShell({
     if (hasText && !patchTextId) {
       return {
         error: developerDetails
-          ? "Text cannot be patched for this target — add a data-nuvio-id on the text element."
-          : "nuvio can't safely edit this text yet.",
+          ? "Text cannot be patched for this target — add a data-rte-id on the text element."
+          : "rte can't safely edit this text yet.",
       };
     }
     if (hasStyle && !patchStyleId) {
       return {
         error: developerDetails
           ? "Styles cannot be patched for this target."
-          : "nuvio can't safely edit this area yet.",
+          : "rte can't safely edit this area yet.",
       };
     }
     if (hasText && patchTextId) {
@@ -903,7 +914,7 @@ export function PropertyPanelShell({
   const showWelcome = shouldShowWelcome({ developerDetails, dismissed: dismissedGuides });
   const patchBlockedReason =
     indexIdCount === 0
-      ? "Source index has 0 ids — the dev server cannot map data-nuvio-id to files. Run bun dev from the repo root (builds packages), then hard-refresh. Check the terminal for [nuvio] index warnings."
+      ? "Source index has 0 ids — the dev server cannot map data-rte-id to files. Run bun dev from the repo root (builds packages), then hard-refresh. Check the terminal for [rte] index warnings."
       : selectedId && !selectionResolved
         ? selectError ??
           "Server did not confirm this id (no source file). Patches stay disabled until selection succeeds."
@@ -1260,15 +1271,15 @@ export function PropertyPanelShell({
       <button
         type="button"
         ref={(el) => setShellElement(el)}
-        className={`${NUVO_ROOT} nuvio-panel-tab ${NUVO_GLASS_SHELL} ${
+        className={`${RTE_ROOT} rte-panel-tab ${RTE_GLASS_SHELL} ${
           displayPanelPosition
             ? ""
             : tabOnRight
-              ? "nuvio-panel-tab--right"
-              : "nuvio-panel-tab--left"
+              ? "rte-panel-tab--right"
+              : "rte-panel-tab--left"
         }`}
         style={{
-          ...NUVO_GLASS_SHELL_INLINE,
+          ...RTE_GLASS_SHELL_INLINE,
           ...(displayPanelPosition
             ? {
                 left: tabOnRight ? undefined : displayPanelPosition.x,
@@ -1283,10 +1294,10 @@ export function PropertyPanelShell({
         title="Expand Editor panel"
         onClick={() => onPanelCollapsedChange(false)}
       >
-        <span className={tabOnRight ? "" : "nuvio-flip-x"} aria-hidden="true">
+        <span className={tabOnRight ? "" : "rte-flip-x"} aria-hidden="true">
           ›
         </span>
-        <span className="nuvio-sr-only">Expand Editor</span>
+        <span className="rte-sr-only">Expand Editor</span>
       </button>
     );
   }
@@ -1305,19 +1316,19 @@ export function PropertyPanelShell({
     <>
       {!embeddedInChrome ? (
         <header
-          className={`nuvio-panel-header ${
-            panelDragging ? "nuvio-panel-header--grabbing" : ""
+          className={`rte-panel-header ${
+            panelDragging ? "rte-panel-header--grabbing" : ""
           }`}
           onPointerDown={onHeaderPointerDown}
         >
-          <div className="nuvio-panel-header-left">
-            <div className="nuvio-panel-header-nuvio-row">
-              <span className="nuvio-chip-title">nuvio</span>
-              <span className="nuvio-chip-spacer" aria-hidden="true" />
+          <div className="rte-panel-header-left">
+            <div className="rte-panel-header-rte-row">
+              <span className="rte-chip-title">rte</span>
+              <span className="rte-chip-spacer" aria-hidden="true" />
               <button
                 type="button"
-                className={`nuvio-button-chip ${
-                  editMode ? "nuvio-button-chip--active" : ""
+                className={`rte-button-chip ${
+                  editMode ? "rte-button-chip--active" : ""
                 }`}
                 title={editMode ? "Exit editor mode" : "Enter editor mode"}
                 aria-label={editMode ? "Exit editor mode" : "Enter editor mode"}
@@ -1330,7 +1341,7 @@ export function PropertyPanelShell({
                 {editMode ? "Editing" : "Edit"}
               </button>
             </div>
-            <NuvioChipStatus
+            <RteChipStatus
               channel={channel}
               channelLabel={channelLabel}
               indexedCount={indexIdCount}
@@ -1344,7 +1355,7 @@ export function PropertyPanelShell({
           </div>
           <button
             type="button"
-            className={`nuvio-toggle-details ${developerDetails ? "nuvio-toggle-details--on" : ""}`}
+            className={`rte-toggle-details ${developerDetails ? "rte-toggle-details--on" : ""}`}
             title="Show file paths, risk level, and technical diagnostics"
             aria-label="Developer details"
             aria-pressed={developerDetails}
@@ -1355,7 +1366,7 @@ export function PropertyPanelShell({
           </button>
           <button
             type="button"
-            className="nuvio-button-icon"
+            className="rte-button-icon"
             title="Reset panel position"
             aria-label="Reset panel position"
             onPointerDown={(e) => e.stopPropagation()}
@@ -1365,7 +1376,7 @@ export function PropertyPanelShell({
           </button>
           <button
             type="button"
-            className="nuvio-button-icon"
+            className="rte-button-icon"
             title="Collapse panel"
             aria-label="Collapse Editor panel"
             onPointerDown={(e) => e.stopPropagation()}
@@ -1382,13 +1393,22 @@ export function PropertyPanelShell({
         <EditorPanelTabs
           active={editorTab}
           onChange={(tab) => {
+            if (tab === "tag") {
+              onMakeEditableModeChange(true);
+            } else {
+              onMakeEditableModeChange(false);
+            }
             if (editorTab === "brand" && tab !== "brand") {
               onRevertBrandPagePreview();
             }
             setEditorTab(tab);
           }}
         />
-        <div className="nuvio-panel-body">
+        <div className="rte-panel-body">
+          {editorTab === "tag" ? (
+            <MakeEditableModeBanner indexedCount={indexIdCount} />
+          ) : (
+            <>
           {showWelcome && editorTab === "edit" ? (
             <OnboardingGuide
               guideId="welcome"
@@ -1397,18 +1417,18 @@ export function PropertyPanelShell({
             />
           ) : null}
           {editorTab !== "brand" || (selectedId && !missing) ? (
-            <div className="nuvio-selection-strip">
+            <div className="rte-selection-strip">
               {editorTab === "brand" ? (
                 developerDetails ? (
                   <>
-                    <span className="nuvio-brand-selection-label">
+                    <span className="rte-brand-selection-label">
                       {selectionBrandCategory
                         ? `${BRAND_CATEGORY_STRIP_LABELS[selectionBrandCategory]} ·`
                         : "Inspecting"}
                     </span>
-                    <span className="nuvio-selection-strip-id">{selectedId}</span>
+                    <span className="rte-selection-strip-id">{selectedId}</span>
                     {resolvedFile ? (
-                      <span className="nuvio-selection-strip-path">
+                      <span className="rte-selection-strip-path">
                         {resolvedFile}
                         {resolvedLine != null ? `:${resolvedLine}` : ""}
                       </span>
@@ -1416,12 +1436,12 @@ export function PropertyPanelShell({
                   </>
                 ) : (
                   <>
-                    <span className="nuvio-brand-selection-label">
+                    <span className="rte-brand-selection-label">
                       {selectionBrandCategory
                         ? `${BRAND_CATEGORY_STRIP_LABELS[selectionBrandCategory]} ·`
                         : "Inspecting"}
                     </span>
-                    <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
+                    <span className="rte-selection-strip-id rte-selection-strip-id--friendly">
                       {selectionTitle}
                     </span>
                   </>
@@ -1429,9 +1449,9 @@ export function PropertyPanelShell({
               ) : selectedId ? (
                 developerDetails ? (
                   <>
-                    <span className="nuvio-selection-strip-id">{selectedId}</span>
+                    <span className="rte-selection-strip-id">{selectedId}</span>
                     {resolvedFile ? (
-                      <span className="nuvio-selection-strip-path">
+                      <span className="rte-selection-strip-path">
                         {resolvedFile}
                         {resolvedLine != null ? `:${resolvedLine}` : ""}
                       </span>
@@ -1439,13 +1459,13 @@ export function PropertyPanelShell({
                   </>
                 ) : (
                   <>
-                    <span className="nuvio-selection-strip-id nuvio-selection-strip-id--friendly">
+                    <span className="rte-selection-strip-id rte-selection-strip-id--friendly">
                       {selectionTitle}
                     </span>
                     {taskRouter.backNav ? (
                       <button
                         type="button"
-                        className="nuvio-back-link"
+                        className="rte-back-link"
                         onClick={taskRouter.backNav.onBack}
                       >
                         {taskRouter.backNav.label}
@@ -1454,20 +1474,20 @@ export function PropertyPanelShell({
                   </>
                 )
               ) : (
-                <span className="nuvio-text-muted">Click something on the page to edit it.</span>
+                <span className="rte-text-muted">Click something on the page to edit it.</span>
               )}
             </div>
           ) : null}
         {indexIdCount === 0 ? (
-          <p className="nuvio-text-xs nuvio-text-warn">
+          <p className="rte-text-xs rte-text-warn">
             {developerDetails ? "Index empty — restart dev server." : getSimpleIndexEmptyMessage()}
           </p>
         ) : null}
         {developerDetails && selectedId && !resolvedFile && selectError ? (
-          <p className="nuvio-text-xs nuvio-text-error">{selectError}</p>
+          <p className="rte-text-xs rte-text-error">{selectError}</p>
         ) : null}
         {!developerDetails && selectedId && !resolvedFile && selectError ? (
-          <p className="nuvio-text-xs nuvio-text-error">{getSimpleSelectErrorMessage(selectError)}</p>
+          <p className="rte-text-xs rte-text-error">{getSimpleSelectErrorMessage(selectError)}</p>
         ) : null}
 
         {editorTab === "brand" ? (
@@ -1497,7 +1517,7 @@ export function PropertyPanelShell({
               onBrandDraftChange={onBrandDraftChange}
             />
             {brandPreviewClearedNotice ? (
-              <p className="nuvio-text-2xs nuvio-text-warn">{brandPreviewClearedNotice}</p>
+              <p className="rte-text-2xs rte-text-warn">{brandPreviewClearedNotice}</p>
             ) : null}
           </>
         ) : (
@@ -1522,14 +1542,14 @@ export function PropertyPanelShell({
         simpleRouterMode === "nav" &&
         taskRouter.navTask === "navigationItems" &&
         taskRouter.navTargets.length > 0 ? (
-          <section className="nuvio-card nuvio-stack-2">
-            <p className="nuvio-label">Pick a link</p>
-            <div className="nuvio-stack-1">
+          <section className="rte-card rte-stack-2">
+            <p className="rte-label">Pick a link</p>
+            <div className="rte-stack-1">
               {taskRouter.navTargets.map((navEntry) => (
                 <button
                   key={navEntry.id}
                   type="button"
-                  className={`nuvio-button nuvio-button--block ${selectedId === navEntry.id ? "nuvio-button-primary" : ""}`}
+                  className={`rte-button rte-button--block ${selectedId === navEntry.id ? "rte-button-primary" : ""}`}
                   onClick={() => onSelectIndexedId(navEntry.id)}
                 >
                   {formatFriendlyId(navEntry.id, navEntry)}
@@ -1592,9 +1612,9 @@ export function PropertyPanelShell({
             indexEntries={indexEntries}
             developerDetails={developerDetails}
             taskRouterActive={taskRouter.active}
-            onSwitchToTarget={({ nuvioId, key }) => {
-              if (nuvioId) {
-                onSelectIndexedId(nuvioId);
+            onSwitchToTarget={({ rteId, key }) => {
+              if (rteId) {
+                onSelectIndexedId(rteId);
               } else {
                 onActiveTextTargetKeyChange(key);
               }
@@ -1617,10 +1637,10 @@ export function PropertyPanelShell({
         ) : null}
 
         {selectedId && missing ? (
-          <p className="nuvio-text-xs nuvio-text-warn">
+          <p className="rte-text-xs rte-text-warn">
             {developerDetails ? (
               <>
-                No matching <span className="nuvio-text-mono">data-nuvio-id</span> node in the
+                No matching <span className="rte-text-mono">data-rte-id</span> node in the
                 document.
               </>
             ) : (
@@ -1630,20 +1650,20 @@ export function PropertyPanelShell({
         ) : null}
 
         {developerDetails && selectedId && !missing ? (
-          <section className="nuvio-card nuvio-stack-2">
-            <h3 className="nuvio-section-title">Structure</h3>
+          <section className="rte-card rte-stack-2">
+            <h3 className="rte-section-title">Structure</h3>
             {previewBusy && structuralPreviewActive ? (
-              <p className="nuvio-text-2xs nuvio-text-accent">Updating layout…</p>
+              <p className="rte-text-2xs rte-text-accent">Updating layout…</p>
             ) : null}
             {structuralPreviewMessage ? (
-              <p className="nuvio-banner nuvio-banner--error">{structuralPreviewMessage}</p>
+              <p className="rte-banner rte-banner--error">{structuralPreviewMessage}</p>
             ) : null}
             {structuralPreviewOk ? (
-              <p className="nuvio-banner nuvio-banner--success nuvio-banner--success-mono">
+              <p className="rte-banner rte-banner--success rte-banner--success-mono">
                 {structuralPreviewOk}
               </p>
             ) : null}
-            <div className="nuvio-row-wrap">
+            <div className="rte-row-wrap">
               <button
                 type="button"
                 disabled={structuralActionsDisabled || !siblingMove.canMoveUp}
@@ -1652,7 +1672,7 @@ export function PropertyPanelShell({
                     ? "Move earlier in source / left in row"
                     : "Already first in this row"
                 }
-                className="nuvio-button"
+                className="rte-button"
                 onClick={() => onRequestStructuralPreview(buildMoveSiblingOp("up"))}
               >
                 Move up
@@ -1665,7 +1685,7 @@ export function PropertyPanelShell({
                     ? "Move later in source / right in row"
                     : "Already last in this row"
                 }
-                className="nuvio-button"
+                className="rte-button"
                 onClick={() => onRequestStructuralPreview(buildMoveSiblingOp("down"))}
               >
                 Move down
@@ -1673,7 +1693,7 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={structuralActionsDisabled}
-                className="nuvio-button"
+                className="rte-button"
                 onClick={() => onRequestStructuralPreview(buildHideOp())}
               >
                 Hide
@@ -1681,7 +1701,7 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={structuralActionsDisabled}
-                className="nuvio-button"
+                className="rte-button"
                 onClick={() => onRequestStructuralPreview(buildShowOp())}
               >
                 Show
@@ -1691,15 +1711,15 @@ export function PropertyPanelShell({
         ) : null}
 
         {showEditSection && (developerDetails || showSimpleEditControls) ? (
-          <section className="nuvio-card nuvio-stack-2">
+          <section className="rte-card rte-stack-2">
             {developerDetails ? (
-              <h3 className="nuvio-section-title">Quick edits</h3>
+              <h3 className="rte-section-title">Quick edits</h3>
             ) : null}
             {hasStyleTargetChoice && developerDetails ? (
-              <label className="nuvio-block nuvio-stack-1">
-                <span className="nuvio-label">Style target</span>
+              <label className="rte-block rte-stack-1">
+                <span className="rte-label">Style target</span>
                 <select
-                  className="nuvio-control nuvio-select"
+                  className="rte-control rte-select"
                   value={styleTargetMode}
                   onChange={(e) => setStyleTargetMode(e.target.value as StyleTargetMode)}
                 >
@@ -1709,14 +1729,14 @@ export function PropertyPanelShell({
               </label>
             ) : null}
             {previewBusy ? (
-              <p className="nuvio-banner nuvio-banner--info nuvio-text-2xs">
+              <p className="rte-banner rte-banner--info rte-text-2xs">
                 {developerDetails
                   ? "Validating patch with the dev server…"
                   : "Validating your changes…"}
               </p>
             ) : null}
             {lastPatchError ? (
-              <p className="nuvio-banner nuvio-banner--error">
+              <p className="rte-banner rte-banner--error">
                 {developerDetails
                   ? lastPatchError
                   : (formatPatchUserMessagePlain(lastPatchError) ??
@@ -1724,32 +1744,32 @@ export function PropertyPanelShell({
               </p>
             ) : null}
             {displayPreviewError && !structuralPreviewActive && developerDetails ? (
-              <p className="nuvio-banner nuvio-banner--error">{displayPreviewError}</p>
+              <p className="rte-banner rte-banner--error">{displayPreviewError}</p>
             ) : null}
             {displayPatchBlockedReason && developerDetails ? (
-              <p className="nuvio-banner nuvio-banner--warn">{displayPatchBlockedReason}</p>
+              <p className="rte-banner rte-banner--warn">{displayPatchBlockedReason}</p>
             ) : null}
             {hasStagedOps && !displayPatchBlockedReason && previewApplyMismatch && developerDetails ? (
-              <p className="nuvio-banner nuvio-banner--neutral nuvio-text-2xs nuvio-leading-snug">
-                Run <span className="nuvio-font-medium">{previewButtonLabel}</span> after each edit
+              <p className="rte-banner rte-banner--neutral rte-text-2xs rte-leading-snug">
+                Run <span className="rte-font-medium">{previewButtonLabel}</span> after each edit
                 so the summary matches what you apply.
               </p>
             ) : null}
             {hasStagedOps && !displayPatchBlockedReason && previewApplyMismatch && simpleMode ? (
-              <p className="nuvio-text-2xs nuvio-text-muted">Validate your changes before applying.</p>
+              <p className="rte-text-2xs rte-text-muted">Validate your changes before applying.</p>
             ) : null}
             {patchTargetConflict ? (
-              <p className="nuvio-banner nuvio-banner--warn nuvio-text-2xs nuvio-leading-snug">
+              <p className="rte-banner rte-banner--warn rte-text-2xs rte-leading-snug">
                 {developerDetails
                   ? "Text and styles apply to different elements. Validate text first, then change styles — or pick one target in Edit target."
                   : "Text and styles apply to different parts. Validate text first, then change styles."}
               </p>
             ) : null}
             {patchTargetError ? (
-              <p className="nuvio-banner nuvio-banner--error nuvio-text-2xs">
+              <p className="rte-banner rte-banner--error rte-text-2xs">
                 {developerDetails
                   ? patchTargetError
-                  : patchTargetError.startsWith("nuvio can't") ||
+                  : patchTargetError.startsWith("rte can't") ||
                       patchTargetError.startsWith("Nothing") ||
                       patchTargetError.startsWith("No changes") ||
                       patchTargetError.startsWith("Text and styles") ||
@@ -1759,47 +1779,47 @@ export function PropertyPanelShell({
               </p>
             ) : null}
             {patchStyleId && selectedId && patchStyleId !== selectedId && developerDetails ? (
-              <p className="nuvio-text-2xs nuvio-text-muted nuvio-leading-snug">
+              <p className="rte-text-2xs rte-text-muted rte-leading-snug">
                 Styles apply to{" "}
-                <span className="nuvio-font-medium">
+                <span className="rte-font-medium">
                   {developerDetails ? patchStyleId : formatFriendlyId(patchStyleId, selectedEntry)}
                 </span>
                 {developerDetails ? " (not the outer container you clicked)" : ""}.
               </p>
             ) : null}
             {patchTextId && developerDetails ? (
-              <p className="nuvio-text-2xs nuvio-text-muted nuvio-leading-snug">
+              <p className="rte-text-2xs rte-text-muted rte-leading-snug">
                 Text applies to{" "}
-                <span className="nuvio-font-medium">
+                <span className="rte-font-medium">
                   {developerDetails ? patchTextId : formatFriendlyId(patchTextId, selectedEntry)}
                 </span>
                 .
               </p>
             ) : null}
             {developerDetails && !textEditable && textEditReason ? (
-              <p className="nuvio-banner nuvio-banner--neutral nuvio-text-2xs">{textEditReason}</p>
+              <p className="rte-banner rte-banner--neutral rte-text-2xs">{textEditReason}</p>
             ) : null}
             {(!panelControls || panelControls.showText) && (
-            <label className="nuvio-block nuvio-stack-1">
-              <span className="nuvio-label">Text</span>
+            <label className="rte-block rte-stack-1">
+              <span className="rte-label">Text</span>
               <textarea
                 value={draftText}
                 onChange={(e) => setDraftText(e.target.value)}
                 rows={2}
                 disabled={!textEditable}
-                className="nuvio-control nuvio-textarea"
+                className="rte-control rte-textarea"
               />
             </label>
             )}
             {showQuickStyle ? (
-              <div className="nuvio-stack-1">
-                <p className="nuvio-label">Quick Style</p>
-                <div className="nuvio-row-wrap">
+              <div className="rte-stack-1">
+                <p className="rte-label">Quick Style</p>
+                <div className="rte-row-wrap">
                   {QUICK_TEXT_STYLE_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
-                      className="nuvio-button-chip"
+                      className="rte-button-chip"
                       onClick={() => {
                         if (preset.id === "normal") {
                           setPicks({ ...baselinePicks });
@@ -1895,11 +1915,11 @@ export function PropertyPanelShell({
             />
             )}
             {(!panelControls || panelControls.showHideShow) && !developerDetails ? (
-              <div className="nuvio-row-wrap">
+              <div className="rte-row-wrap">
                 <button
                   type="button"
                   disabled={structuralActionsDisabled}
-                  className="nuvio-button"
+                  className="rte-button"
                   onClick={() => onRequestStructuralPreview(buildHideOp())}
                 >
                   Hide
@@ -1907,7 +1927,7 @@ export function PropertyPanelShell({
                 <button
                   type="button"
                   disabled={structuralActionsDisabled}
-                  className="nuvio-button"
+                  className="rte-button"
                   onClick={() => onRequestStructuralPreview(buildShowOp())}
                 >
                   Show
@@ -1915,14 +1935,14 @@ export function PropertyPanelShell({
               </div>
             ) : null}
             {developerDetails && LAYOUT_HELPERS.length > 0 ? (
-              <div className="nuvio-stack-1">
-                <p className="nuvio-label">Layout</p>
-                <div className="nuvio-row-wrap">
+              <div className="rte-stack-1">
+                <p className="rte-label">Layout</p>
+                <div className="rte-row-wrap">
                   {LAYOUT_HELPERS.map((helper) => (
                     <button
                       key={helper.id}
                       type="button"
-                      className="nuvio-button-chip"
+                      className="rte-button-chip"
                       onClick={() => setPicks((p) => ({ ...p, ...helper.patch }))}
                     >
                       {helper.label}
@@ -1933,12 +1953,12 @@ export function PropertyPanelShell({
             ) : null}
 
             {developerDetails ? (
-            <details className="nuvio-more-styles">
-              <summary className="nuvio-section-title nuvio-more-styles-summary">
+            <details className="rte-more-styles">
+              <summary className="rte-section-title rte-more-styles-summary">
                 More styles
               </summary>
-            <div className="nuvio-stack-2 nuvio-pt-1">
-              <p className="nuvio-group-title">Typography</p>
+            <div className="rte-stack-2 rte-pt-1">
+              <p className="rte-group-title">Typography</p>
               <SelectRow
                 label="Font size"
                 value={picks.fontSize}
@@ -1970,7 +1990,7 @@ export function PropertyPanelShell({
                 options={textAlignOpts}
               />
 
-              <p className="nuvio-group-title">Spacing</p>
+              <p className="rte-group-title">Spacing</p>
               <SelectRow
                 label="Padding X"
                 value={picks.paddingX}
@@ -2002,7 +2022,7 @@ export function PropertyPanelShell({
                 options={marginYOpts}
               />
 
-              <p className="nuvio-group-title">Layout</p>
+              <p className="rte-group-title">Layout</p>
               <SelectRow
                 label="Flex direction"
                 value={picks.flexDirection}
@@ -2058,7 +2078,7 @@ export function PropertyPanelShell({
                 options={minHeightOpts}
               />
 
-              <p className="nuvio-group-title">Visual</p>
+              <p className="rte-group-title">Visual</p>
               <SelectRow
                 label="Opacity"
                 value={picks.opacity}
@@ -2099,19 +2119,19 @@ export function PropertyPanelShell({
             </details>
             ) : null}
             {previewSummary && !structuralPreviewActive && developerDetails ? (
-              <div className="nuvio-preview-box">
-                <p className="nuvio-preview-box-title">Ready to apply</p>
-                <p className="nuvio-preview-box-body">
+              <div className="rte-preview-box">
+                <p className="rte-preview-box-title">Ready to apply</p>
+                <p className="rte-preview-box-body">
                   {developerDetails ? previewSummary : humanPreviewBlock || previewSummary}
                 </p>
               </div>
             ) : null}
             {developerDetails ? (
-            <div className="nuvio-row-wrap nuvio-pt-2">
+            <div className="rte-row-wrap rte-pt-2">
               <button
                 type="button"
                 disabled={patchActionsDisabled}
-                className="nuvio-button"
+                className="rte-button"
                 onClick={() => {
                   const resolved = resolvePatchApplyId();
                   if ("error" in resolved) {
@@ -2127,7 +2147,7 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={applyDisabled}
-                className="nuvio-button nuvio-button-primary"
+                className="rte-button rte-button-primary"
                 onClick={() => {
                   if (previewValidatedOps?.length) {
                     const resolved = resolvePatchApplyId();
@@ -2145,14 +2165,14 @@ export function PropertyPanelShell({
               <button
                 type="button"
                 disabled={!channelReady || undoStackDepth <= 0}
-                className="nuvio-button nuvio-button-ghost"
+                className="rte-button rte-button-ghost"
                 onClick={() => onRequestUndo()}
               >
                 Undo
               </button>
               <button
                 type="button"
-                className="nuvio-button nuvio-button-ghost"
+                className="rte-button rte-button-ghost"
                 onClick={() => onCancelPreview()}
               >
                 Cancel
@@ -2163,9 +2183,9 @@ export function PropertyPanelShell({
         ) : null}
 
         {simpleMode && selectedId ? (
-          <details className="nuvio-card nuvio-advanced-panel">
-            <summary className="nuvio-section-title nuvio-advanced-summary">Advanced</summary>
-            <div className="nuvio-stack-2 nuvio-pt-1">
+          <details className="rte-card rte-advanced-panel">
+            <summary className="rte-section-title rte-advanced-summary">Advanced</summary>
+            <div className="rte-stack-2 rte-pt-1">
               {showResponsiveDeviceControls ? (
                 <DeviceBreakpointPanel
                   variant="compact"
@@ -2205,12 +2225,12 @@ export function PropertyPanelShell({
                 </>
               ) : null}
               {showSimpleEditControls && taskRouter.presetContext === "card" ? (
-                <div className="nuvio-row-wrap">
+                <div className="rte-row-wrap">
                   {presetsForContext("card").map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
-                      className="nuvio-button-chip"
+                      className="rte-button-chip"
                       onClick={() => setPicks((p) => applyStylePresetToPicks(p, preset.fragment))}
                     >
                       {preset.label}
@@ -2218,8 +2238,8 @@ export function PropertyPanelShell({
                   ))}
                 </div>
               ) : null}
-              <details className="nuvio-outline-panel">
-                <summary className="nuvio-label">Outline</summary>
+              <details className="rte-outline-panel">
+                <summary className="rte-label">Outline</summary>
                 <ComponentTree
                   entries={indexEntries}
                   duplicateErrors={duplicateErrors}
@@ -2230,7 +2250,7 @@ export function PropertyPanelShell({
               </details>
               <button
                 type="button"
-                className="nuvio-button nuvio-button--block"
+                className="rte-button rte-button--block"
                 onClick={() => onDeveloperDetailsChange(true)}
               >
                 Show Developer Details
@@ -2253,8 +2273,8 @@ export function PropertyPanelShell({
         ) : null}
 
         {selectedId ? (
-          <section className="nuvio-card nuvio-card--tree">
-            <h3 className="nuvio-section-title">Component tree</h3>
+          <section className="rte-card rte-card--tree">
+            <h3 className="rte-section-title">Component tree</h3>
             <ComponentTree
               entries={indexEntries}
               duplicateErrors={duplicateErrors}
@@ -2290,9 +2310,9 @@ export function PropertyPanelShell({
             componentName={selectedEntry?.componentName}
             tableContext={detectTableMode(selectedEntry)}
             onSwitchTarget={() => {
-              const target = textTargets.find((t) => t.textEditable && t.nuvioId);
-              if (target?.nuvioId) {
-                onSelectIndexedId(target.nuvioId);
+              const target = textTargets.find((t) => t.textEditable && t.rteId);
+              if (target?.rteId) {
+                onSelectIndexedId(target.rteId);
               }
             }}
             onAddIdHint={() => {
@@ -2347,24 +2367,26 @@ export function PropertyPanelShell({
             onUndo={() => onRequestUndo()}
           />
         ) : null}
+            </>
+          )}
         </div>
     </>
   );
 
   if (embeddedInChrome) {
-    return <div className="nuvio-chrome-panel-content">{panelInner}</div>;
+    return <div className="rte-chrome-panel-content">{panelInner}</div>;
   }
 
   return (
     <aside
       ref={setShellElement}
-      style={{ ...NUVO_GLASS_SHELL_INLINE, ...panelStyle }}
-      className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL} ${docked ? "nuvio-panel--docked" : ""} ${
-        panelDragging ? "nuvio-panel--dragging" : ""
+      style={{ ...RTE_GLASS_SHELL_INLINE, ...panelStyle }}
+      className={`${RTE_ROOT} rte-panel ${RTE_GLASS_SHELL} ${docked ? "rte-panel--docked" : ""} ${
+        panelDragging ? "rte-panel--dragging" : ""
       }`}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className={NUVO_GLASS_CONTENT}>{panelInner}</div>
+      <div className={RTE_GLASS_CONTENT}>{panelInner}</div>
     </aside>
   );
 }
