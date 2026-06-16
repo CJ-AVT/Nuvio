@@ -51,7 +51,8 @@ import { clearNuvioOutlines } from "./nuvio-outlines.js";
 import { pickDefaultTextTargetKey } from "./text-target-dom.js";
 import { useNuvioShadowMount } from "./NuvioShadowRoot.js";
 import { PropertyPanelShell } from "./PropertyPanelShell.js";
-import { NuvioChipStatus, type NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
+import { NuvioChromeHeader } from "./NuvioChromeHeader.js";
+import type { NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
 import { isStructuralOnlyOps } from "./structural-patch-ops.js";
 import { useChromeDrag } from "./useChromeDrag.js";
 import {
@@ -84,6 +85,8 @@ type PendingPatch = {
   bulkSessionId?: string;
 };
 type DevicePreset = "desktop" | "tablet" | "mobile";
+
+const CHROME_COLLAPSE_MS = 450;
 
 function shortDisplayPath(absPath: string): string {
   const norm = absPath.replace(/\\/g, "/");
@@ -164,14 +167,19 @@ export function NuvioDevShellInner(): ReactElement {
   const connectGenRef = useRef(0);
 
   const [chromeLayout, setChromeLayout] = useState<OverlayChromePersist>(loadOverlayChromePersist);
-  const [chipPos, setChipPos] = useState<Point | null>(() =>
-    cornerAnchorPosition(
-      loadOverlayChromePersist().chip.corner,
+  const [chipPos, setChipPos] = useState<Point | null>(() => {
+    const saved = loadOverlayChromePersist();
+    const pos = saved.chip.position ?? saved.panel.position;
+    if (pos) {
+      return pos;
+    }
+    return cornerAnchorPosition(
+      saved.chip.corner,
       220,
-      120,
+      40,
       OVERLAY_CHROME_MARGIN,
-    ),
-  );
+    );
+  });
 
   const patchChrome = useCallback(
     (patch: { panel?: Partial<OverlayChromePersist["panel"]>; chip?: Partial<OverlayChromePersist["chip"]> }) => {
@@ -189,7 +197,7 @@ export function NuvioDevShellInner(): ReactElement {
 
   const onPanelCollapsedChange = useCallback(
     (collapsed: boolean) => {
-      patchChrome({ panel: { collapsed } });
+      patchChrome({ panel: { collapsed }, chip: { collapsed } });
     },
     [patchChrome],
   );
@@ -202,7 +210,7 @@ export function NuvioDevShellInner(): ReactElement {
   );
 
   const onResetPanelPosition = useCallback(() => {
-    patchChrome({ panel: { position: null, collapsed: false } });
+    patchChrome({ panel: { position: null, collapsed: false }, chip: { collapsed: false } });
   }, [patchChrome]);
 
   const onChipCollapsedChange = useCallback(
@@ -221,22 +229,23 @@ export function NuvioDevShellInner(): ReactElement {
 
   const onResetChipPosition = useCallback(() => {
     const corner = DEFAULT_OVERLAY_CHROME.chip.corner;
-    patchChrome({ chip: { corner, collapsed: false } });
     const el = chipRef.current;
-    if (el) {
-      setChipPos(cornerAnchorPosition(corner, el.offsetWidth, el.offsetHeight));
-    }
+    const pos = el
+      ? cornerAnchorPosition(corner, el.offsetWidth, el.offsetHeight)
+      : cornerAnchorPosition(corner, 220, 40);
+    setChipPos(pos);
+    patchChrome({
+      chip: { corner, collapsed: false, position: null },
+      panel: { position: null, collapsed: false },
+    });
   }, [patchChrome]);
 
-  const anchorChipToCorner = useCallback(
-    (corner: ChipCorner) => {
-      const el = chipRef.current;
-      if (!el) {
-        return;
-      }
-      setChipPos(cornerAnchorPosition(corner, el.offsetWidth, el.offsetHeight));
+  const persistChromePosition = useCallback(
+    (pos: Point) => {
+      setChipPos(pos);
+      patchChrome({ chip: { position: pos }, panel: { position: pos } });
     },
-    [],
+    [patchChrome],
   );
 
   const commitChipDrag = useCallback(
@@ -245,13 +254,13 @@ export function NuvioDevShellInner(): ReactElement {
       if (!el) {
         return;
       }
-      const centerX = pos.x + el.offsetWidth / 2;
-      const centerY = pos.y + el.offsetHeight / 2;
-      const corner = snapToNearestCorner(centerX, centerY);
-      onChipCornerChange(corner);
-      setChipPos(cornerAnchorPosition(corner, el.offsetWidth, el.offsetHeight));
+      const clamped = clampToViewport(pos.x, pos.y, el.offsetWidth, el.offsetHeight);
+      persistChromePosition(clamped);
+      const centerX = clamped.x + el.offsetWidth / 2;
+      const centerY = clamped.y + el.offsetHeight / 2;
+      onChipCornerChange(snapToNearestCorner(centerX, centerY));
     },
-    [onChipCornerChange],
+    [onChipCornerChange, persistChromePosition],
   );
 
   const { dragging: chipDragging, onHeaderPointerDown: onChipHeaderPointerDown } = useChromeDrag({
@@ -270,41 +279,66 @@ export function NuvioDevShellInner(): ReactElement {
     if (chipDragging) {
       return;
     }
-    anchorChipToCorner(chromeLayout.chip.corner);
+    const el = chipRef.current;
+    if (!el) {
+      return;
+    }
+
+    const saved = chromeLayout.chip.position ?? chromeLayout.panel.position;
+    if (saved) {
+      const clamped = clampToViewport(saved.x, saved.y, el.offsetWidth, el.offsetHeight);
+      setChipPos((prev) => {
+        if (prev && prev.x === clamped.x && prev.y === clamped.y) {
+          return prev;
+        }
+        return clamped;
+      });
+      return;
+    }
+
+    setChipPos((prev) => {
+      if (prev) {
+        const clamped = clampToViewport(prev.x, prev.y, el.offsetWidth, el.offsetHeight);
+        return clamped.x === prev.x && clamped.y === prev.y ? prev : clamped;
+      }
+      return cornerAnchorPosition(chromeLayout.chip.corner, el.offsetWidth, el.offsetHeight);
+    });
   }, [
-    anchorChipToCorner,
     chipDragging,
     chromeLayout.chip.collapsed,
     chromeLayout.chip.corner,
+    chromeLayout.chip.position,
+    chromeLayout.panel.position,
   ]);
 
   useEffect(() => {
     const onResize = () => {
-      if (!chipDragging) {
-        anchorChipToCorner(chromeLayout.chip.corner);
+      if (chipDragging) {
+        return;
       }
-      const panelEl = panelRef.current;
-      const panelPos = chromeLayout.panel.position;
-      if (panelEl && panelPos) {
-        const clamped = clampToViewport(
-          panelPos.x,
-          panelPos.y,
-          panelEl.offsetWidth,
-          panelEl.offsetHeight,
-        );
-        if (clamped.x !== panelPos.x || clamped.y !== panelPos.y) {
-          onPanelPositionChange(clamped);
+      const el = chipRef.current;
+      if (!el) {
+        return;
+      }
+      const saved = chromeLayout.chip.position ?? chromeLayout.panel.position;
+      if (saved) {
+        const clamped = clampToViewport(saved.x, saved.y, el.offsetWidth, el.offsetHeight);
+        setChipPos(clamped);
+        if (clamped.x !== saved.x || clamped.y !== saved.y) {
+          persistChromePosition(clamped);
         }
+        return;
       }
+      setChipPos(cornerAnchorPosition(chromeLayout.chip.corner, el.offsetWidth, el.offsetHeight));
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [
-    anchorChipToCorner,
     chipDragging,
     chromeLayout.chip.corner,
+    chromeLayout.chip.position,
     chromeLayout.panel.position,
-    onPanelPositionChange,
+    persistChromePosition,
   ]);
 
   // Clamp saved floating panel positions so chrome never renders off-screen.
@@ -431,9 +465,21 @@ export function NuvioDevShellInner(): ReactElement {
     setHoverTextTargetKey(null);
   }, [selectedId, selectedEntry]);
 
+  const exitEditMode = useCallback(() => {
+    revertBrandDomStaging();
+    setBrandPagePreviewActive(false);
+    clearNuvioOutlines();
+    setSelectedId(null);
+    setUntaggedTarget(null);
+    setTagError(null);
+    setTagBusy(false);
+    setEditMode(false);
+  }, []);
+
   const toggleEditMode = useCallback(() => {
     setEditMode((prev) => {
       if (prev) {
+        patchChrome({ panel: { collapsed: true }, chip: { collapsed: true } });
         revertBrandDomStaging();
         setBrandPagePreviewActive(false);
         clearNuvioOutlines();
@@ -441,9 +487,28 @@ export function NuvioDevShellInner(): ReactElement {
         setUntaggedTarget(null);
         setTagError(null);
         setTagBusy(false);
+        return false;
       }
-      return !prev;
+      patchChrome({ panel: { collapsed: false }, chip: { collapsed: false } });
+      return true;
     });
+  }, [patchChrome]);
+
+  const expandChrome = useCallback(() => {
+    patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
+    setEditMode(true);
+  }, [patchChrome]);
+
+  const collapseChrome = useCallback(() => {
+    patchChrome({ chip: { collapsed: true }, panel: { collapsed: true } });
+    if (editMode) {
+      window.setTimeout(() => exitEditMode(), CHROME_COLLAPSE_MS);
+    }
+  }, [editMode, exitEditMode, patchChrome]);
+
+  const setChromeShellElement = useCallback((el: HTMLElement | null) => {
+    assignRef(chipRef, el);
+    assignRef(panelRef, el);
   }, []);
 
   const sendPatchMessage = useCallback(
@@ -1214,6 +1279,12 @@ export function NuvioDevShellInner(): ReactElement {
     setActiveBreakpoint(nextBp);
   }, [devicePreset]);
 
+  useEffect(() => {
+    if (untaggedTarget && chromeLayout.chip.collapsed) {
+      patchChrome({ chip: { collapsed: false }, panel: { collapsed: false } });
+    }
+  }, [chromeLayout.chip.collapsed, patchChrome, untaggedTarget]);
+
   const channelLabel = channel === "ready" ? "connected" : channel;
   const channelState: NuvioChannelState =
     channel === "ready"
@@ -1224,171 +1295,148 @@ export function NuvioDevShellInner(): ReactElement {
           ? "error"
           : "idle";
 
-  const chromeUi = (
-    <>
-      {editMode && untaggedTarget ? (
-        <aside
-          ref={(el) => assignRef(panelRef, el)}
-          style={NUVO_GLASS_SHELL_INLINE}
-          className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL}`}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <div className={NUVO_GLASS_CONTENT}>
-            <header className="nuvio-panel-header">
-              <span className="nuvio-panel-header-title">Make Editable</span>
-            </header>
-            <MakeEditablePanel
-              target={untaggedTarget}
-              suggestedId={tagSuggestedId}
-              onSuggestedIdChange={setTagSuggestedId}
-              onConfirm={onConfirmMakeEditable}
-              onCancel={onCancelUntagged}
-              busy={tagBusy}
-              error={tagError}
-            />
-          </div>
-        </aside>
-      ) : null}
-      {editMode && !untaggedTarget ? (
-        <PropertyPanelShell
-          editMode={editMode}
-          shellRef={panelRef}
-          panelCollapsed={chromeLayout.panel.collapsed}
-          panelPosition={chromeLayout.panel.position}
-          onPanelCollapsedChange={onPanelCollapsedChange}
-          onPanelPositionChange={onPanelPositionChange}
-          onResetPanelPosition={onResetPanelPosition}
-          indexEntries={indexEntries}
-          onSelectIndexedId={onSelectId}
-          onRequestStructuralPreview={onRequestStructuralPreview}
-          selectedId={selectedId}
-          resolvedFile={resolvedFile}
-          resolvedLine={resolvedLine}
-          indexIdCount={knownIds.size}
-          knownIds={knownIds}
-          duplicateErrors={duplicateErrors}
-          selectError={selectError}
-          channelReady={channel === "ready"}
-          previewSummary={previewSummary}
-          previewError={previewError}
-          lastPatchError={lastPatchError}
-          stagedVersion={stagedVersion}
-          previewValidatedFingerprint={previewValidatedFingerprint}
-          previewValidatedOps={previewValidatedOps}
-          structuralPreviewActive={structuralPreviewActive}
-          undoStackDepth={undoStackDepth}
-          previewBusy={previewBusy}
-          onStagedPatchFingerprint={onStagedPatchFingerprint}
-          onRequestPreview={onRequestPreview}
-          onRequestBrandBulkPreview={onRequestBrandBulkPreview}
-          onRequestBrandBulkApply={onRequestBrandBulkApply}
-          onBrandSaved={() => {
-            setBrandBulkAppliedByAction({});
-            revertBrandPagePreview();
-            clearBrandBulkSession();
-            setBrandPreviewSummary(null);
-            setPreviewSummary(null);
-          }}
-          onBrandDraftChange={onBrandDraftChange}
-          onBrandRouteChange={onBrandRouteChange}
-          onRequestApply={onRequestApply}
-          onRequestUndo={onRequestUndo}
-          onCancelPreview={onCancelPreview}
-          previewOrigin={previewOrigin}
-          brandPreviewSummary={brandPreviewSummary}
-          brandBulkProgress={brandBulkProgress}
-          brandBulkApplyReady={brandBulkApplyReady}
-          brandBulkValidatedAction={brandBulkValidatedAction}
-          brandBulkValidatedConfig={brandBulkValidatedConfig}
-          brandBulkAppliedByAction={brandBulkAppliedByAction}
-          brandPagePreviewActive={brandPagePreviewActive}
-          onRequestBrandPagePreview={onRequestBrandPagePreview}
-          onRevertBrandPagePreview={revertBrandPagePreview}
-          runtimeDiagnostics={runtimeDiagnostics}
-          developerDetails={developerDetails}
-          onDeveloperDetailsChange={onDeveloperDetailsChange}
-          activeTextTargetKey={activeTextTargetKey}
-          onActiveTextTargetKeyChange={setActiveTextTargetKey}
-          hoverTextTargetKey={hoverTextTargetKey}
-          onHoverTextTargetKeyChange={setHoverTextTargetKey}
-          devicePreset={devicePreset}
-          onDevicePresetChange={setDevicePreset}
-          activeBreakpoint={activeBreakpoint}
-          onActiveBreakpointChange={setActiveBreakpoint}
-        />
-      ) : null}
+  const chromeShellCollapsed = chromeLayout.chip.collapsed;
+  const chromeExpanded =
+    !chromeShellCollapsed && (editMode || Boolean(untaggedTarget));
 
-      <div
-        ref={(el) => assignRef(chipRef, el)}
-        style={{
-          ...NUVO_GLASS_SHELL_INLINE,
-          ...(chipPos
-            ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" }
-            : {}),
-        }}
-        className={`${NUVO_ROOT} nuvio-chip ${NUVO_GLASS_SHELL} ${chromeLayout.chip.collapsed ? "nuvio-chip--collapsed" : ""} ${
-          chipDragging ? "nuvio-chip--dragging" : ""
-        }`}
-      >
-        <div className={NUVO_GLASS_CONTENT}>
-          <div
-            className={`nuvio-chip-header ${chipDragging ? "nuvio-chip-header--grabbing" : ""}`}
-            onPointerDown={onChipHeaderPointerDown}
-          >
-            <span className="nuvio-chip-title">nuvio</span>
-            <span className="nuvio-chip-spacer" aria-hidden="true" />
-            <button
-              type="button"
-              className="nuvio-button-icon"
-              title={chromeLayout.chip.collapsed ? "Expand chip" : "Collapse chip"}
-              aria-label={
-                chromeLayout.chip.collapsed ? "Expand nuvio chip" : "Collapse nuvio chip"
-              }
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onChipCollapsedChange(!chromeLayout.chip.collapsed)}
-            >
-              {chromeLayout.chip.collapsed ? "+" : "−"}
-            </button>
-            {chromeLayout.chip.collapsed ? null : (
-              <button
-                type="button"
-                className="nuvio-button-icon"
-                title="Reset chip position"
-                aria-label="Reset chip position"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => onResetChipPosition()}
-              >
-                Reset
-              </button>
-            )}
-            <button
-              type="button"
-              className={`nuvio-button-chip ${editMode ? "nuvio-button-chip--active" : ""}`}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleEditMode();
-              }}
-            >
-              {editMode ? "Editing" : "Edit"}
-            </button>
+  const [chromeBodyMounted, setChromeBodyMounted] = useState(chromeExpanded);
+
+  useEffect(() => {
+    if (!chromeLayout.chip.collapsed) {
+      setChromeBodyMounted(true);
+      return;
+    }
+    const id = window.setTimeout(() => setChromeBodyMounted(false), CHROME_COLLAPSE_MS);
+    return () => window.clearTimeout(id);
+  }, [chromeLayout.chip.collapsed]);
+
+  const chromeUi = (
+    <div
+      ref={setChromeShellElement}
+      style={{
+        ...NUVO_GLASS_SHELL_INLINE,
+        ...(chipPos
+          ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" }
+          : {}),
+      }}
+      className={`${NUVO_ROOT} nuvio-chrome-shell ${NUVO_GLASS_SHELL} ${
+        chromeShellCollapsed ? "nuvio-chrome-shell--collapsed" : "nuvio-chrome-shell--expanded"
+      } ${chipDragging ? "nuvio-chrome-shell--dragging" : ""}`}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className={NUVO_GLASS_CONTENT}>
+        <NuvioChromeHeader
+          expanded={chromeExpanded}
+          dragging={chipDragging}
+          channel={channelState}
+          channelLabel={channelLabel}
+          indexedCount={knownIds.size}
+          duplicateErrors={duplicateErrors}
+          selectedId={selectedId}
+          selectedEntry={selectedEntry}
+          indexEntries={indexEntries}
+          selectError={selectError}
+          developerDetails={developerDetails}
+          onExpand={expandChrome}
+          onCollapse={collapseChrome}
+          onResetChipPosition={onResetChipPosition}
+          onResetPanelPosition={onResetPanelPosition}
+          onDeveloperDetailsChange={onDeveloperDetailsChange}
+          onHeaderPointerDown={onChipHeaderPointerDown}
+        />
+
+        <div
+          className={`nuvio-chrome-body-wrap ${
+            chromeExpanded ? "nuvio-chrome-body-wrap--open" : ""
+          }`}
+        >
+          <div className="nuvio-chrome-body">
+            {chromeBodyMounted && untaggedTarget ? (
+              <MakeEditablePanel
+                target={untaggedTarget}
+                suggestedId={tagSuggestedId}
+                onSuggestedIdChange={setTagSuggestedId}
+                onConfirm={onConfirmMakeEditable}
+                onCancel={onCancelUntagged}
+                busy={tagBusy}
+                error={tagError}
+              />
+            ) : chromeBodyMounted && editMode && !untaggedTarget ? (
+              <PropertyPanelShell
+                editMode={editMode}
+                embeddedInChrome
+                shellRef={panelRef}
+                panelCollapsed={false}
+                panelPosition={chromeLayout.panel.position}
+                onPanelCollapsedChange={onPanelCollapsedChange}
+                onPanelPositionChange={onPanelPositionChange}
+                onResetPanelPosition={onResetPanelPosition}
+                indexEntries={indexEntries}
+                onSelectIndexedId={onSelectId}
+                onRequestStructuralPreview={onRequestStructuralPreview}
+                selectedId={selectedId}
+                resolvedFile={resolvedFile}
+                resolvedLine={resolvedLine}
+                indexIdCount={knownIds.size}
+                knownIds={knownIds}
+                duplicateErrors={duplicateErrors}
+                selectError={selectError}
+                channelReady={channel === "ready"}
+                channel={channelState}
+                channelLabel={channelLabel}
+                onToggleEditMode={toggleEditMode}
+                previewSummary={previewSummary}
+                previewError={previewError}
+                lastPatchError={lastPatchError}
+                stagedVersion={stagedVersion}
+                previewValidatedFingerprint={previewValidatedFingerprint}
+                previewValidatedOps={previewValidatedOps}
+                structuralPreviewActive={structuralPreviewActive}
+                undoStackDepth={undoStackDepth}
+                previewBusy={previewBusy}
+                onStagedPatchFingerprint={onStagedPatchFingerprint}
+                onRequestPreview={onRequestPreview}
+                onRequestBrandBulkPreview={onRequestBrandBulkPreview}
+                onRequestBrandBulkApply={onRequestBrandBulkApply}
+                onBrandSaved={() => {
+                  setBrandBulkAppliedByAction({});
+                  revertBrandPagePreview();
+                  clearBrandBulkSession();
+                  setBrandPreviewSummary(null);
+                  setPreviewSummary(null);
+                }}
+                onBrandDraftChange={onBrandDraftChange}
+                onBrandRouteChange={onBrandRouteChange}
+                onRequestApply={onRequestApply}
+                onRequestUndo={onRequestUndo}
+                onCancelPreview={onCancelPreview}
+                previewOrigin={previewOrigin}
+                brandPreviewSummary={brandPreviewSummary}
+                brandBulkProgress={brandBulkProgress}
+                brandBulkApplyReady={brandBulkApplyReady}
+                brandBulkValidatedAction={brandBulkValidatedAction}
+                brandBulkValidatedConfig={brandBulkValidatedConfig}
+                brandBulkAppliedByAction={brandBulkAppliedByAction}
+                brandPagePreviewActive={brandPagePreviewActive}
+                onRequestBrandPagePreview={onRequestBrandPagePreview}
+                onRevertBrandPagePreview={revertBrandPagePreview}
+                runtimeDiagnostics={runtimeDiagnostics}
+                developerDetails={developerDetails}
+                onDeveloperDetailsChange={onDeveloperDetailsChange}
+                activeTextTargetKey={activeTextTargetKey}
+                onActiveTextTargetKeyChange={setActiveTextTargetKey}
+                hoverTextTargetKey={hoverTextTargetKey}
+                onHoverTextTargetKeyChange={setHoverTextTargetKey}
+                devicePreset={devicePreset}
+                onDevicePresetChange={setDevicePreset}
+                activeBreakpoint={activeBreakpoint}
+                onActiveBreakpointChange={setActiveBreakpoint}
+              />
+            ) : null}
           </div>
-          {!chromeLayout.chip.collapsed ? (
-            <NuvioChipStatus
-              channel={channelState}
-              channelLabel={channelLabel}
-              indexedCount={knownIds.size}
-              duplicateErrors={duplicateErrors}
-              selectedId={selectedId}
-              selectedEntry={selectedEntry}
-              indexEntries={indexEntries}
-              selectError={selectError}
-              developerDetails={developerDetails}
-            />
-          ) : null}
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (

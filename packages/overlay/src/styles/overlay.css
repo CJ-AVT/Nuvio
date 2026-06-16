@@ -183,7 +183,7 @@
   }
 }
 
-/* Chip */
+/* Chip (legacy) + unified chrome shell */
 .nuvio-chip {
   pointer-events: auto;
   position: fixed;
@@ -265,6 +265,225 @@
   line-height: 1.35;
 }
 
+/* Unified popup: collapsed chip morphs into expanded editor */
+.nuvio-chrome-shell {
+  pointer-events: auto;
+  position: fixed;
+  z-index: var(--nuvio-z-chip);
+  min-width: 0;
+  text-align: left;
+  transform-origin: top left;
+  interpolate-size: allow-keywords;
+  transition:
+    width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    max-height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    padding 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+
+.nuvio-chrome-shell--collapsed {
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 32px));
+  padding: 7px 10px;
+  border-radius: 999px;
+}
+
+.nuvio-chrome-shell--expanded {
+  z-index: var(--nuvio-z-panel);
+  width: min(400px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 12px 14px;
+  border-radius: var(--nuvio-radius-shell);
+}
+
+.nuvio-chrome-shell--dragging {
+  user-select: none;
+}
+
+.nuvio-chrome-shell > .nuvio-glass-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: inherit;
+}
+
+.nuvio-chrome-shell--collapsed > .nuvio-glass-content {
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 32px));
+  position: relative;
+}
+
+.nuvio-chrome-shell--collapsed .nuvio-chrome-header-meta,
+.nuvio-chrome-shell--collapsed .nuvio-chrome-body-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.nuvio-chrome-shell--collapsed .nuvio-chrome-header-meta {
+  top: 100%;
+  width: min(400px, calc(100vw - 48px));
+}
+
+.nuvio-chrome-shell--collapsed .nuvio-chrome-body-wrap {
+  top: 0;
+  width: min(400px, calc(100vw - 48px));
+  max-width: calc(100vw - 32px);
+}
+
+.nuvio-chrome-shell--collapsed .nuvio-chrome-header {
+  position: relative;
+  z-index: 1;
+}
+
+.nuvio-chrome-header {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+}
+
+.nuvio-chrome-header--grabbing {
+  cursor: grabbing;
+}
+
+.nuvio-chrome-header-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nuvio-chrome-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--nuvio-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nuvio-chrome-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.nuvio-chrome-header-tools .nuvio-toggle-details {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 10px;
+}
+
+.nuvio-chrome-header-tools .nuvio-button-icon,
+.nuvio-chrome-expand-btn.nuvio-button-icon {
+  min-height: 28px;
+  min-width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nuvio-chrome-expand-btn.nuvio-button-icon,
+.nuvio-chrome-collapse-btn.nuvio-button-icon {
+  font-size: 15px;
+  font-weight: 500;
+  padding: 4px 8px;
+}
+
+.nuvio-chrome-header-meta {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px);
+  clip-path: inset(0 0 100% 0);
+  transition:
+    grid-template-rows 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.36s ease,
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    clip-path 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    margin-top 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  margin-top: 0;
+}
+
+.nuvio-chrome-header-meta > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nuvio-chrome-header-meta--visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+  margin-top: 4px;
+}
+
+.nuvio-chrome-header-meta--visible > .nuvio-chip-status {
+  overflow: visible;
+  margin-top: 0;
+}
+
+.nuvio-chrome-body-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  min-height: 0;
+}
+
+.nuvio-chrome-body-wrap--open {
+  grid-template-rows: 1fr;
+}
+
+.nuvio-chrome-body {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-14px) scaleY(0.94);
+  transform-origin: top center;
+  clip-path: inset(0 0 100% 0);
+  transition:
+    opacity 0.4s ease,
+    transform 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+    clip-path 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.nuvio-chrome-body-wrap--open .nuvio-chrome-body {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+  clip-path: inset(0 0 0 0);
+  overflow: visible;
+  transition:
+    opacity 0.42s ease 0.06s,
+    transform 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.04s,
+    clip-path 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.02s;
+}
+
+.nuvio-chrome-panel-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 148px);
+}
+
+.nuvio-chrome-panel-content .nuvio-panel-body {
+  max-height: calc(100vh - 220px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nuvio-chrome-shell,
+  .nuvio-chrome-header-meta,
+  .nuvio-chrome-body-wrap,
+  .nuvio-chrome-body {
+    transition: none;
+  }
+}
+
 /* Editor panel */
 .nuvio-panel {
   pointer-events: auto;
@@ -300,7 +519,7 @@
 .nuvio-panel-header {
   display: flex;
   flex-shrink: 0;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   margin: 0 0 4px;
   padding: 0 2px 6px;
@@ -309,6 +528,25 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--nuvio-text);
+}
+
+.nuvio-panel-header-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nuvio-panel-header-nuvio-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nuvio-panel-header-left .nuvio-chip-status {
+  margin-top: 0;
 }
 
 .nuvio-editor-versions {

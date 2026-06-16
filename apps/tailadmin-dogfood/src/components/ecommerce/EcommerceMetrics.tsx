@@ -11,7 +11,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.customers.card"
-        className="bg-white border border-green-300 rounded-md p-6 shadow-sm md:p-6 xl:text-red-700 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+        className="bg-white border border-green-300 rounded-md p-6 shadow-sm md:p-6 xl:text-red-700 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 xl:hidden dark:border-gray-800 dark:bg-white/[0.03] hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
@@ -43,7 +43,7 @@ export default function EcommerceMetrics() {
       {/* <!-- Metric Item Start --> */}
       <div
         data-nuvio-id="metric.orders.card"
-        className="bg-white border border-green-300 rounded-md p-6 shadow-sm md:p-4 md:gap-2 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+        className="bg-white border border-green-300 rounded-md p-6 shadow-sm md:p-4 md:gap-2 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 xl:flex-row xl:justify-center xl:items-center dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
       >
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />
@@ -60,7 +60,7 @@ export default function EcommerceMetrics() {
               data-nuvio-id="metric.orders.value"
               className="mt-2 text-sm font-normal text-green-600 xl:text-sm xl:font-normal xl:text-gray-700 dark:text-white/90"
             >
-              5,35911201
+              5.39
             </h4>
           </div>
 

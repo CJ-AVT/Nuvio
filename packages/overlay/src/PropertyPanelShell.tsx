@@ -34,7 +34,7 @@ import {
   readAlphaPicksFromElement,
 } from "./read-alpha-picks.js";
 import { ComponentTree } from "./ComponentTree.js";
-import { EditorStackVersions } from "./RuntimeDiagnosticsBlock.js";
+import { EditorStackVersions, NuvioChipStatus, type NuvioChannelState } from "./RuntimeDiagnosticsBlock.js";
 import { SelectionMetadata } from "./SelectionMetadata.js";
 import { SelectionSummary } from "./SelectionSummary.js";
 import { TextTargetPicker } from "./TextTargetPicker.js";
@@ -138,6 +138,8 @@ export type PropertyPanelShellProps = {
   duplicateErrors: readonly DuplicateIdError[];
   selectError: string | null;
   channelReady: boolean;
+  channel: NuvioChannelState;
+  channelLabel: string;
   previewSummary: string | null;
   previewError: string | null;
   lastPatchError: string | null;
@@ -187,10 +189,13 @@ export type PropertyPanelShellProps = {
   runtimeDiagnostics: RuntimeDiagnostics | null;
   developerDetails: boolean;
   onDeveloperDetailsChange: (enabled: boolean) => void;
+  onToggleEditMode: () => void;
   activeTextTargetKey: string | null;
   onActiveTextTargetKeyChange: (key: string) => void;
   hoverTextTargetKey: string | null;
   onHoverTextTargetKeyChange: (key: string | null) => void;
+  /** When true, header/aside chrome is owned by NuvioDevShell (unified popup). */
+  embeddedInChrome?: boolean;
 };
 
 function assignShellRef(
@@ -356,6 +361,8 @@ export function PropertyPanelShell({
   duplicateErrors,
   selectError,
   channelReady,
+  channel,
+  channelLabel,
   previewSummary,
   previewError,
   lastPatchError,
@@ -397,11 +404,13 @@ export function PropertyPanelShell({
   runtimeDiagnostics,
   developerDetails,
   onDeveloperDetailsChange,
+  onToggleEditMode,
   activeTextTargetKey,
   onActiveTextTargetKeyChange,
   hoverTextTargetKey,
   onHoverTextTargetKeyChange,
-}: PropertyPanelShellProps): ReactElement {
+  embeddedInChrome = false,
+}: PropertyPanelShellProps): ReactElement | null {
   void hoverTextTargetKey;
   type StyleTargetMode = "container" | "text";
   const internalShellRef = useRef<HTMLElement | null>(null);
@@ -448,7 +457,7 @@ export function PropertyPanelShell({
 
   const { dragging: panelDragging, onHeaderPointerDown } = useChromeDrag({
     shellRef: internalShellRef,
-    enabled: !panelCollapsed,
+    enabled: !panelCollapsed && !embeddedInChrome,
     position: livePanelPosition,
     setPosition: (next) => {
       if (next) {
@@ -1242,7 +1251,11 @@ export function PropertyPanelShell({
     { value: "ring-white", label: "ring-white" },
   ];
 
-  if (panelCollapsed) {
+  if (embeddedInChrome && panelCollapsed) {
+    return null;
+  }
+
+  if (panelCollapsed && !embeddedInChrome) {
     return (
       <button
         type="button"
@@ -1279,31 +1292,56 @@ export function PropertyPanelShell({
   }
 
   const docked = displayPanelPosition === null;
-  const panelStyle: CSSProperties | undefined = docked
-    ? undefined
-    : {
-        left: displayPanelPosition.x,
-        top: displayPanelPosition.y,
-        maxHeight: "calc(100vh - 48px)",
-      };
+  const panelStyle: CSSProperties | undefined =
+    embeddedInChrome || docked
+      ? undefined
+      : {
+          left: displayPanelPosition.x,
+          top: displayPanelPosition.y,
+          maxHeight: "calc(100vh - 48px)",
+        };
 
-  return (
-    <aside
-      ref={setShellElement}
-      style={{ ...NUVO_GLASS_SHELL_INLINE, ...panelStyle }}
-      className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL} ${docked ? "nuvio-panel--docked" : ""} ${
-        panelDragging ? "nuvio-panel--dragging" : ""
-      }`}
-      onPointerDown={(e) => e.stopPropagation()}
-    >
-      <div className={NUVO_GLASS_CONTENT}>
+  const panelInner = (
+    <>
+      {!embeddedInChrome ? (
         <header
           className={`nuvio-panel-header ${
             panelDragging ? "nuvio-panel-header--grabbing" : ""
           }`}
           onPointerDown={onHeaderPointerDown}
         >
-          <span className="nuvio-panel-header-title">Editor</span>
+          <div className="nuvio-panel-header-left">
+            <div className="nuvio-panel-header-nuvio-row">
+              <span className="nuvio-chip-title">nuvio</span>
+              <span className="nuvio-chip-spacer" aria-hidden="true" />
+              <button
+                type="button"
+                className={`nuvio-button-chip ${
+                  editMode ? "nuvio-button-chip--active" : ""
+                }`}
+                title={editMode ? "Exit editor mode" : "Enter editor mode"}
+                aria-label={editMode ? "Exit editor mode" : "Enter editor mode"}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleEditMode();
+                }}
+              >
+                {editMode ? "Editing" : "Edit"}
+              </button>
+            </div>
+            <NuvioChipStatus
+              channel={channel}
+              channelLabel={channelLabel}
+              indexedCount={indexIdCount}
+              duplicateErrors={duplicateErrors}
+              selectedId={selectedId}
+              selectedEntry={selectedEntry}
+              indexEntries={indexEntries}
+              selectError={selectError}
+              developerDetails={developerDetails}
+            />
+          </div>
           <button
             type="button"
             className={`nuvio-toggle-details ${developerDetails ? "nuvio-toggle-details--on" : ""}`}
@@ -1331,12 +1369,16 @@ export function PropertyPanelShell({
             title="Collapse panel"
             aria-label="Collapse Editor panel"
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onPanelCollapsedChange(true)}
+            onClick={() => {
+              onPanelCollapsedChange(true);
+              onToggleEditMode();
+            }}
           >
             −
           </button>
         </header>
-        {developerDetails ? <EditorStackVersions diagnostics={runtimeDiagnostics} /> : null}
+      ) : null}
+      {developerDetails ? <EditorStackVersions diagnostics={runtimeDiagnostics} /> : null}
         <EditorPanelTabs
           active={editorTab}
           onChange={(tab) => {
@@ -2306,7 +2348,23 @@ export function PropertyPanelShell({
           />
         ) : null}
         </div>
-      </div>
+    </>
+  );
+
+  if (embeddedInChrome) {
+    return <div className="nuvio-chrome-panel-content">{panelInner}</div>;
+  }
+
+  return (
+    <aside
+      ref={setShellElement}
+      style={{ ...NUVO_GLASS_SHELL_INLINE, ...panelStyle }}
+      className={`${NUVO_ROOT} nuvio-panel ${NUVO_GLASS_SHELL} ${docked ? "nuvio-panel--docked" : ""} ${
+        panelDragging ? "nuvio-panel--dragging" : ""
+      }`}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className={NUVO_GLASS_CONTENT}>{panelInner}</div>
     </aside>
   );
 }

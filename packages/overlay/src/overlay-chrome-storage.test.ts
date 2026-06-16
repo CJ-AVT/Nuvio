@@ -18,12 +18,13 @@ describe("parseOverlayChromePersist", () => {
     const s = parseOverlayChromePersist(
       JSON.stringify({
         panel: { collapsed: true, position: { x: 10, y: 20 } },
-        chip: { collapsed: false, corner: "top-left" },
+        chip: { collapsed: false, corner: "top-left", position: { x: 40, y: 50 } },
       }),
     );
     expect(s.panel.collapsed).toBe(true);
     expect(s.panel.position).toEqual({ x: 10, y: 20 });
     expect(s.chip.corner).toBe("top-left");
+    expect(s.chip.position).toEqual({ x: 40, y: 50 });
   });
 
   it("rejects invalid corner and position", () => {

@@ -5,6 +5,8 @@ export const OVERLAY_CHROME_MARGIN = 24;
 
 export type ChipCorner = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
+export type Point = { x: number; y: number };
+
 export type OverlayChromePersist = {
   panel: {
     collapsed: boolean;
@@ -14,15 +16,15 @@ export type OverlayChromePersist = {
   chip: {
     collapsed: boolean;
     corner: ChipCorner;
+    /** Last dragged/floating top-left position; when set, overrides corner anchor. */
+    position: Point | null;
   };
 };
 
 export const DEFAULT_OVERLAY_CHROME: OverlayChromePersist = {
   panel: { collapsed: false, position: null },
-  chip: { collapsed: false, corner: "bottom-right" },
+  chip: { collapsed: false, corner: "bottom-right", position: null },
 };
-
-export type Point = { x: number; y: number };
 
 const CHIP_CORNERS: readonly ChipCorner[] = [
   "bottom-right",
@@ -62,6 +64,7 @@ export function parseOverlayChromePersist(raw: string | null): OverlayChromePers
       chip: {
         collapsed: chip?.collapsed === true,
         corner: isChipCorner(chip?.corner) ? chip.corner : DEFAULT_OVERLAY_CHROME.chip.corner,
+        position: isPoint(chip?.position) ? chip.position : null,
       },
     };
   } catch {
