@@ -49,7 +49,7 @@ async function checkDevServerReachable(port: number): Promise<DoctorCheck> {
       id: "dev_server",
       label: "Dev server reachable",
       status: "warn",
-      detail: `Start pnpm dev — could not reach ${url}`,
+      detail: `Start bun dev — could not reach ${url}`,
     };
   }
 }

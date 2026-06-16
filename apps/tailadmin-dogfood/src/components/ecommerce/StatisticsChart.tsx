@@ -148,19 +148,19 @@ export default function StatisticsChart() {
   return (
     <div
       data-nuvio-id="chart.sales"
-      className="bg-white border border-green-300 rounded-md p-6 shadow-sm sm:px-6 sm:pt-6 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md sm:px-6 sm:pt-6 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
     >
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">
           <h3
             data-nuvio-id="chart.sales.title"
-            className="text-base font-medium text-green-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
+            className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
           >
             Statistics
           </h3>
           <p
             data-nuvio-id="chart.sales.subtitle"
-            className="mt-1 text-sm font-normal text-green-600 xl:bg-slate-50 xl:text-sm xl:font-normal xl:text-gray-700 dark:text-gray-400"
+            className="mt-1 text-sm font-normal text-rose-600 xl:bg-slate-50 xl:text-sm xl:font-normal xl:text-gray-700 dark:text-gray-400"
           >
             Target you've set for each month 1001
           </p>

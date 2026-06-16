@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "pnpm --filter @nuvio/shared run build && pnpm --filter @nuvio/ast-engine run build && pnpm --filter @nuvio/overlay run build && pnpm --filter @nuvio/vite-plugin run build",
+    "predev": "bun run --filter '@nuvio/shared' build && bun run --filter '@nuvio/ast-engine' build && bun run --filter '@nuvio/overlay' build && bun run --filter '@nuvio/vite-plugin' build",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

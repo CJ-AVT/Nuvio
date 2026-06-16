@@ -3,8 +3,8 @@
 Onboarding and diagnostics for nuvio in Vite + React + Tailwind projects.
 
 ```bash
-pnpm dlx @nuvio/cli init --yes
-pnpm dev
+bunx @nuvio/cli init --yes
+bun run dev
 ```
 
 **Commands:** `init` · `doctor` · `scan` · `stats`

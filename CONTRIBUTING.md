@@ -4,7 +4,7 @@
 
 **Full MVP:** **`@nuvio/*` `0.1.0`** on npm **`latest`**. **Alpha line:** `0.1.0-alpha.x` on **`alpha`**.
 
-Before publishing stable: `pnpm dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md). Maintainer flow: [docs/npmPublish.md](./docs/npmPublish.md). DoD checklist: [docs/FULL_MVP_DOD.md](./docs/FULL_MVP_DOD.md). Limits: [docs/LIMITATIONS.md](./docs/LIMITATIONS.md), [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md). [CHANGELOG.md](./CHANGELOG.md) tracks releases.
+Before publishing stable: `bun run dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md). Maintainer flow: [docs/npmPublish.md](./docs/npmPublish.md). DoD checklist: [docs/FULL_MVP_DOD.md](./docs/FULL_MVP_DOD.md). Limits: [docs/LIMITATIONS.md](./docs/LIMITATIONS.md), [docs/COMPATIBILITY.md](./docs/COMPATIBILITY.md). [CHANGELOG.md](./CHANGELOG.md) tracks releases.
 
 ## Monorepo layout
 
@@ -16,15 +16,15 @@ Before publishing stable: `pnpm dogfood` and [docs/DOGFOOD.md](./docs/DOGFOOD.md
 
 ## Dev loop
 
-1. `pnpm install` — from the **repo root** (see root `.npmrc` for React hoisting so editors resolve `react` reliably).
-2. `pnpm build` — required after changing `packages/*` before running the demo (or use package-level `pnpm --filter @nuvio/vite-plugin dev` watch while iterating).
-3. `pnpm dev:tailadmin` — Vite dev server with Nuvio plugin (port 5173).
+1. `bun install` — from the **repo root**.
+2. `bun run build` — required after changing `packages/*` before running the demo (or use package-level `bun run --filter '@nuvio/vite-plugin' build` watch while iterating).
+3. `bun run dev:tailadmin` — Vite dev server with Nuvio plugin (port 5173).
 
 ## Tests and types
 
 ```bash
-pnpm typecheck
-pnpm test
+bun run typecheck
+bun run test
 ```
 
 File writes from the plugin go through `@nuvio/ast-engine` and `assertPathWithinRoot` from `@nuvio/shared/secure-path` (Node-only; not included in the browser-safe `@nuvio/shared` entry).

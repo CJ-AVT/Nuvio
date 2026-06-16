@@ -270,31 +270,25 @@
   pointer-events: auto;
   position: fixed;
   z-index: var(--nuvio-z-chip);
+  width: min(400px, calc(100vw - 48px));
   min-width: 0;
   text-align: left;
   transform-origin: top left;
-  interpolate-size: allow-keywords;
+  border-radius: var(--nuvio-radius-shell);
   transition:
-    width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
     max-height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
-    border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1),
     padding 0.45s cubic-bezier(0.32, 0.72, 0, 1);
   overflow: hidden;
 }
 
 .nuvio-chrome-shell--collapsed {
-  width: max-content;
-  max-width: min(22rem, calc(100vw - 32px));
   padding: 7px 10px;
-  border-radius: 999px;
 }
 
 .nuvio-chrome-shell--expanded {
   z-index: var(--nuvio-z-panel);
-  width: min(400px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
   padding: 12px 14px;
-  border-radius: var(--nuvio-radius-shell);
 }
 
 .nuvio-chrome-shell--dragging {
@@ -309,9 +303,12 @@
 }
 
 .nuvio-chrome-shell--collapsed > .nuvio-glass-content {
-  width: max-content;
-  max-width: min(22rem, calc(100vw - 32px));
+  width: 100%;
   position: relative;
+}
+
+.nuvio-chrome-shell--collapsed .nuvio-chrome-header-top {
+  width: 100%;
 }
 
 .nuvio-chrome-shell--collapsed .nuvio-chrome-header-meta,
@@ -324,13 +321,12 @@
 
 .nuvio-chrome-shell--collapsed .nuvio-chrome-header-meta {
   top: 100%;
-  width: min(400px, calc(100vw - 48px));
+  width: 100%;
 }
 
 .nuvio-chrome-shell--collapsed .nuvio-chrome-body-wrap {
   top: 0;
-  width: min(400px, calc(100vw - 48px));
-  max-width: calc(100vw - 32px);
+  width: 100%;
 }
 
 .nuvio-chrome-shell--collapsed .nuvio-chrome-header {
@@ -400,14 +396,14 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px);
   clip-path: inset(0 0 100% 0);
   transition:
-    grid-template-rows 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.36s ease,
-    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    clip-path 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    margin-top 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+    grid-template-rows 0.34s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.22s ease,
+    transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1),
+    clip-path 0.34s cubic-bezier(0.2, 0.8, 0.2, 1),
+    margin-top 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
   margin-top: 0;
 }
 
@@ -432,7 +428,7 @@
 .nuvio-chrome-body-wrap {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: grid-template-rows 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
   min-height: 0;
 }
 
@@ -444,24 +440,24 @@
   min-height: 0;
   overflow: hidden;
   opacity: 0;
-  transform: translateY(-14px) scaleY(0.94);
+  transform: translateY(-10px);
   transform-origin: top center;
   clip-path: inset(0 0 100% 0);
   transition:
-    opacity 0.4s ease,
-    transform 0.45s cubic-bezier(0.32, 0.72, 0, 1),
-    clip-path 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+    opacity 0.22s ease,
+    transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1),
+    clip-path 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nuvio-chrome-body-wrap--open .nuvio-chrome-body {
   opacity: 1;
-  transform: translateY(0) scaleY(1);
+  transform: translateY(0);
   clip-path: inset(0 0 0 0);
   overflow: visible;
   transition:
-    opacity 0.42s ease 0.06s,
-    transform 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.04s,
-    clip-path 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.02s;
+    opacity 0.28s ease 0.08s,
+    transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s,
+    clip-path 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) 0.02s;
 }
 
 .nuvio-chrome-panel-content {

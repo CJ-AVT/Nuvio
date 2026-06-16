@@ -36,8 +36,7 @@
   },
   "scripts": {
     "build": "tsup src/cli-entry.ts --format esm --clean --external @babel/parser --external @babel/traverse --external @babel/generator --external @babel/types --external fast-glob --external @nuvio/vite-plugin --external @nuvio/shared --external @nuvio/ast-engine",
-    "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

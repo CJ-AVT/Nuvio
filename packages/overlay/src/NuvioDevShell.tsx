@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type MutableRefObject,
   type ReactElement,
   type RefObject,
@@ -212,13 +213,6 @@ export function NuvioDevShellInner(): ReactElement {
   const onResetPanelPosition = useCallback(() => {
     patchChrome({ panel: { position: null, collapsed: false }, chip: { collapsed: false } });
   }, [patchChrome]);
-
-  const onChipCollapsedChange = useCallback(
-    (collapsed: boolean) => {
-      patchChrome({ chip: { collapsed } });
-    },
-    [patchChrome],
-  );
 
   const onChipCornerChange = useCallback(
     (corner: ChipCorner) => {
@@ -1310,15 +1304,15 @@ export function NuvioDevShellInner(): ReactElement {
     return () => window.clearTimeout(id);
   }, [chromeLayout.chip.collapsed]);
 
+  const chromeShellStyle: CSSProperties = {
+    ...NUVO_GLASS_SHELL_INLINE,
+    ...(chipPos ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" } : {}),
+  };
+
   const chromeUi = (
     <div
       ref={setChromeShellElement}
-      style={{
-        ...NUVO_GLASS_SHELL_INLINE,
-        ...(chipPos
-          ? { left: chipPos.x, top: chipPos.y, right: "auto", bottom: "auto" }
-          : {}),
-      }}
+      style={chromeShellStyle}
       className={`${NUVO_ROOT} nuvio-chrome-shell ${NUVO_GLASS_SHELL} ${
         chromeShellCollapsed ? "nuvio-chrome-shell--collapsed" : "nuvio-chrome-shell--expanded"
       } ${chipDragging ? "nuvio-chrome-shell--dragging" : ""}`}

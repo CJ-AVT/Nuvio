@@ -78,7 +78,6 @@ import {
   formatApplyBrandSectionLead,
   isApplyBrandEnabled,
   isValidateBrandEnabled,
-  shouldTrackCrossPageApply,
   validateBrandButtonTitle,
   type BrandApplySectionInput,
 } from "./brand-apply-section.js";
@@ -564,11 +563,7 @@ export function BrandKitPanel({
   }, [channelReady, draft, onBrandSaved]);
 
   const runBulkValidate = useCallback(
-    (
-      action: BrandApplyAction,
-      brandConfig: BrandConfig,
-      options?: { crossPageApply?: boolean },
-    ) => {
+    (action: BrandApplyAction, brandConfig: BrandConfig) => {
       setApplyError(null);
       if (!channelReady) {
         const msg = "Dev channel is not connected yet.";
@@ -594,9 +589,8 @@ export function BrandKitPanel({
   );
 
   const onValidateBrand = useCallback(() => {
-    const crossPageApply = shouldTrackCrossPageApply(saved, draft);
-    runBulkValidate(activeCategory, saved, { crossPageApply });
-  }, [activeCategory, draft, runBulkValidate, saved]);
+    runBulkValidate(activeCategory, saved);
+  }, [activeCategory, runBulkValidate, saved]);
 
   const onApplyBrand = useCallback(() => {
     if (!applyBrandEnabled) {

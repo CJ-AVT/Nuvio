@@ -66,15 +66,15 @@ Brand apply options:
   --dry-run             Report targets without writing source files
 
 Examples:
-  pnpm dlx @nuvio/cli init --yes
-  pnpm dlx @nuvio/cli doctor
-  pnpm dlx @nuvio/cli scan --json
-  pnpm dlx @nuvio/cli stats
-  pnpm dlx @nuvio/cli coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-  pnpm dlx @nuvio/cli coverage verify --all --cwd apps/tailadmin-dogfood
-  pnpm dlx @nuvio/cli brand scan --page dashboard --cwd apps/tailadmin-dogfood
-  pnpm dlx @nuvio/cli brand scan --all --cwd apps/tailadmin-dogfood
-  pnpm dlx @nuvio/cli brand apply --all --cwd apps/tailadmin-dogfood
+  bunx @nuvio/cli init --yes
+  bunx @nuvio/cli doctor
+  bunx @nuvio/cli scan --json
+  bunx @nuvio/cli stats
+  bunx @nuvio/cli coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+  bunx @nuvio/cli coverage verify --all --cwd apps/tailadmin-dogfood
+  bunx @nuvio/cli brand scan --page dashboard --cwd apps/tailadmin-dogfood
+  bunx @nuvio/cli brand scan --all --cwd apps/tailadmin-dogfood
+  bunx @nuvio/cli brand apply --all --cwd apps/tailadmin-dogfood
 `);
 }
 

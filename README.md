@@ -30,28 +30,27 @@ Preview before apply. Undo after apply. The overlay and Vite plugin run only in 
 From your app folder (where `package.json` and `vite.config` live):
 
 ```bash
-pnpm dlx @nuvio/cli init --yes
-pnpm dev
+bunx @nuvio/cli init --yes
+bun run dev
 ```
 
 Open localhost → click the nuvio chip → **Edit on**.
 
 After init, see `nuvio/START_HERE.md` and `nuvio/AGENT.md` in your project.
 
-**Tip:** When `pnpm create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
+**Tip:** When `bun create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
 
 ### Develop this monorepo
 
 ```bash
-corepack enable
-pnpm install
-pnpm build
+bun install
+bun run build
 ```
 
 Then run TailAdmin:
 
 ```bash
-pnpm dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
+bun run dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
 ```
 
 ---
@@ -60,8 +59,8 @@ pnpm dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
 
 | Context | Command |
 | ------- | ------- |
-| **This monorepo** | `pnpm build` — builds all `packages/*` |
-| **Your app** | No separate nuvio build; `nuvio init` wires the dev plugin and overlay. Run your normal `pnpm dev` / `vite dev`. |
+| **This monorepo** | `bun run build` — builds all `packages/*` |
+| **Your app** | No separate nuvio build; `nuvio init` wires the dev plugin and overlay. Run your normal `bun run dev` / `vite dev`. |
 | **Production app build** | Unchanged — nuvio is not included in production bundles. |
 
 ---
@@ -74,7 +73,7 @@ Run from the **app package** that has Vite + React (not necessarily the monorepo
 
 ```bash
 cd apps/your-app
-pnpm dlx @nuvio/cli init --yes
+bunx @nuvio/cli init --yes
 ```
 
 `init` installs `@nuvio/vite-plugin` and `@nuvio/overlay`, registers the Vite plugin, mounts the dev shell, and adds starter instrumentation.
@@ -84,7 +83,7 @@ pnpm dlx @nuvio/cli init --yes
 If you skip the CLI or need to wire by hand:
 
 ```bash
-pnpm add -D @nuvio/vite-plugin @nuvio/overlay
+bun add -d @nuvio/vite-plugin @nuvio/overlay
 ```
 
 ```ts
@@ -134,7 +133,7 @@ More: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · [d
 | Area | Support |
 | ---- | ------- |
 | **Runtime** | Node.js 20+ |
-| **Package manager** | pnpm 9 (this monorepo) |
+| **Package manager** | Bun (this monorepo) |
 | **Bundler** | Vite 5.4+, 6.x, 8.x |
 | **UI** | React 18.3+, 19.x |
 | **Styling** | Tailwind CSS 3.x and 4.x |
@@ -149,7 +148,7 @@ More: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · [d
 
 **Works today**
 
-- Local dev only (`pnpm dev` / `vite dev`)
+- Local dev only (`bun run dev` / `vite dev`)
 - Element editing and Brand Kit bulk apply for patchable hosts
 - React + Vite + Tailwind stacks listed above
 
@@ -181,18 +180,18 @@ Root `package.json` scripts for this monorepo:
 
 | Script | Description |
 | ------ | ----------- |
-| `pnpm build` | Build all `packages/*` |
-| `pnpm typecheck` | Typecheck packages and apps |
-| `pnpm test` | Run package tests |
-| `pnpm dev` | Build packages, then TailAdmin dogfood (port 5173) |
-| `pnpm dev:tailadmin` | Same as `pnpm dev` |
-| `pnpm dogfood` | Build + typecheck + test + TailAdmin production build |
-| `pnpm test:cli` | CLI test suite |
-| `pnpm coverage:dogfood` | PCC verify all tailadmin pages |
-| `pnpm brand:dogfood` | Brand scan all tailadmin pages |
-| `pnpm brand:apply:dogfood` | CLI brand apply (dogfood) |
-| `pnpm publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
-| `pnpm publish:alpha` | Publish packages to npm `alpha` tag |
+| `bun run build` | Build all `packages/*` |
+| `bun run typecheck` | Typecheck packages and apps |
+| `bun run test` | Run package tests |
+| `bun run dev` | Build packages, then TailAdmin dogfood (port 5173) |
+| `bun run dev:tailadmin` | Same as `bun run dev` |
+| `bun run dogfood` | Build + typecheck + test + TailAdmin production build |
+| `bun run test:cli` | CLI test suite |
+| `bun run coverage:dogfood` | PCC verify all tailadmin pages |
+| `bun run brand:dogfood` | Brand scan all tailadmin pages |
+| `bun run brand:apply:dogfood` | CLI brand apply (dogfood) |
+| `bun run publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
+| `bun run publish:alpha` | Publish packages to npm `alpha` tag |
 
 ---
 

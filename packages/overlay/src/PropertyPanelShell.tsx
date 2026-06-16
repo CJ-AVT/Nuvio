@@ -903,7 +903,7 @@ export function PropertyPanelShell({
   const showWelcome = shouldShowWelcome({ developerDetails, dismissed: dismissedGuides });
   const patchBlockedReason =
     indexIdCount === 0
-      ? "Source index has 0 ids — the dev server cannot map data-nuvio-id to files. Run pnpm dev from the repo root (builds packages), then hard-refresh. Check the terminal for [nuvio] index warnings."
+      ? "Source index has 0 ids — the dev server cannot map data-nuvio-id to files. Run bun dev from the repo root (builds packages), then hard-refresh. Check the terminal for [nuvio] index warnings."
       : selectedId && !selectionResolved
         ? selectError ??
           "Server did not confirm this id (no source file). Patches stay disabled until selection succeeds."

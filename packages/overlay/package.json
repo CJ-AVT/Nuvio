@@ -41,8 +41,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

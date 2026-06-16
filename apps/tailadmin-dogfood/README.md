@@ -7,9 +7,9 @@ Real-world Nuvio compatibility fixture: [TailAdmin free React dashboard](https:/
 From repo root:
 
 ```bash
-pnpm install
-pnpm dev:tailadmin
-# or: cd apps/tailadmin-dogfood && pnpm dev
+bun install
+bun run dev:tailadmin
+# or: cd apps/tailadmin-dogfood && bun run dev
 ```
 
 Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on the Nuvio chip to open the Editor panel.
@@ -33,8 +33,8 @@ Open the URL Vite prints (default `http://localhost:5173/`). Click **Edit** on t
 Verify per-page PCC:
 
 ```bash
-pnpm exec nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-pnpm exec nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
+bunx nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+bunx nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
 ```
 
 ## Instrumented ids (dashboard)
@@ -90,11 +90,11 @@ Declared in `nuvio/pages/form-elements.pcc.yaml`. Each form section uses a liter
 Dashboard and Form Elements coverage are declared in `nuvio/pages/*.pcc.yaml`. Verify offline (CI-safe):
 
 ```bash
-pnpm exec nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
-pnpm exec nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
-pnpm coverage:dogfood
-pnpm brand:apply:dogfood
-pnpm brand:dogfood
+bunx nuvio coverage verify --page dashboard --cwd apps/tailadmin-dogfood
+bunx nuvio coverage verify --page form-elements --cwd apps/tailadmin-dogfood
+bun run coverage:dogfood
+bun run brand:apply:dogfood
+bun run brand:dogfood
 ```
 
 Manifests: `dashboard.pcc.yaml`, `form-elements.pcc.yaml`, `basic-tables.pcc.yaml`, `badges.pcc.yaml`.

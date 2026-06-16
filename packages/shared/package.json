@@ -39,8 +39,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts src/secure-path.ts src/load-pcc-manifest.ts src/dev-auth.ts --format esm --dts --clean",
-    "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
