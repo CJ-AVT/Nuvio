@@ -2,194 +2,90 @@
 
 **v1.1.0** — visual editor for **React + Vite + Tailwind** (dev-only; nothing runs in production).
 
-Define a project **Brand Kit** and apply it by category across pages, or click individual elements to edit text and Tailwind classes — preview first, then apply to real source files.
-
 [![npm @nuvio/cli](https://img.shields.io/npm/v/@nuvio/cli?label=%40nuvio%2Fcli%201.1.0)](https://www.npmjs.com/package/@nuvio/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
-[![Vite 5–8](https://img.shields.io/badge/Vite-5%20%7C%206%20%7C%208-646cff)](#vite--tailwind-coverage)
-[![Tailwind 3–4](https://img.shields.io/badge/Tailwind-3.x%20%7C%204.x-38bdf8)](#vite--tailwind-coverage)
-[![React 18–19](https://img.shields.io/badge/React-18%20%7C%2019-61dafb)](#vite--tailwind-coverage)
 
-**Published packages (1.1.0):** `@nuvio/cli` · `@nuvio/vite-plugin` · `@nuvio/overlay` · `@nuvio/shared` · `@nuvio/ast-engine`
-
-Stop burning AI prompts on padding, colors, and layout tweaks — edit visually, keep real source files.
+**Published packages:** `@nuvio/cli` · `@nuvio/vite-plugin` · `@nuvio/overlay` · `@nuvio/shared` · `@nuvio/ast-engine`
 
 ---
 
-## Demo
+## Purpose
 
-### Brand Kit (project branding)
+nuvio lets you edit a React + Vite + Tailwind app visually in the browser and write changes back to real source files.
 
-**Edit on → Brand Kit tab → pick a category → Save Brand → Validate → Apply** on the current page. Navigate to another route and repeat per category — one saved brand in `nuvio/brand.json`, applied across your app.
+- **Brand Kit** — define project branding once (`nuvio/brand.json`), then bulk-apply styles by category (card, heading, text, button, table, form, badge) across pages.
+- **Element editing** — click a tagged element, preview Tailwind and text changes, then apply to code.
 
-Categories: **card**, **heading**, **text**, **button**, **table**, **form**, **badge**.
-
-<img src="docs/assets/nuvio-brand-kit26.gif" width="100%" alt="Brand Kit demo: define styles, save brand, validate and apply across dashboard pages" />
-
-### Element editing
-
-**Edit on → click an element → Validate Changes → Apply to Code**
-
-<img src="docs/assets/nuvio-element16.gif" width="100%" alt="nuvio demo: Edit on → click an element → Preview Changes → Apply to Code" />
-
-**Try Brand Kit (recommended):**
-
-```bash
-pnpm install
-pnpm build && pnpm dev:tailadmin
-```
-
-Open the printed URL (default `http://localhost:5173/`) → nuvio chip → **Edit on** → **Brand Kit** tab. See [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) for per-page category counts and PCC hosts.
-
-**Try element editing only:**
-
-```bash
-pnpm build && pnpm --filter @nuvio/demo-app dev
-```
-
-Open `http://localhost:5174` → **Edit on** → **Edit Element** tab.
-
-Demo assets: [nuvio-brand-kit26.gif](docs/assets/nuvio-brand-kit26.gif) · [nuvio-element16.gif](docs/assets/nuvio-element16.gif)
+Preview before apply. Undo after apply. The overlay and Vite plugin run only in dev (`import.meta.env.DEV`).
 
 ---
 
-## Quick Start
+## Setup
 
-**You need:** React · Vite · Tailwind · Node 20+
+### Use nuvio in your app
 
-In your project folder (`package.json` + `vite.config`):
+**Requirements:** Node 20+, React, Vite, Tailwind.
+
+From your app folder (where `package.json` and `vite.config` live):
 
 ```bash
 pnpm dlx @nuvio/cli init --yes
 pnpm dev
 ```
 
-Open localhost → **Edit on**.
-
-| Goal | Flow |
-| ---- | ---- |
-| **Brand a page** | **Brand Kit** tab → category chip → adjust presets → **Save Brand** → **Validate** → **Apply** |
-| **Edit one element** | **Edit Element** tab → click a host → **Preview Changes** → **Apply to Code** |
+Open localhost → click the nuvio chip → **Edit on**.
 
 After init, see `nuvio/START_HERE.md` and `nuvio/AGENT.md` in your project.
 
 **Tip:** When `pnpm create vite` asks “Install and start now?” → **No**, so you can run `init` before the first dev server.
 
-Commands omit version pins — `pnpm dlx @nuvio/cli` uses npm **latest** (currently **1.1.0**).
+### Develop this monorepo
 
-More: [CHANGELOG.md](CHANGELOG.md) · [examples/README.md](examples/README.md) · [TailAdmin dogfood](apps/tailadmin-dogfood/README.md)
+```bash
+corepack enable
+pnpm install
+pnpm build
+```
 
----
+Then run TailAdmin:
 
-## Vite + Tailwind coverage
-
-| Area | 1.1.0 support |
-| ---- | ------------- |
-| **Vite** | 5.4+, 6.x, 8.x (`create vite` react-ts) |
-| **React** | 18.3+, 19.x |
-| **Tailwind** | 3.x and 4.x utility patches |
-| **`className`** | literals, `cn()`, conditional `cn`, static `classnames()` |
-| **Libraries** | shadcn · TailAdmin · DaisyUI (detection + guides in CLI templates) |
-| **Onboarding** | `nuvio init` + click-to-tag (no manual id for first edit) |
-| **Brand Kit** | `nuvio/brand.json` · per-category bulk validate/apply · cross-page |
-| **PCC (optional)** | `nuvio/pages/*.pcc.yaml` page coverage manifests · `nuvio coverage verify` |
-| **CLI** | `doctor` · `scan` · `stats` · `brand scan` · `brand apply` · `coverage verify` |
-
-### Example apps
-
-| Example | Run | What it proves |
-| ------- | --- | -------------- |
-| [vite-basic](examples/vite-basic/) | `pnpm --filter @nuvio/example-vite-basic dev` | init + click-to-tag |
-| [shadcn-dashboard](examples/shadcn-dashboard/) | `pnpm --filter @nuvio/example-shadcn-dashboard dev` | shadcn `cn()` + Card/Button |
-| [tailadmin-dogfood](apps/tailadmin-dogfood/) | `pnpm dev:tailadmin` | Full TailAdmin + **Brand Kit** + PCC dogfood |
-
-See [examples/README.md](examples/README.md).
+```bash
+pnpm dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
+```
 
 ---
 
-## What nuvio does
+## Build
 
-After `nuvio init`, nuvio:
-
-1. Installs `@nuvio/vite-plugin` and `@nuvio/overlay`
-2. Registers the Vite plugin (dev server only)
-3. Mounts the nuvio overlay in your app shell
-4. Adds a starter editable region (`page.title` on your first heading)
-5. Opens the **Brand Kit** tab by default — category chips, presets, **Save Brand**, **Validate**, **Apply**
-6. Lets you click elements and edit in the browser — tagged or **Make Editable** (click-to-tag)
-7. Generates source-backed patches and writes them to your files
-
-**Preview before apply.** **Undo** after apply. **No production bundle** — the overlay renders nothing when `import.meta.env.DEV` is false.
-
-Instrument hosts with **`data-nuvio-id="unique.name"`** on patchable DOM nodes (literal `className` on the same element for Brand Kit bulk apply). Optional [PCC manifests](apps/tailadmin-dogfood/nuvio/pages/) declare which hosts belong to each brand category per route.
-
----
-
-## Brand Kit (summary)
-
-| Section | Purpose |
+| Context | Command |
 | ------- | ------- |
-| **Category** | Card, Heading, Text, Button, Table, Form, Badge — counts for the current page |
-| **Define Brand** | Presets for the active category + **Save Brand** → `nuvio/brand.json` |
-| **Apply Brand** | **Validate** (dry-run all hosts in category) → **Apply** (write patches) |
-
-**Cross-page:** save once, then on each route choose a category → **Validate** → **Apply**. Validate is enabled only after **Save Brand**; Apply only after a successful Validate for that category on that page.
-
-Dogfood reference: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md)
+| **This monorepo** | `pnpm build` — builds all `packages/*` |
+| **Your app** | No separate nuvio build; `nuvio init` wires the dev plugin and overlay. Run your normal `pnpm dev` / `vite dev`. |
+| **Production app build** | Unchanged — nuvio is not included in production bundles. |
 
 ---
 
-## Security
+## Add to an existing project or monorepo
 
-nuvio is a **local dev tool**. The Vite plugin exposes authenticated write APIs on the dev server (WebSocket patches, brand config). Do not expose the dev server to untrusted networks without understanding the threat model.
+### Recommended: CLI init
 
-See [SECURITY.md](SECURITY.md).
+Run from the **app package** that has Vite + React (not necessarily the monorepo root):
 
----
+```bash
+cd apps/your-app
+pnpm dlx @nuvio/cli init --yes
+```
 
-## Current limitations
+`init` installs `@nuvio/vite-plugin` and `@nuvio/overlay`, registers the Vite plugin, mounts the dev shell, and adds starter instrumentation.
 
-**Works today**
+### Manual wiring
 
-- React 18 / 19 · Vite 5, 6, 8 · Tailwind 3.x / 4.x
-- Local dev only (`pnpm dev` / `vite dev`)
-- Element editing + Brand Kit bulk apply for patchable hosts
-
-**Editing constraints**
-
-- Supported `className` modes: string literals, `cn()`, conditional `cn`, static `classnames()` maps
-- Each `data-nuvio-id` must be **unique** (`nuvio scan` lists duplicates)
-- Brand Kit bulk apply requires **literal** `data-nuvio-id` + patchable `className` on native DOM (wrapper props alone are not indexed)
-- Use **Make Editable** for new hosts, or follow [TailAdmin dogfood](apps/tailadmin-dogfood/README.md) instrumentation patterns
-
-**CLI diagnostics**
-
-- `nuvio doctor` · `nuvio scan` · `nuvio stats` · `nuvio brand scan` · `nuvio coverage verify`
-
-**On the roadmap**
-
-- Next.js `nuvio init` (experimental `@nuvio/next` in monorepo)
-- Apply brand to all pages in one action (Approach 2)
-
-**Not planned near-term**
-
-- Vue, Angular, or non-React frameworks
-- Production / hosted editing
-
----
-
-## Advanced setup
-
-Use this if you skip the CLI or need to wire nuvio by hand.
-
-### Manual install
+If you skip the CLI or need to wire by hand:
 
 ```bash
 pnpm add -D @nuvio/vite-plugin @nuvio/overlay
 ```
-
-### Register the Vite plugin
 
 ```ts
 // vite.config.ts
@@ -199,22 +95,9 @@ import { nuvio } from "@nuvio/vite-plugin";
 
 export default defineConfig({
   plugins: [react(), nuvio()],
-  resolve: {
-    dedupe: ["react", "react-dom"],
-  },
+  resolve: { dedupe: ["react", "react-dom"] },
 });
 ```
-
-Optional plugin options:
-
-```ts
-nuvio({
-  scanGlobs: ["src/**/*.{tsx,jsx}"],
-  verbose: process.env.NUVIO_VERBOSE === "1",
-});
-```
-
-### Mount the dev shell
 
 ```tsx
 // e.g. App.tsx
@@ -230,100 +113,94 @@ export default function App() {
 }
 ```
 
-`NuvioDevShell` returns `null` in production builds. The Vite plugin runs only on `vite dev`.
-
 ### Instrument hosts
 
-Put stable **`data-nuvio-id="your.region.id"`** on JSX you want to edit or brand. For Brand Kit bulk apply, use a **literal** `className` on the same native element (see dogfood form sections).
+Add stable `data-nuvio-id="your.region.id"` on JSX you want to edit or brand. For Brand Kit bulk apply, use a **literal** `className` on the same native element.
 
 Optional: add `nuvio/pages/<page>.pcc.yaml` and run `nuvio coverage verify --page <page>`.
 
-### Troubleshooting
+### Monorepo notes
 
-| Symptom | Fix |
-| ------- | --- |
-| **`0 ids` in chip** | Restart dev after TSX changes; try `nuvio({ verbose: true })` |
-| **No chip after `create vite`** | Run `nuvio init` before `pnpm dev`, or restart dev |
-| **Edit button dead** | Re-run `pnpm dlx @nuvio/cli init --yes`; `rm -rf node_modules/.vite`; restart dev |
-| **Apply greyed out (Edit tab)** | Select an id’d element; run **Preview Changes** first |
-| **Validate greyed out (Brand Kit)** | **Save Brand** first; pick a category with hosts on the page |
-| **Apply greyed out (Brand Kit)** | Run **Validate** for the active category first |
-| **Category count too low** | Add literal `data-nuvio-id` on native elements; declare hosts in PCC — see [dogfood README](apps/tailadmin-dogfood/README.md) |
+- Run `nuvio init` (or manual wiring) **per app** that should have the editor.
+- `nuvio doctor` recognizes workspace-linked monorepo apps.
+- Overlay CSS is self-contained — do **not** add `@nuvio/overlay` to Tailwind `content`.
 
-More: [CHANGELOG.md](CHANGELOG.md) · [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### Requirements (monorepo contributors)
-
-- **Node.js** >= 20
-- **pnpm** 9 (`corepack enable` recommended)
-
-### Compatibility
-
-| Stack | Supported |
-| ----- | --------- |
-| Vite | 5.4+, 6.x, 8.x |
-| React | 18.3+, 19.x |
-| Tailwind | 3.x, 4.x |
-
-Overlay CSS is self-contained — you do **not** add `@nuvio/overlay` to Tailwind `content`.
+More: [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) · [docs/nuvioUser.md](docs/nuvioUser.md)
 
 ---
 
-## Maintainer documentation
+## Tech stack
 
-For contributors — not required to use nuvio in your app.
+| Area | Support |
+| ---- | ------- |
+| **Runtime** | Node.js 20+ |
+| **Package manager** | pnpm 9 (this monorepo) |
+| **Bundler** | Vite 5.4+, 6.x, 8.x |
+| **UI** | React 18.3+, 19.x |
+| **Styling** | Tailwind CSS 3.x and 4.x |
+| **`className` modes** | literals, `cn()`, conditional `cn`, static `classnames()` |
+| **Libraries** | shadcn, TailAdmin, DaisyUI (detection + guides in CLI templates) |
 
-| Resource | Purpose |
-| -------- | ------- |
-| [CHANGELOG.md](CHANGELOG.md) | Releases and notable changes |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Monorepo layout and dev loop |
-| [examples/README.md](examples/README.md) | Example apps + `v10:acceptance` |
-| [apps/tailadmin-dogfood/README.md](apps/tailadmin-dogfood/README.md) | Brand Kit dogfood, PCC, instrumented ids |
+**CLI commands:** `init` · `doctor` · `scan` · `stats` · `brand scan` · `brand apply` · `coverage verify`
 
-### Monorepo setup
+---
 
-```bash
-corepack enable
-pnpm install
-pnpm build
-```
+## Limitations
 
-### Demo apps
+**Works today**
 
-```bash
-pnpm dev:tailadmin          # Brand Kit + TailAdmin (port 5173)
-pnpm --filter @nuvio/demo-app dev   # Element editing demo (port 5174)
-pnpm dev                    # build packages, then demo-app
-```
+- Local dev only (`pnpm dev` / `vite dev`)
+- Element editing and Brand Kit bulk apply for patchable hosts
+- React + Vite + Tailwind stacks listed above
 
-### Scripts
+**Editing constraints**
+
+- Each `data-nuvio-id` must be unique (`nuvio scan` lists duplicates)
+- Brand Kit bulk apply requires literal `data-nuvio-id` + patchable `className` on native DOM
+- Wrapper-only props without a patchable native `className` are not indexed
+
+**On the roadmap**
+
+- Next.js `nuvio init` (experimental `@nuvio/next` in this monorepo)
+- Apply brand to all pages in one action
+
+**Not planned near-term**
+
+- Vue, Angular, or non-React frameworks
+- Production or hosted editing
+
+nuvio is a **local dev tool**. The Vite plugin exposes write APIs on the dev server. See [SECURITY.md](SECURITY.md).
+
+Full detail: [docs/LIMITATIONS.md](docs/LIMITATIONS.md) · [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
+
+---
+
+## Scripts
+
+Root `package.json` scripts for this monorepo:
 
 | Script | Description |
 | ------ | ----------- |
 | `pnpm build` | Build all `packages/*` |
 | `pnpm typecheck` | Typecheck packages and apps |
 | `pnpm test` | Run package tests |
-| `pnpm dogfood` | Build + typecheck + test + demo production build |
-| `pnpm dev:tailadmin` | TailAdmin dogfood dev server |
+| `pnpm dev` | Build packages, then start `@nuvio/demo-app` |
+| `pnpm dev:tailadmin` | Build packages, then TailAdmin dogfood (port 5173) |
+| `pnpm dogfood` | Build + typecheck + test + demo-app production build |
+| `pnpm test:cli` | CLI test suite |
 | `pnpm coverage:dogfood` | PCC verify all tailadmin pages |
 | `pnpm brand:dogfood` | Brand scan all tailadmin pages |
 | `pnpm brand:apply:dogfood` | CLI brand apply (dogfood) |
-| `pnpm v10:acceptance` | v1.0 gate: init + doctor + stats on examples |
-| `pnpm test:cli` | CLI test suite |
 | `pnpm publish:stable` | Publish five `@nuvio/*` packages to npm `latest` |
+| `pnpm publish:alpha` | Publish packages to npm `alpha` tag |
 
 ---
 
-## Built with AI
+## More
 
-nuvio was developed using modern AI-assisted engineering workflows (Cursor Agent, ChatGPT). AI accelerated implementation; product direction, architecture, and final decisions remained human-led.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| Resource | Purpose |
+| -------- | ------- |
+| [CHANGELOG.md](CHANGELOG.md) | Releases and notable changes |
+| [SECURITY.md](SECURITY.md) | Threat model |
 
 **Repository:** [github.com/ehah/Nuvio](https://github.com/ehah/Nuvio) · **License:** MIT
-
-**Release notes template:** [.github/release-notes/v1.0.0.md](.github/release-notes/v1.0.0.md)
