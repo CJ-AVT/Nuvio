@@ -5,91 +5,54 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import Badge from "../ui/badge/Badge";
-interface Product {
-  id: number;
-  name: string;
-  variants: string;
-  category: string;
-  price: string;
-  image: string;
-  status: "Delivered" | "Pending" | "Canceled";
-}
-const tableData: Product[] = [
+const tableData = [
   {
     id: 1,
     name: "MacBook Pro 13”",
-    variants: "2 Variants",
     category: "Laptop",
-    price: "$2399.00",
+    price: "$2,399",
     status: "Delivered",
-    image: "/images/product/product-01.jpg",
   },
   {
     id: 2,
-    name: "Apple Watch Ultra Test",
-    variants: "1 Variant",
+    name: "Apple Watch Ultra",
     category: "Watch",
-    price: "$879.00",
+    price: "$879",
     status: "Pending",
-    image: "/images/product/product-02.jpg",
   },
   {
     id: 3,
-    name: "iPhone 15 Pro Max pro +",
-    variants: "2 Variants",
-    category: "SmartPhone",
-    price: "$1869.00",
+    name: "iPhone 15 Pro Max",
+    category: "Phone",
+    price: "$1,869",
     status: "Delivered",
-    image: "/images/product/product-03.jpg",
-  },
-  {
-    id: 4,
-    name: "iPad Pro 3rd Gen",
-    variants: "2 Variants",
-    category: "Electronics",
-    price: "$1699.00",
-    status: "Canceled",
-    image: "/images/product/product-04.jpg",
-  },
-  {
-    id: 5,
-    name: "AirPods Pro 2nd Gen",
-    variants: "1 Variant",
-    category: "Accessories",
-    price: "$240.00",
-    status: "Delivered",
-    image: "/images/product/product-05.jpg",
   },
 ];
 export default function RecentOrders() {
   return (
     <div
       data-rte-id="orders.card"
-      className="overflow-hidden bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md sm:px-6 xl:shadow-sm xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-blue-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+      className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 hover:border-rose-400 hover:border-rose-400"
     >
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3
-            data-rte-id="orders.title"
-            className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
-          >
-            Recent Orders
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3
+          data-rte-id="orders.title"
+          className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600"
+        >
+          Recent Orders
+        </h3>
+        <div className="flex gap-2">
           <button
-            data-rte-id="orders.filter"
             type="button"
-            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-xl px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-xl xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700 hover:bg-purple-700 hover:bg-blue-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700"
+            data-rte-id="orders.filter"
+            className="inline-flex items-center gap-2 font-medium bg-rose-600 text-white rounded-xl px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-xl xl:px-4 xl:py-2 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700"
           >
-            Filter Button Test
+            Filter
           </button>
           <button
-            data-rte-id="orders.seeAll"
             type="button"
-            className="inline-flex items-center gap-2 font-medium shadow-theme-xs bg-rose-600 text-white rounded-xl px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-xl xl:px-4 xl:py-2 hover:bg-rose-700 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-700 hover:bg-blue-700 hover:bg-rose-700 hover:bg-green-700 hover:bg-purple-700 hover:bg-purple-700 hover:bg-blue-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-green-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700"
+            data-rte-id="orders.seeAll"
+            className="inline-flex items-center gap-2 font-medium bg-rose-600 text-white rounded-xl px-4 py-2 xl:bg-rose-600 xl:text-white xl:rounded-xl xl:px-4 xl:py-2 hover:bg-rose-700 hover:bg-rose-700 hover:bg-rose-700"
           >
             See all
           </button>
@@ -97,91 +60,42 @@ export default function RecentOrders() {
       </div>
       <div
         data-rte-id="orders.table"
-        className="overflow-x-auto max-w-full border border-rose-300 rounded-xl xl:max-w-full xl:border xl:border-gray-200 xl:rounded-md"
+        className="overflow-x-auto max-w-full border border-rose-300 rounded-xl xl:border-gray-200"
       >
         <Table>
-          <TableHeader className="border-y border-gray-100 dark:border-gray-800">
+          <TableHeader>
             <TableRow data-rte-id="orders.header.row">
-              <TableCell
-                isHeader
-                data-rte-id="orders.header.products"
-                className="py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-              >
-                Products Sold
+              <TableCell isHeader data-rte-id="orders.header.products">
+                Products
               </TableCell>
-              <TableCell
-                isHeader
-                data-rte-id="orders.header.category"
-                className="py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-              >
-                Category101
+              <TableCell isHeader data-rte-id="orders.header.category">
+                Category
               </TableCell>
-              <TableCell
-                isHeader
-                data-rte-id="orders.header.price"
-                className="py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-              >
+              <TableCell isHeader data-rte-id="orders.header.price">
                 Price
               </TableCell>
-              <TableCell
-                isHeader
-                data-rte-id="orders.header.status"
-                className="py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-              >
+              <TableCell isHeader data-rte-id="orders.header.status">
                 Status
               </TableCell>
             </TableRow>
           </TableHeader>
-
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody>
             {tableData.map((product) => (
               <TableRow
                 key={product.id}
                 data-rte-id={`orders.row.${product.id}`}
-                className="border-0"
               >
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-[50px] w-[50px] overflow-hidden rounded-md">
-                      <img
-                        src={product.image}
-                        className="h-[50px] w-[50px]"
-                        alt={product.name}
-                      />
-                    </div>
-                    <div>
-                      <p
-                        data-rte-id={`orders.row.${product.id}.nameText`}
-                        className="font-medium text-gray-800 xl:text-sm xl:font-normal xl:text-gray-600 dark:text-white/90"
-                      >
-                        {product.name}
-                      </p>
-                      <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-                        {product.variants}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-theme-sm text-gray-500 dark:text-gray-400">
-                  {product.category}
-                </TableCell>
-                <TableCell className="py-3 text-theme-sm text-gray-500 dark:text-gray-400">
-                  {product.price}
-                </TableCell>
-                <TableCell className="py-3 text-theme-sm text-gray-500 dark:text-gray-400">
-                  <Badge
-                    size="sm"
-                    color={
-                      product.status === "Delivered"
-                        ? "success"
-                        : product.status === "Pending"
-                          ? "warning"
-                          : "error"
-                    }
+                <TableCell>
+                  <span
+                    data-rte-id={`orders.row.${product.id}.nameText`}
+                    className="font-medium text-gray-800 xl:text-sm xl:font-normal xl:text-gray-600"
                   >
-                    {product.status}
-                  </Badge>
+                    {product.name}
+                  </span>
                 </TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell>{product.price}</TableCell>
+                <TableCell>{product.status}</TableCell>
               </TableRow>
             ))}
           </TableBody>

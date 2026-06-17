@@ -1,46 +1,28 @@
+import DemographicCard from "../../components/ecommerce/DemographicCard";
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
-import PageMeta from "../../components/common/PageMeta";
+import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 export default function Home() {
   return (
-    <>
-      <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
+    <div className="space-y-6">
       <h1
         data-rte-id="dashboard.title"
-        className="mb-4 text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600 dark:text-white/90"
+        className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600"
       >
-        Ecommerce Dashboard 1024356
+        Ecommerce Dashboard
       </h1>
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 space-y-6 xl:col-span-7">
-          <EcommerceMetrics />
-
-          <MonthlySalesChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
-
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
-
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
-        </div>
+      <EcommerceMetrics />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <MonthlySalesChart />
+        <MonthlyTarget />
       </div>
-    </>
+      <StatisticsChart />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DemographicCard />
+        <RecentOrders />
+      </div>
+    </div>
   );
 }

@@ -1,38 +1,65 @@
-import PageMeta from "../../components/common/PageMeta";
-import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+const rows = [
+  {
+    name: "John Doe",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    name: "Jane Smith",
+    role: "Editor",
+    status: "Pending",
+  },
+];
 export default function BasicTables() {
   return (
-    <>
-      <PageMeta
-        title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h2
-          data-rte-id="tables.page.title"
-          className="text-base font-medium text-rose-600 xl:text-lg xl:font-semibold xl:text-green-600 dark:text-white/90"
+    <div className="space-y-6">
+      <h2
+        data-rte-id="tables.page.title"
+        className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600"
+      >
+        Basic Tables
+      </h2>
+      <div
+        data-rte-id="tables.basic.card"
+        className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-slate-300 xl:rounded-xl xl:p-6 hover:border-rose-400"
+      >
+        <h3
+          data-rte-id="tables.basic.title"
+          className="text-base font-medium text-rose-600 xl:text-base xl:font-medium xl:text-green-600"
         >
-          Basic Tables
-        </h2>
-      </div>
-      <div className="space-y-6">
+          Basic Table 1
+        </h3>
         <div
-          data-rte-id="tables.basic.card"
-          className="bg-slate-50 border border-rose-300 rounded-xl p-6 shadow-md xl:bg-white xl:border xl:border-gray-200 xl:rounded-md xl:p-6 dark:border-gray-800 dark:bg-white/[0.03] hover:border-rose-400 hover:border-rose-400 hover:border-rose-400 hover:border-rose-400"
+          data-rte-id="tables.basic.table"
+          className="mt-4 overflow-x-auto max-w-full border border-rose-300 rounded-xl"
         >
-          <div className="px-6 py-5">
-            <h3
-              data-rte-id="tables.basic.title"
-              className="text-base font-medium text-rose-600 xl:text-lg xl:font-semibold xl:text-red-500 dark:text-white/90"
-            >
-              Basic Table 1
-            </h3>
-          </div>
-          <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-            <BasicTableOne />
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableCell isHeader>Name</TableCell>
+                <TableCell isHeader>Role</TableCell>
+                <TableCell isHeader>Status</TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.name}>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.role}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
-    </>
+    </div>
   );
 }

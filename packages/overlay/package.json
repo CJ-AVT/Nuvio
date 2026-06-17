@@ -41,6 +41,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "dev": "tsup src/index.tsx --format esm --watch --clean=false --no-dts",
     "prepublishOnly": "bun run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
